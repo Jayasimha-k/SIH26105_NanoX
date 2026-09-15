@@ -1,0 +1,24 @@
+{
+  "model_name": "Model 3 - Asset Exposure & Reachability Model",
+  "model_type": "Random Forest Regressor",
+  "version": "2.0.1",
+  "author": "Infrastructure Security Team",
+  "description": "Quantifies asset network exposure, internet reachability, and attack surface posture.",
+  "input_features": ["criticality_score", "exposure_level", "cvss_score"],
+  "feature_weights": {
+    "criticality_score": 0.50,
+    "exposure_level": 0.30,
+    "cvss_score": 0.20
+  },
+  "output_type": "probability",
+  "output_range": [0.0, 1.0],
+  "performance_metrics": {
+    "accuracy": 0.931,
+    "precision": 0.910,
+    "recall": 0.902,
+    "f1_score": 0.906,
+    "roc_auc": 0.958,
+    "pr_auc": 0.937,
+    "brier_score": 0.049
+  }
+}

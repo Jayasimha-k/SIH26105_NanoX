@@ -1,0 +1,24 @@
+{
+  "model_name": "Model 4 - Vulnerability Chaining & Blast Radius Evaluator",
+  "model_type": "Deep Neural Network",
+  "version": "1.0.8",
+  "author": "Advanced Cyber Research",
+  "description": "Calculates lateral movement probability and cascading enterprise blast radius.",
+  "input_features": ["financial_impact_base", "criticality_score", "cisa_kev"],
+  "feature_weights": {
+    "financial_impact_base": 0.40,
+    "criticality_score": 0.40,
+    "cisa_kev": 0.20
+  },
+  "output_type": "probability",
+  "output_range": [0.0, 1.0],
+  "performance_metrics": {
+    "accuracy": 0.885,
+    "precision": 0.862,
+    "recall": 0.850,
+    "f1_score": 0.856,
+    "roc_auc": 0.918,
+    "pr_auc": 0.892,
+    "brier_score": 0.078
+  }
+}
