@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OrganizationSpecificRiskModelSchema",
+  "description": "Schema specification for the Organization-Specific Risk Model architecture. Defines the 11 input dimensions and required output targets. Upstream Meta Model features remain unfulfilled until team integration.",
+  "status": "AWAITING_META_MODEL_INTEGRATION_CONTRACT",
+  "version": "0.1.0-STAGED",
+  "inputs": {
+    "1_meta_model_output": {
+      "status": "UNFULFILLED_PENDING_CONTRACT",
+      "description": "Upstream Meta Model synthesis of P1, P2, P3, and P4 sub-models. Real feature names and shapes must be supplied via META_MODEL_INTEGRATION_CONTRACT.md.",
+      "required_fields": [
+        "is_contract_fulfilled",
+        "meta_model_version",
+        "meta_score"
+      ],
+      "properties": {
+        "is_contract_fulfilled": { "type": "boolean", "default": false },
+        "meta_model_version": { "type": ["string", "null"] },
+        "meta_score": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+        "raw_outputs": { "type": "object" },
+        "confidence": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 }
+      }
+    },
+    "2_organization_profile": {
+      "type": "object",
+      "required": ["organization_id", "industry", "organization_size", "number_of_employees"],
+      "properties": {
+        "organization_id": { "type": "string" },
+        "organization_name": { "type": "string" },
+        "industry": { "type": "string" },
+        "organization_size": { "type": "string", "enum": ["small", "medium", "large"] },
+        "number_of_employees": { "type": "integer", "minimum": 1 },
+        "number_of_endpoints": { "type": "integer", "minimum": 0 },
+        "number_of_servers": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "3_asset_inventory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["asset_id", "asset_name", "technology"],
+        "properties": {
+          "asset_id": { "type": "string" },
+          "asset_name": { "type": "string" },
+          "technology": { "type": "string" },
+          "ip_address": { "type": ["string", "null"] },
+          "owner": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "4_asset_criticality": {
+      "type": "object",
+      "description": "Criticality score per asset on a 1.0 to 10.0 scale.",
+      "properties": {
+        "criticality_scale": { "type": "string", "default": "1.0_to_10.0" },
+        "minimum": 1.0,
+        "maximum": 10.0
+      }
+    },
+    "5_asset_exposure": {
+      "type": "string",
+      "description": "Network exposure tier of the asset.",
+      "enum": ["INTERNET_FACING", "INTERNAL_PROTECTED", "AIR_GAPPED_ISOLATED"]
+    },
+    "6_vulnerability_state": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["cve_id", "cvss_score"],
+        "properties": {
+          "cve_id": { "type": "string" },
+          "cvss_score": { "type": "number", "minimum": 0.0, "maximum": 10.0 },
+          "is_exploitable": { "type": "boolean" },
+          "cisa_kev_listed": { "type": "boolean" }
+        }
+      }
+    },
+    "7_security_controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["control_id", "name", "is_active"],
+        "properties": {
+          "control_id": { "type": "string" },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "is_active": { "type": "boolean" },
+          "effectiveness": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+        }
+      }
+    },
+    "8_business_context": {
+      "type": "object",
+      "required": ["regulatory_framework"],
+      "properties": {
+        "regulatory_framework": { "type": "string" },
+        "annual_revenue_inr": { "type": "number", "minimum": 0 },
+        "downtime_cost_per_hour_inr": { "type": "number", "minimum": 0 },
+        "data_classification_tier": { "type": "string", "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"] }
+      }
+    },
+    "9_financial_impact": {
+      "type": "object",
+      "required": ["single_loss_expectancy_inr", "annualized_rate_of_occurrence"],
+      "properties": {
+        "single_loss_expectancy_inr": { "type": "number", "minimum": 0 },
+        "annualized_rate_of_occurrence": { "type": "number", "minimum": 0 },
+        "estimated_incident_cost_inr": { "type": "number", "minimum": 0 }
+      }
+    },
+    "10_incident_history": {
+      "type": "object",
+      "properties": {
+        "incident_history_count": { "type": "integer", "minimum": 0 },
+        "past_loss_amounts_inr": { "type": "array", "items": { "type": "number" } }
+      }
+    },
+    "11_optional_posture_baseline_output": {
+      "type": "object",
+      "description": "Optional inference output from models/organization-risk/model.onnx surrogate baseline.",
+      "properties": {
+        "posture_baseline_score": { "type": ["number", "null"], "minimum": 0.0, "maximum": 100.0 }
+      }
+    }
+  },
+  "outputs": {
+    "required": [
+      "organization_id",
+      "probability_of_event",
+      "financial_impact_inr",
+      "expected_annual_loss_inr",
+      "risk_level",
+      "model_confidence",
+      "top_risk_drivers"
+    ],
+    "properties": {
+      "organization_id": { "type": "string" },
+      "probability_of_event": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+      "financial_impact_inr": { "type": "number", "minimum": 0 },
+      "expected_annual_loss_inr": { "type": "number", "minimum": 0 },
+      "risk_level": { "type": "string", "enum": ["Low", "Moderate", "High", "Critical"] },
+      "model_confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+      "top_risk_drivers": { "type": "array", "items": { "type": "string" } },
+      "integration_status": { "type": "string" },
+      "meta_model_version_used": { "type": ["string", "null"] }
+    }
+  }
+}

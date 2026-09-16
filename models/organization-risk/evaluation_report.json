@@ -1,0 +1,58 @@
+{
+  "mae": 2.277,
+  "rmse": 2.897,
+  "r2": 0.9869,
+  "risk_level_accuracy": 0.9307,
+  "top_features": [
+    {
+      "rank": 1,
+      "feature": "offline_backup",
+      "importance": 8.228
+    },
+    {
+      "rank": 2,
+      "feature": "privileged_access_management",
+      "importance": 4.082
+    },
+    {
+      "rank": 3,
+      "feature": "network_segmentation",
+      "importance": 3.7586
+    },
+    {
+      "rank": 4,
+      "feature": "siem_deployed",
+      "importance": 3.5128
+    },
+    {
+      "rank": 5,
+      "feature": "mfa_coverage",
+      "importance": 3.308
+    },
+    {
+      "rank": 6,
+      "feature": "least_privilege_enforced",
+      "importance": 2.98
+    },
+    {
+      "rank": 7,
+      "feature": "vendor_risk_management",
+      "importance": 2.7485
+    },
+    {
+      "rank": 8,
+      "feature": "edr_coverage",
+      "importance": 2.5446
+    },
+    {
+      "rank": 9,
+      "feature": "incident_response_plan",
+      "importance": 2.3849
+    },
+    {
+      "rank": 10,
+      "feature": "security_awareness_training",
+      "importance": 2.2582
+    }
+  ]
+}

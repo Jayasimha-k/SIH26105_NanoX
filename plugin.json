@@ -1,0 +1,13 @@
+{
+  "name": "organization-risk",
+  "version": "0.1.0",
+  "task": "organization-cyber-risk-assessment",
+  "framework": "ONNX",
+  "offline": true,
+  "model_file": "model.onnx",
+  "input_schema": "feature_schema.json",
+  "preprocessing_config": "preprocessing.json",
+  "evaluation_metrics": "evaluation_report.json",
+  "description": "Offline-ready machine learning plugin for enterprise cybersecurity posture evaluation and continuous risk quantification.",
+  "nist_alignment": "NIST CSF 2.0 (Govern, Identify, Protect, Detect, Respond, Recover)"
+}

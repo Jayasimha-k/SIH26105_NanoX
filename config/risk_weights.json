@@ -1,0 +1,44 @@
+{
+  "version": "1.0.0",
+  "framework": "NIST CSF 2.0 & Empirical Control Quantification",
+  "rationale": "Weights represent the empirical contribution of security control dimensions to overall organizational breach resilience, calibrated against VERIS breach root causes.",
+  "category_weights": {
+    "identity_and_access": {
+      "weight": 0.20,
+      "rationale": "Identity compromise, credential stuffing, and lack of MFA represent >50% of initial breach vectors according to DBIR/VCDB."
+    },
+    "vulnerability_management": {
+      "weight": 0.18,
+      "rationale": "Dwell time of known exploitable CVEs directly drives exposure to automated botnet and ransomware operators."
+    },
+    "protection": {
+      "weight": 0.15,
+      "rationale": "Data-at-rest encryption, network microsegmentation, and secure baselines limit blast radius and lateral movement."
+    },
+    "detection": {
+      "weight": 0.15,
+      "rationale": "Mean time to detect (MTTD), SIEM, and 24/7 SOC telemetry are essential for halting unauthorized dwell before data exfiltration."
+    },
+    "recovery": {
+      "weight": 0.14,
+      "rationale": "Air-gapped immutable offline backups determine whether ransomware attacks lead to existential data loss or rapid operational restoration."
+    },
+    "response": {
+      "weight": 0.10,
+      "rationale": "Documented and battle-tested incident response playbooks reduce business disruption costs and containment delay."
+    },
+    "third_party": {
+      "weight": 0.05,
+      "rationale": "Supply chain monitoring and vendor access management restrict unvetted third-party ingress."
+    },
+    "asset_management": {
+      "weight": 0.03,
+      "rationale": "Comprehensive asset discovery ensures no shadow IT or forgotten servers bypass security posture enforcement."
+    }
+  },
+  "asset_exposure_multipliers": {
+    "INTERNET_FACING": 1.0,
+    "INTERNAL_PROTECTED": 0.35,
+    "AIR_GAPPED_ISOLATED": 0.05
+  }
+}

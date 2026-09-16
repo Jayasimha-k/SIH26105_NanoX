@@ -1,0 +1,54 @@
+# ==============================================================================
+# CRYPTO-CONFIG: Permissioned Identity Configuration for Hyperledger Fabric
+# SIH 2026 Problem Statement 26105
+# Defines MSP (Membership Service Provider) topologies for:
+# - OrdererOrg (3 Raft consensus ordering nodes)
+# - Org1 (Risk Governance Org)
+# - Org2 (Regulatory Audit Org)
+# ==============================================================================
+
+OrdererOrgs:
+  - Name: Orderer
+    Domain: example.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer1
+        SANS:
+          - localhost
+          - 127.0.0.1
+          - orderer1.example.com
+      - Hostname: orderer2
+        SANS:
+          - localhost
+          - 127.0.0.1
+          - orderer2.example.com
+      - Hostname: orderer3
+        SANS:
+          - localhost
+          - 127.0.0.1
+          - orderer3.example.com
+
+PeerOrgs:
+  - Name: Org1
+    Domain: org1.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - 127.0.0.1
+        - peer0.org1.example.com
+    Users:
+      Count: 1
+
+  - Name: Org2
+    Domain: org2.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - 127.0.0.1
+        - peer0.org2.example.com
+    Users:
+      Count: 1

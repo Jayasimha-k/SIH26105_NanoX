@@ -1,0 +1,117 @@
+{
+  "catalog_version": "2026.09.16-OFFLINE",
+  "source": "CISA Known Exploited Vulnerabilities (KEV) Catalog",
+  "mode": "OFFLINE",
+  "last_updated": "2026-09-16",
+  "total_records": 12,
+  "known_exploited_vulnerabilities": [
+    {
+      "cve_id": "CVE-2021-34473",
+      "vendor_project": "Microsoft",
+      "product": "Exchange Server",
+      "vulnerability_name": "Microsoft Exchange Server Remote Code Execution Vulnerability (ProxyShell)",
+      "date_added": "2021-11-03",
+      "short_description": "Microsoft Exchange Server contains an unauthenticated remote code execution vulnerability.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2021-26855",
+      "vendor_project": "Microsoft",
+      "product": "Exchange Server",
+      "vulnerability_name": "Microsoft Exchange Server Server-Side Request Forgery (SSRF) Vulnerability (ProxyLogon)",
+      "date_added": "2021-11-03",
+      "short_description": "Microsoft Exchange Server contains a server-side request forgery vulnerability that allows unauthenticated attackers to authenticate as the Exchange server.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2021-44228",
+      "vendor_project": "Apache",
+      "product": "Log4j",
+      "vulnerability_name": "Apache Log4j2 JNDI Remote Code Execution Vulnerability",
+      "date_added": "2021-12-10",
+      "short_description": "Apache Log4j2 contains an unspecified vulnerability when message lookup substitution is enabled.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2024-3094",
+      "vendor_project": "Tukaani Project",
+      "product": "XZ Utils",
+      "vulnerability_name": "XZ Utils Supply Chain Backdoor Vulnerability",
+      "date_added": "2024-04-01",
+      "short_description": "Malicious code was discovered in the upstream tarballs of xz starting with versions 5.6.0 and 5.6.1.",
+      "required_action": "Revert to xz-5.4.x and check systems for unauthorized SSH access."
+    },
+    {
+      "cve_id": "CVE-2023-23397",
+      "vendor_project": "Microsoft",
+      "product": "Outlook",
+      "vulnerability_name": "Microsoft Outlook Privilege Escalation Vulnerability",
+      "date_added": "2023-03-15",
+      "short_description": "Microsoft Outlook contains a privilege escalation vulnerability that triggers NTLM authentication leaks.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2024-1709",
+      "vendor_project": "ConnectWise",
+      "product": "ScreenConnect",
+      "vulnerability_name": "ConnectWise ScreenConnect Authentication Bypass Vulnerability",
+      "date_added": "2024-02-21",
+      "short_description": "ConnectWise ScreenConnect contains an authentication bypass vulnerability using an alternate path or channel.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2024-21887",
+      "vendor_project": "Ivanti",
+      "product": "Connect Secure and Policy Secure",
+      "vulnerability_name": "Ivanti Connect Secure Command Injection Vulnerability",
+      "date_added": "2024-01-11",
+      "short_description": "A command injection vulnerability in the web component of Ivanti Connect Secure allows an authenticated administrator to execute arbitrary commands.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2023-4863",
+      "vendor_project": "Google / libwebp",
+      "product": "libwebp",
+      "vulnerability_name": "libwebp Heap Buffer Overflow Vulnerability",
+      "date_added": "2023-09-13",
+      "short_description": "libwebp contains a heap buffer overflow in WebP image processing that allows arbitrary code execution.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2023-38831",
+      "vendor_project": "RARLAB",
+      "product": "WinRAR",
+      "vulnerability_name": "WinRAR Arbitrary Code Execution Vulnerability",
+      "date_added": "2023-08-24",
+      "short_description": "WinRAR contains an arbitrary code execution vulnerability when processing ZIP archives.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2022-22965",
+      "vendor_project": "VMware / Spring",
+      "product": "Spring Framework",
+      "vulnerability_name": "Spring Framework Remote Code Execution Vulnerability (Spring4Shell)",
+      "date_added": "2022-04-04",
+      "short_description": "Spring Framework contains an unauthenticated remote code execution vulnerability.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2023-34362",
+      "vendor_project": "Progress Software",
+      "product": "MOVEit Transfer",
+      "vulnerability_name": "Progress MOVEit Transfer SQL Injection Vulnerability",
+      "date_added": "2023-06-02",
+      "short_description": "MOVEit Transfer contains an SQL injection vulnerability that allows unauthenticated access to database content.",
+      "required_action": "Apply updates per vendor instructions."
+    },
+    {
+      "cve_id": "CVE-2023-4966",
+      "vendor_project": "Citrix",
+      "product": "NetScaler ADC and Gateway",
+      "vulnerability_name": "Citrix NetScaler ADC and Gateway Sensitive Information Disclosure (Citrix Bleed)",
+      "date_added": "2023-10-18",
+      "short_description": "Citrix NetScaler ADC and Gateway contain a buffer overflow vulnerability that allows memory disclosure.",
+      "required_action": "Apply updates per vendor instructions."
+    }
+  ]
+}

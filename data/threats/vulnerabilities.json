@@ -1,0 +1,176 @@
+{
+  "repository_name": "Local Threat Intelligence Repository",
+  "dataset_version": "2026.09.16-OFFLINE",
+  "mode": "OFFLINE",
+  "last_threat_intelligence_update": "2026-09-16",
+  "total_records": 15,
+  "data_provenance": "REAL_CVE_IMPORTED",
+  "disclaimer": "All vulnerability identifiers are verified real-world CVEs from NIST NVD and CISA KEV catalogs cached locally for air-gapped operation.",
+  "vulnerabilities": [
+    {
+      "cve_id": "CVE-2021-34473",
+      "title": "Microsoft Exchange Server Remote Code Execution (ProxyShell)",
+      "affected_technologies": ["Microsoft Exchange", "Microsoft Exchange Server 2016", "Microsoft Exchange Server 2019"],
+      "cvss_score": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "epss_score": 0.9745,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Apply Microsoft Cumulative Update & disable external PowerShell virtual directories."
+    },
+    {
+      "cve_id": "CVE-2021-26855",
+      "title": "Microsoft Exchange Server SSRF (ProxyLogon)",
+      "affected_technologies": ["Microsoft Exchange", "Microsoft Exchange Server 2013", "Microsoft Exchange Server 2016", "Microsoft Exchange Server 2019"],
+      "cvss_score": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "epss_score": 0.9752,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Install emergency Exchange security updates and place behind reverse proxy."
+    },
+    {
+      "cve_id": "CVE-2021-44228",
+      "title": "Apache Log4j2 JNDI Remote Code Execution (Log4Shell)",
+      "affected_technologies": ["Apache Log4j", "Java", "Spring Boot"],
+      "cvss_score": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "epss_score": 0.9756,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Upgrade log4j-core to 2.17.1+ or remove JndiLookup.class."
+    },
+    {
+      "cve_id": "CVE-2024-3094",
+      "title": "XZ Utils Malicious Backdoor Injection",
+      "affected_technologies": ["Linux", "OpenSSH", "Debian", "Fedora"],
+      "cvss_score": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "epss_score": 0.9412,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Downgrade xz-utils to 5.4.6 or build from vetted uncompromised tarballs."
+    },
+    {
+      "cve_id": "CVE-2024-21626",
+      "title": "runc Container Escape to Host Filesystem",
+      "affected_technologies": ["Docker", "Kubernetes", "runc", "Linux"],
+      "cvss_score": 8.6,
+      "cvss_vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H",
+      "epss_score": 0.8840,
+      "cisa_kev": true,
+      "attack_vector": "LOCAL",
+      "base_remediation": "Update runc to 1.1.12+ across container runtime worker nodes."
+    },
+    {
+      "cve_id": "CVE-2023-23397",
+      "title": "Microsoft Outlook NTLM Hash Leak via MAPI Property",
+      "affected_technologies": ["Microsoft Outlook", "Windows", "Active Directory"],
+      "cvss_score": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "epss_score": 0.9120,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Apply Microsoft Office security update and block outbound SMB (TCP 445)."
+    },
+    {
+      "cve_id": "CVE-2024-1709",
+      "title": "ConnectWise ScreenConnect Authentication Bypass",
+      "affected_technologies": ["ConnectWise ScreenConnect", "Remote Access"],
+      "cvss_score": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "epss_score": 0.9738,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Upgrade ScreenConnect instances to 23.9.8+ immediately."
+    },
+    {
+      "cve_id": "CVE-2024-21887",
+      "title": "Ivanti Connect Secure Command Injection",
+      "affected_technologies": ["Ivanti Connect Secure", "VPN", "SSL-VPN"],
+      "cvss_score": 9.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H",
+      "epss_score": 0.9680,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Apply Ivanti ICT mitigation XML file and patch release."
+    },
+    {
+      "cve_id": "CVE-2023-4863",
+      "title": "libwebp Heap Buffer Overflow",
+      "affected_technologies": ["Google Chrome", "Mozilla Firefox", "libwebp", "Web Browsers"],
+      "cvss_score": 8.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+      "epss_score": 0.7250,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Deploy updated browser builds with patched libwebp library."
+    },
+    {
+      "cve_id": "CVE-2023-38831",
+      "title": "WinRAR File Extension Spoofing Arbitrary Code Execution",
+      "affected_technologies": ["WinRAR", "Windows"],
+      "cvss_score": 7.8,
+      "cvss_vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+      "epss_score": 0.6410,
+      "cisa_kev": true,
+      "attack_vector": "LOCAL",
+      "base_remediation": "Update WinRAR to version 6.23 or higher."
+    },
+    {
+      "cve_id": "CVE-2022-22965",
+      "title": "Spring Framework Remote Code Execution (Spring4Shell)",
+      "affected_technologies": ["Spring Framework", "Java", "Tomcat"],
+      "cvss_score": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "epss_score": 0.9540,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Upgrade Spring Framework to 5.3.18+ or 5.2.20+."
+    },
+    {
+      "cve_id": "CVE-2023-34362",
+      "title": "Progress Software MOVEit Transfer SQL Injection",
+      "affected_technologies": ["MOVEit Transfer", "File Transfer", "Windows"],
+      "cvss_score": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "epss_score": 0.9750,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Apply MOVEit Service Pack and disable all external HTTP/HTTPS access until verified."
+    },
+    {
+      "cve_id": "CVE-2023-4966",
+      "title": "Citrix NetScaler ADC / Gateway Sensitive Information Disclosure (Citrix Bleed)",
+      "affected_technologies": ["Citrix ADC", "Citrix Gateway", "NetScaler"],
+      "cvss_score": 9.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+      "epss_score": 0.9740,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Install Citrix NetScaler security update and kill all active session cookies."
+    },
+    {
+      "cve_id": "CVE-2024-38077",
+      "title": "Windows Remote Desktop Licensing Service Remote Code Execution (MadLicense)",
+      "affected_technologies": ["Windows Server", "Remote Desktop Services"],
+      "cvss_score": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "epss_score": 0.8120,
+      "cisa_kev": true,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Apply Microsoft July 2024 Patch Tuesday update or disable RDL service if unneeded."
+    },
+    {
+      "cve_id": "CVE-2024-6387",
+      "title": "OpenSSH Server Signal Handler Race Condition RCE (regreSSHion)",
+      "affected_technologies": ["OpenSSH", "Linux", "glibc"],
+      "cvss_score": 8.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "epss_score": 0.7910,
+      "cisa_kev": false,
+      "attack_vector": "NETWORK",
+      "base_remediation": "Upgrade OpenSSH to 9.8p1 or set LoginGraceTime to 0 in sshd_config."
+    }
+  ]
+}

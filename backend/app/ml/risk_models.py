@@ -198,14 +198,10 @@ class FullAIRiskPipeline:
         incident_count: Optional[int] = 0
     ) -> Dict[str, Any]:
         """
-<<<<<<< HEAD
-        Executes full prediction pipeline:
-        asset + vulnerability -> P1/P2/P3/P4 -> conflict analysis -> meta-model -> raw probability -> calibrator -> calibrated probability -> EAL
-=======
-        Executes full AI workflow:
-        Uses the 5 trained production XGBoost models:
-        NVD/EPSS/KEV/MITRE -> Production XGBoost Base Models (P1-P4) -> Meta Model 5 -> Org-Specific Adaptation
->>>>>>> 244a01e0fcc9e5c68f6a2c770a4e2804c1f0662c
+        Executes full AI prediction pipeline:
+        asset + vulnerability -> P1/P2/P3/P4 (Production XGBoost Base Models)
+        -> conflict analysis -> Meta Model 5 -> Platt calibration
+        -> calibrated probability -> EAL
         """
         try:
             from app.ml.production_loader import production_ml_engine
@@ -243,42 +239,26 @@ class FullAIRiskPipeline:
             p3 = IndividualRiskModels.model_3_cisa_kev(is_cisa_kev)
             p4 = IndividualRiskModels.model_4_mitre_attack(mitre_technique)
 
-<<<<<<< HEAD
-        meta_result = MetaModelEnsemble.predict_meta(
-            p1=p1,
-            p2=p2,
-            p3=p3,
-            p4=p4,
-            asset_criticality=asset_criticality if asset_criticality is not None else 5.0,
-            exposure_level=exposure_level or "INTERNAL",
-            incident_count=incident_count if incident_count is not None else 0
-        )
-        raw_p = meta_result["raw_probability"]
-        calibrated_p = meta_result["calibrated_probability"]
-
-        return {
-            "p1_nvd": p1,
-            "p2_epss": p2,
-            "p3_cisa_kev": p3,
-            "p4_mitre_attack": p4,
-            "raw_probability": raw_p,
-            "calibrated_probability": calibrated_p,
-            "meta_exploitation_probability": raw_p,
-            "organization_adapted_probability": calibrated_p,
-            "conflict_information": meta_result["conflict_analysis"]
-        }
-=======
-            meta_p = MetaModelEnsemble.combine_predictions(p1, p2, p3, p4)
-            org_adapted_p = OrganizationSpecificRiskModel.adapt_to_organization(
-                meta_p, asset_criticality, exposure_level, incident_count
+            meta_result = MetaModelEnsemble.predict_meta(
+                p1=p1,
+                p2=p2,
+                p3=p3,
+                p4=p4,
+                asset_criticality=asset_criticality if asset_criticality is not None else 5.0,
+                exposure_level=exposure_level or "INTERNAL",
+                incident_count=incident_count if incident_count is not None else 0
             )
+            raw_p = meta_result["raw_probability"]
+            calibrated_p = meta_result["calibrated_probability"]
 
             return {
                 "p1_nvd": p1,
                 "p2_epss": p2,
                 "p3_cisa_kev": p3,
                 "p4_mitre_attack": p4,
-                "meta_exploitation_probability": meta_p,
-                "organization_adapted_probability": org_adapted_p
+                "raw_probability": raw_p,
+                "calibrated_probability": calibrated_p,
+                "meta_exploitation_probability": raw_p,
+                "organization_adapted_probability": calibrated_p,
+                "conflict_information": meta_result["conflict_analysis"]
             }
->>>>>>> 244a01e0fcc9e5c68f6a2c770a4e2804c1f0662c

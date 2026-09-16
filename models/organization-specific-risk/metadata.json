@@ -1,0 +1,41 @@
+{
+  "model_name": "organization-specific-risk",
+  "version": "0.1.0-STAGED_INTERFACE",
+  "status": "FRAMEWORK_STAGED_AWAITING_META_MODEL_INTEGRATION",
+  "is_trained": false,
+  "architecture_role": "Layer 2 - Specific Risk & EAL Quantification",
+  "pipeline_flow": "P1 + P2 + P3 + P4 -> Meta Model -> Organization-Specific Risk Model -> EAL -> Investment Optimizer",
+  "upstream_dependencies": {
+    "sub_models": ["P1", "P2", "P3", "P4"],
+    "meta_model": {
+      "status": "AWAITING_EXTERNAL_TEAM_SCHEMA",
+      "contract_file": "META_MODEL_INTEGRATION_CONTRACT.md",
+      "model_path": null
+    },
+    "posture_baseline_model": {
+      "status": "AVAILABLE_SURROGATE",
+      "model_path": "models/organization-risk/model.onnx",
+      "role": "Optional organization posture baseline prior"
+    }
+  },
+  "downstream_consumers": [
+    "Expected Annual Loss (EAL) Calculator",
+    "Knapsack Cyber Investment Optimizer (PuLP)",
+    "Immutable Blockchain Audit Ledger"
+  ],
+  "inputs_required_count": 11,
+  "outputs_supported": [
+    "probability_of_event",
+    "financial_impact_inr",
+    "expected_annual_loss_inr",
+    "risk_level",
+    "model_confidence",
+    "top_risk_drivers"
+  ],
+  "contract_enforcement": {
+    "strict_mode": true,
+    "fail_on_missing_meta_model": true,
+    "exception_type": "IntegrationContractError"
+  },
+  "notes": "Model training and synthetic data generation are deliberately deferred until the actual Meta Model interface and real/defensible loss targets are finalized."
+}

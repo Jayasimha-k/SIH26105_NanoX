@@ -1,0 +1,47 @@
+{
+  "repository": "Local Threat Events Database",
+  "mode": "OFFLINE",
+  "last_updated": "2026-09-16",
+  "events": [
+    {
+      "event_id": "EVT-HIST-2024-001",
+      "timestamp": "2024-03-29T14:30:00Z",
+      "threat_actor": "Nation-State Supply Chain Infiltrator",
+      "associated_cve": "CVE-2024-3094",
+      "target_component": "OpenSSH / xz-utils",
+      "description": "Backdoor discovered in upstream tarballs enabling unauthorized remote root bypass.",
+      "severity": "CRITICAL",
+      "relevance_scope": ["Linux", "OpenSSH"]
+    },
+    {
+      "event_id": "EVT-HIST-2024-002",
+      "timestamp": "2024-02-19T08:15:00Z",
+      "threat_actor": "Ransomware Affiliates (LockBit, BlackCat)",
+      "associated_cve": "CVE-2024-1709",
+      "target_component": "ConnectWise ScreenConnect",
+      "description": "Mass automated mass-exploitation of ScreenConnect instances via path bypass setup wizard.",
+      "severity": "CRITICAL",
+      "relevance_scope": ["ConnectWise ScreenConnect", "Remote Access"]
+    },
+    {
+      "event_id": "EVT-HIST-2023-003",
+      "timestamp": "2023-10-25T11:00:00Z",
+      "threat_actor": "LockBit 3.0",
+      "associated_cve": "CVE-2023-4966",
+      "target_component": "Citrix NetScaler Gateway",
+      "description": "Exploitation of Citrix Bleed session hijacking bypassing multi-factor authentication.",
+      "severity": "CRITICAL",
+      "relevance_scope": ["Citrix ADC", "Citrix Gateway"]
+    },
+    {
+      "event_id": "EVT-HIST-2023-004",
+      "timestamp": "2023-06-01T16:45:00Z",
+      "threat_actor": "CL0P Ransomware Gang",
+      "associated_cve": "CVE-2023-34362",
+      "target_component": "MOVEit Transfer",
+      "description": "Zero-day SQL injection exploitation leading to systemic enterprise data theft across healthcare and finance.",
+      "severity": "CRITICAL",
+      "relevance_scope": ["MOVEit Transfer", "File Transfer"]
+    }
+  ]
+}

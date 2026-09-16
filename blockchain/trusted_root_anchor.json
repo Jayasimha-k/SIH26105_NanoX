@@ -1,0 +1,10 @@
+{
+  "anchor_version": "1.0.0",
+  "blockchain_id": "SIH-26105-OFFLINE-LEDGER",
+  "genesis_block_index": 0,
+  "genesis_previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "genesis_block_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "algorithm": "SHA-256",
+  "anchor_created_at": "2026-09-16T10:00:00Z",
+  "security_notice": "CRITICAL AUDIT NOTE: Storing the blockchain within the same SQLite database file as application data does NOT inherently prevent an adversary with filesystem write access from modifying both records. This out-of-band trusted root anchor file serves as an external cryptographic baseline to verify genesis linkage and detect unauthorized database alterations."
+}

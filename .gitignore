@@ -29,10 +29,21 @@ wheels/
 # --- Python Virtual Environments ---
 venv/
 .venv/
+.venv*/
 env/
 ENV/
 env.bak/
 venv.bak/
+.venv_org_risk/
+
+# --- Archives & Large Raw Zips ---
+*.zip
+*.tar.gz
+CyberOptRQ_Production_Models-20260916T120030Z-1-001/
+
+# --- Hyperledger Fabric Private Crypto Material ---
+fabric/crypto-config/
+crypto-config/
 
 # --- Node.js & Frontend ---
 node_modules/

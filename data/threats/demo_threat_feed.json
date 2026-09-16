@@ -1,0 +1,67 @@
+{
+  "feed_type": "SIMULATION / DEMO DATA",
+  "notice": "All events in this feed are explicitly simulated for the SIH 2026 air-gapped demonstration. Simulated events use DEMO-THREAT-* identifiers.",
+  "target_organization": "Hospital A",
+  "simulation_version": "1.0.0",
+  "events": [
+    {
+      "event_id": "DEMO-THREAT-2026-001",
+      "step": 1,
+      "event_type": "VULNERABILITY_DISCOVERY",
+      "timestamp": "2026-09-16T10:00:00Z",
+      "title": "Simulated Active Zero-Day Threat Discovered in Microsoft Exchange",
+      "affected_technology": "Microsoft Exchange",
+      "reference_cve": "CVE-2021-34473",
+      "cvss_score": 9.8,
+      "epss_score": 0.45,
+      "cisa_kev": true,
+      "description": "High-severity vulnerability discovered in mail and calendar routing modules allowing remote pre-authentication access.",
+      "threat_status": "DISCOVERED_IN_THE_WILD"
+    },
+    {
+      "event_id": "DEMO-THREAT-2026-002",
+      "step": 2,
+      "event_type": "EXPLOITABILITY_ESCALATION",
+      "timestamp": "2026-09-16T10:15:00Z",
+      "title": "Public Weaponized Exploit Code Published",
+      "affected_technology": "Microsoft Exchange",
+      "reference_cve": "CVE-2021-34473",
+      "cvss_score": 9.8,
+      "epss_score": 0.965,
+      "cisa_kev": true,
+      "description": "Public proof-of-concept exploit published on GitHub; automated botnet scanning detected targeting port 443.",
+      "threat_status": "ACTIVE_WEAPONIZATION"
+    },
+    {
+      "event_id": "DEMO-THREAT-2026-003",
+      "step": 3,
+      "event_type": "REMEDIATION_ADVISORY",
+      "timestamp": "2026-09-16T10:30:00Z",
+      "title": "Emergency Vendor Patch & Compensating Control Advisory",
+      "affected_technology": "Microsoft Exchange",
+      "reference_cve": "CVE-2021-34473",
+      "cvss_score": 9.8,
+      "epss_score": 0.965,
+      "cisa_kev": true,
+      "description": "Vendor publishes out-of-band hotfix; recommends immediate air-gapping and endpoint detection isolation.",
+      "recommended_action": "Apply Security Hotfix KB-5001779 and enable Zero-Trust Microsegmentation.",
+      "threat_status": "PATCH_AVAILABLE"
+    },
+    {
+      "event_id": "DEMO-THREAT-2026-004",
+      "step": 4,
+      "event_type": "REMEDIATION_EXECUTION",
+      "timestamp": "2026-09-16T10:45:00Z",
+      "title": "Hospital A Applies Patch and Deploys Microsegmentation",
+      "affected_technology": "Microsoft Exchange",
+      "target_asset": "SERVER-001",
+      "reference_cve": "CVE-2021-34473",
+      "remediation_status": "PATCH_APPLIED_AND_VERIFIED",
+      "controls_applied": [
+        "Automated Patch Remediation Pipeline",
+        "Network Microsegmentation Isolation"
+      ],
+      "threat_status": "REMEDIATED"
+    }
+  ]
+}

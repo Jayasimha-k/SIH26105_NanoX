@@ -1,0 +1,19 @@
+{
+  "name": "cyber-risk-audit-chaincode",
+  "version": "1.0.0",
+  "description": "Hyperledger Fabric Smart Contract for Cyber Risk Quantification and Investment Audit Trail",
+  "main": "cyber_risk_audit.js",
+  "engines": {
+    "node": ">=16",
+    "npm": ">=8"
+  },
+  "scripts": {
+    "start": "fabric-chaincode-node start"
+  },
+  "dependencies": {
+    "fabric-contract-api": "^2.5.0",
+    "fabric-shim": "^2.5.0"
+  },
+  "author": "SIH 2026 Team NanoX (PS-26105)",
+  "license": "Apache-2.0"
+}
