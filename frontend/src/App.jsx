@@ -25,6 +25,7 @@ export default function App({ isClerkConfigured = true }) {
   const [wsStatus, setWsStatus] = useState('DISCONNECTED');
   const [demoAuthenticated, setDemoAuthenticated] = useState(false);
   const [wsClientRef, setWsClientRef] = useState(null);
+  const [isMessengerOpen, setIsMessengerOpen] = useState(false);
 
   // Realtime Inter-Team Messages State with localStorage Persistence
   const [interTeamMessages, setInterTeamMessages] = useState(() => {
@@ -156,31 +157,27 @@ export default function App({ isClerkConfigured = true }) {
     );
   }
 
-  // Role-Tailored Top Banner Config
+  // Role-Tailored Top Workspace Config
   const roleBanners = {
     CISO: {
-      title: "CISO Executive Governance & Decision Center",
-      subtitle: "Focus: Financial Loss Quantification (FAIR), ROSI Optimization, CISO Approval Desk & Compliance",
+      title: "CISO Executive Workspace",
       icon: ShieldCheck,
-      color: "border-[#A34054] bg-[#141124]"
+      color: "border-slate-200 bg-white"
     },
     SOC: {
-      title: "SOC Threat Intelligence & Attack Surface Operations",
-      subtitle: "Focus: Live CVE Ingestion, NVD/EPSS/KEV Vectors, MITRE ATT&CK TTP & Asset Threat Maps",
+      title: "SOC Operations Center",
       icon: Database,
-      color: "border-[#ED9E5B]/60 bg-[#141124]"
+      color: "border-slate-200 bg-white"
     },
     Security: {
-      title: "Security Lead Risk Modeling & Optimization Studio",
-      subtitle: "Focus: 4-Model AI Ensembles, PuLP Linear Program Solver & Continuous Recalculation",
+      title: "Security Architecture & Modeling",
       icon: Eye,
-      color: "border-[#662249] bg-[#141124]"
+      color: "border-slate-200 bg-white"
     },
     IT: {
-      title: "IT Remediation & Control Implementation Queue",
-      subtitle: "Focus: Executing Approved Controls, Deployment Tracking & Realtime Inter-Team Messenger",
+      title: "IT Remediation & SecOps",
       icon: Wrench,
-      color: "border-emerald-500/50 bg-[#141124]"
+      color: "border-slate-200 bg-white"
     }
   };
 
@@ -190,11 +187,27 @@ export default function App({ isClerkConfigured = true }) {
   const renderActiveView = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardView overview={overview} onNavigate={setActiveTab} />;
+        return (
+          <DashboardView
+            overview={overview}
+            onNavigate={setActiveTab}
+            recommendations={recommendations}
+            onRefresh={reloadData}
+          />
+        );
       case 'threat_intel':
-        return <DetectView vulnerabilities={vulnerabilities} assets={assets} incidents={incidents} controls={controls} />;
+      case 'vulnerabilities':
       case 'asset_inventory':
-        return <DetectView vulnerabilities={vulnerabilities} assets={assets} incidents={incidents} controls={controls} />;
+      case 'ai_risk':
+      case 'incidents':
+        return (
+          <DetectView
+            vulnerabilities={vulnerabilities}
+            assets={assets}
+            incidents={incidents}
+            controls={controls}
+          />
+        );
       case 'ai_quantification':
         return (
           <div className="space-y-6">
@@ -202,48 +215,88 @@ export default function App({ isClerkConfigured = true }) {
             <QuantifyView overview={overview} />
           </div>
         );
+      case 'model_evidence':
+        return (
+          <PredictView assets={assets} vulnerabilities={vulnerabilities} />
+        );
       case 'optimizer':
-        return <OptimizeRecommendView recommendations={recommendations} onNavigate={setActiveTab} />;
+      case 'recommendations':
+        return (
+          <OptimizeRecommendView
+            recommendations={recommendations}
+            onNavigate={setActiveTab}
+          />
+        );
       case 'approvals':
-        return <ApproveView recommendations={recommendations} currentRole={currentRole} onRefresh={reloadData} />;
+        return (
+          <ApproveView
+            recommendations={recommendations}
+            currentRole={currentRole}
+            onRefresh={reloadData}
+          />
+        );
       case 'execution':
-        return <ExecuteView recommendations={recommendations} currentRole={currentRole} onRefresh={reloadData} />;
+      case 'approved_controls':
+      case 'tracking':
+        return (
+          <ExecuteView
+            recommendations={recommendations}
+            currentRole={currentRole}
+            onRefresh={reloadData}
+          />
+        );
       case 'recalculate':
-        return <VerifyRecalculateView recommendations={recommendations} onRefresh={reloadData} />;
+        return (
+          <VerifyRecalculateView
+            recommendations={recommendations}
+            onRefresh={reloadData}
+          />
+        );
       case 'audit':
-        return <AuditView auditBlocks={auditBlocks} onRefresh={reloadData} />;
+        return (
+          <AuditView
+            auditBlocks={auditBlocks}
+            onRefresh={reloadData}
+          />
+        );
       case 'business_value':
         return <BusinessValueView />;
       default:
-        return <DashboardView overview={overview} onNavigate={setActiveTab} />;
+        return (
+          <DashboardView
+            overview={overview}
+            onNavigate={setActiveTab}
+            recommendations={recommendations}
+            onRefresh={reloadData}
+          />
+        );
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A0914] text-[#E9BCB9] relative">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 relative">
       <Header
         currentRole={currentRole}
         wsStatus={wsStatus}
         onSignOut={handleSignOut}
         isClerkConfigured={isClerkConfigured}
+        onToggleMessenger={() => setIsMessengerOpen(!isMessengerOpen)}
+        unreadMessageCount={interTeamMessages.length}
       />
       <div className="flex flex-1">
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
         <main className="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto w-full space-y-6">
           {/* Role-Tailored Custom Interface Banner */}
-          <div className={`p-4 rounded-xl border flex items-center justify-between shadow-lg ${activeBanner.color}`}>
+          <div className="p-4 rounded-2xl border border-slate-200 bg-white flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-[#0D0B18] rounded-xl border border-[#44174E] text-[#ED9E5B]">
+              <div className="p-2.5 bg-blue-50 rounded-xl border border-blue-100 text-blue-600">
                 <BannerIcon className="w-5 h-5" />
               </div>
-              <div>
-                <span className="cyber-badge text-[9px] mb-0.5">{currentRole} DEDICATED WORKSPACE</span>
-                <h2 className="text-sm font-bold text-[#E9BCB9]">{activeBanner.title}</h2>
-                <p className="text-[11px] text-[#E9BCB9]/70">{activeBanner.subtitle}</p>
-              </div>
+              <h2 className="text-base font-bold text-slate-900">{activeBanner.title}</h2>
             </div>
-            <div className="hidden md:flex items-center gap-2 font-mono text-xs text-[#ED9E5B] bg-[#0D0B18] px-3 py-1.5 rounded-lg border border-[#44174E]">
-              <span>WebSocket Sync: Active</span>
+            <div className="hidden sm:flex items-center gap-2 font-medium text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200/60">
+              <span className="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
+              <span>Active</span>
             </div>
           </div>
 
@@ -251,12 +304,14 @@ export default function App({ isClerkConfigured = true }) {
         </main>
       </div>
 
-      {/* Realtime Cross-Role Inter-Team Communication Layer */}
+      {/* On-Demand Cross-Role Inter-Team Communication Drawer */}
       <InterTeamMessenger
         currentRole={currentRole}
         messages={interTeamMessages}
         onSendMessage={handleSendMessage}
         onNavigate={setActiveTab}
+        isOpen={isMessengerOpen}
+        onClose={() => setIsMessengerOpen(false)}
       />
     </div>
   );

@@ -102,6 +102,14 @@ class RiskPredictResponse(BaseModel):
     organization_adapted_probability: float
     financial_impact: float
     eal_pre_control: float
+    p1_class: Optional[int] = None
+    p2_class: Optional[int] = None
+    p3_class: Optional[int] = None
+    p4_class: Optional[int] = None
+    meta_prediction_class: Optional[int] = None
+    probability_horizon: Optional[str] = "Annualized Expected Exploitation Frequency"
+    models_used: Optional[List[str]] = []
+    architecture: Optional[str] = "P1 + P2 + P3 + P4 -> Meta Model 5 -> P5"
 
 # Optimization Schemas
 class OptimizationRequest(BaseModel):

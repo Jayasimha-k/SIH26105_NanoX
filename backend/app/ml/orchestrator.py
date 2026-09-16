@@ -41,36 +41,65 @@ class MLOrchestrator:
     def run_pipeline(self, features: Dict[str, Any]) -> Dict[str, Any]:
         """
         Full 2-stage execution flow:
-        1. Preprocess features & run base models (Model 1..4) concurrently/sequentially
+        1. Preprocess features & run base models (Model 1..4) using trained XGBoost models
         2. Construct meta-model input vector from base model outputs
-        3. Run Meta-Model to yield final probability score
+        3. Run Meta-Model to yield final calibrated probability score
         """
-        base_predictions = {}
-        
-        # Stage 1: Base Model Inferences
-        for name, adapter in self.base_models.items():
-            try:
-                score = adapter.predict(features)
-                base_predictions[name] = round(score, 4)
-            except Exception as e:
-                logger.error(f"Error predicting with {name}: {e}")
-                base_predictions[name] = 0.50
-
-        # Stage 2: Meta Model Synthesis
-        meta_input = {**features, **base_predictions}
         try:
-            final_prob = self.meta_model.predict(meta_input)
+            from app.ml.production_loader import production_ml_engine
+            vuln_dict = {
+                "cvss_score": features.get("cvss_score", 7.5),
+                "cwe_id": features.get("cwe_id", "CWE-787"),
+                "epss_score": features.get("epss_score", 0.5),
+                "cisa_kev": features.get("cisa_kev", False),
+                "mitre_attack_technique": features.get("mitre_attack_technique", "T1190"),
+                "exploitability_score": features.get("exploitability_score", 2.8),
+                "impact_score": features.get("impact_score", 4.2),
+                "attack_vector": features.get("attack_vector", "NETWORK")
+            }
+            asset_dict = {
+                "criticality_score": features.get("criticality_score", 5.0),
+                "exposure_level": features.get("exposure_level", "INTERNAL")
+            }
+            incident_count = features.get("incident_count", 0)
+            res = production_ml_engine.predict_all(vuln_dict, asset_dict, incident_count)
+            return {
+                "base_model_predictions": {
+                    "model_1": res["p1_nvd"],
+                    "model_2": res["p2_epss"],
+                    "model_3": res["p3_org_risk"],
+                    "model_4": res["p4_mitre_attack"]
+                },
+                "meta_model_prediction": res["meta_exploitation_probability"],
+                "final_exploitation_probability": res["organization_adapted_probability"],
+                "models_used": res.get("models_used", []),
+                "architecture": res.get("architecture", "")
+            }
         except Exception as e:
-            logger.error(f"Error predicting with meta_model: {e}")
-            final_prob = sum(base_predictions.values()) / len(base_predictions)
+            logger.warning(f"Production ML Engine fallback triggered: {e}")
+            base_predictions = {}
+            for name, adapter in self.base_models.items():
+                try:
+                    score = adapter.predict(features)
+                    base_predictions[name] = round(score, 4)
+                except Exception as ex:
+                    logger.error(f"Error predicting with {name}: {ex}")
+                    base_predictions[name] = 0.50
 
-        final_prob = round(float(final_prob), 4)
+            meta_input = {**features, **base_predictions}
+            try:
+                final_prob = self.meta_model.predict(meta_input)
+            except Exception as ex:
+                logger.error(f"Error predicting with meta_model: {ex}")
+                final_prob = sum(base_predictions.values()) / len(base_predictions)
 
-        return {
-            "base_model_predictions": base_predictions,
-            "meta_model_prediction": final_prob,
-            "final_exploitation_probability": final_prob
-        }
+            final_prob = round(float(final_prob), 4)
+
+            return {
+                "base_model_predictions": base_predictions,
+                "meta_model_prediction": final_prob,
+                "final_exploitation_probability": final_prob
+            }
 
     def get_all_model_metadata(self) -> Dict[str, Any]:
         """Returns metadata configuration for all registered models."""

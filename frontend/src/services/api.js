@@ -30,6 +30,7 @@ export const api = {
   // Step 2: Predict AI Models (P1-P4 Ensemble & Org Adapt)
   predictRisk: (asset_id, vulnerability_id) =>
     fetchJSON('/predict/run', { method: 'POST', body: JSON.stringify({ asset_id, vulnerability_id }) }),
+  getMLModelDiagnostics: () => fetchJSON('/predict/diagnostics'),
 
   // Step 3: Quantify Financial Risk (EAL)
   getQuantificationOverview: () => fetchJSON('/quantify/overview'),

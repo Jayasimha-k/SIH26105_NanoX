@@ -19,9 +19,12 @@ CyberOpt-RQ is a full-stack, production-style platform for **AI-powered continuo
    - Interactive threshold slider and dependency enforcement rules.
 4. **What-If Sensitivity Analysis**:
    - Dynamic threat surge multipliers and active control toggles for instant risk recalculation.
-5. **Cryptographic Blockchain Audit Ledger (`backend/app/services/ledger.py`)**:
-   - SHA-256 block-chaining engine recording recommendation decisions, CISO approvals, IT execution, and verification steps.
-   - Built-in tamper verification tool.
+5. **Decentralized Consortium Blockchain Network (`backend/app/services/blockchain/`)**:
+   - **4 Distributed P2P Nodes**: CISO Authority (8001), SOC Intel (8002), IT Auditor (8003), and Compliance Authority (8004), each maintaining an independent ledger and mempool.
+   - **BFT Proof-of-Work Consensus**: Real nonce iteration, mining difficulty target (`00...`), and multi-node Byzantine quorum voting.
+   - **ECDSA-secp256k1 Asymmetric Cryptography**: Transactions cryptographically signed with stakeholder private keys and validated against public keys.
+   - **Smart Contracts Engine**: On-chain governance enforcing risk policies (`SC-001`), multi-signature requirements (`SC-002`), and SLA compliance (`SC-003`).
+   - **Byzantine Self-Healing & Tamper Resistance**: Interactive demo showing rogue node detection via majority voting (>50%) and auto-repairing tampered blocks.
 6. **Real-Time WebSockets (`backend/app/services/websocket_manager.py`)**:
    - Event pub/sub broadcasting live updates (`CONTROL_APPROVED`, `EXECUTION_UPDATED`, `VERIFICATION_COMPLETED`) across CISO, SOC, and IT clients.
 7. **Complete Dark-Theme React Dashboard (`frontend/`)**:
