@@ -44,17 +44,38 @@ class IndividualRiskModels:
     def model_4_mitre_attack(technique_id: Optional[str]) -> float:
         """
         Model 4 (P4): MITRE ATT&CK Technique Severity Model.
-        Quantifies attack technique severity (e.g. T1190 Exploit Public-Facing App, T1068 Privilege Escalation).
+        Quantifies attack technique severity:
+        - Critical Initial Access / Remote Code Execution: 0.75 - 0.90
+        - Execution, Persistence & Privilege Escalation: 0.40 - 0.65
+        - Discovery, Collection & Reconnaissance: 0.10 - 0.25
+        - Default / Unknown / Non-weaponized technique: 0.15
         """
-        tid = str(technique_id or "T1190").strip().upper()
-        high_severity_techniques = {
+        if not technique_id:
+            return 0.15
+        tid = str(technique_id).strip().upper()
+        technique_weights = {
+            # Critical Initial Access & Remote Exploitation (Tier 1)
             "T1190": 0.90,  # Exploit Public-Facing Application
-            "T1068": 0.85,  # Exploitation for Privilege Escalation
             "T1210": 0.88,  # Exploitation of Remote Services
-            "T1059": 0.75,  # Command and Scripting Interpreter
-            "T1078": 0.70   # Valid Accounts
+            "T1068": 0.82,  # Exploitation for Privilege Escalation
+            "T1566": 0.78,  # Phishing
+            "T1200": 0.75,  # Hardware Additions
+            # Execution & Lateral Movement (Tier 2)
+            "T1059": 0.65,  # Command and Scripting Interpreter
+            "T1078": 0.55,  # Valid Accounts
+            "T1053": 0.50,  # Scheduled Task/Job
+            "T1021": 0.60,  # Remote Services (RDP/SSH)
+            "T1555": 0.45,  # Credentials from Password Stores
+            # Discovery, Reconnaissance & Passive Collection (Tier 3)
+            "T1082": 0.18,  # System Information Discovery
+            "T1083": 0.15,  # File and Directory Discovery
+            "T1018": 0.20,  # Remote System Discovery
+            "T1046": 0.22,  # Network Service Discovery
+            "T1005": 0.25,  # Data from Local System
+            "T1016": 0.12,  # System Network Configuration Discovery
+            "T1033": 0.10,  # System Owner/User Discovery
         }
-        return high_severity_techniques.get(tid, 0.60)
+        return technique_weights.get(tid, 0.15)
 
 class MetaModelEnsemble:
     _adapter: Optional[BaseModelAdapter] = None
@@ -198,14 +219,8 @@ class FullAIRiskPipeline:
         incident_count: Optional[int] = 0
     ) -> Dict[str, Any]:
         """
-<<<<<<< HEAD
-        Executes full prediction pipeline:
-        asset + vulnerability -> P1/P2/P3/P4 -> conflict analysis -> meta-model -> raw probability -> calibrator -> calibrated probability -> EAL
-=======
-        Executes full AI workflow:
-        Uses the 5 trained production XGBoost models:
-        NVD/EPSS/KEV/MITRE -> Production XGBoost Base Models (P1-P4) -> Meta Model 5 -> Org-Specific Adaptation
->>>>>>> 244a01e0fcc9e5c68f6a2c770a4e2804c1f0662c
+        Executes full AI prediction workflow:
+        Uses the 5 trained production XGBoost models with conflict analysis and calibrated organization adaptation.
         """
         try:
             from app.ml.production_loader import production_ml_engine
@@ -215,24 +230,50 @@ class FullAIRiskPipeline:
                 "epss_score": epss_score,
                 "cisa_kev": is_cisa_kev,
                 "mitre_attack_technique": mitre_technique,
-                "exploitability_score": min(3.9, cvss_score * 0.35),
-                "impact_score": min(6.0, cvss_score * 0.65),
-                "attack_vector": "NETWORK" if cvss_score >= 7.0 else "LOCAL",
+                "exploitability_score": min(3.9, (cvss_score or 5.0) * 0.35),
+                "impact_score": min(6.0, (cvss_score or 5.0) * 0.65),
+                "attack_vector": "NETWORK" if (cvss_score or 5.0) >= 7.0 else "LOCAL",
                 "complexity": "LOW",
-                "privileges_required": "NONE" if cvss_score >= 8.0 else "LOW"
+                "privileges_required": "NONE" if (cvss_score or 5.0) >= 8.0 else "LOW"
             }
             asset_dict = {
                 "criticality_score": asset_criticality,
                 "exposure_level": exposure_level
             }
             res = production_ml_engine.predict_all(vuln_dict, asset_dict, incident_count)
+            p1 = res["p1_nvd"]
+            p2 = res["p2_epss"]
+            p3 = res["p3_org_risk"]
+            p4 = res["p4_mitre_attack"]
+            spread = max(p1, p2, p3, p4) - min(p1, p2, p3, p4)
+            conflict_reasons = []
+            if abs(p1 - p2) > 0.4:
+                conflict_reasons.append(f"CVSS severity (P1: {p1:.2f}) diverges significantly from EPSS probability (P2: {p2:.2f})")
+            if abs(p3 - p1) > 0.4:
+                conflict_reasons.append(f"Organizational exposure (P3: {p3:.2f}) diverges from theoretical severity (P1: {p1:.2f})")
+            
+            conflict_info = {
+                "has_conflict": spread >= 0.4,
+                "spread": round(spread, 4),
+                "conflict_reasons": conflict_reasons,
+                "evidence_freshness": "CURRENT (Synced Live)"
+            }
+
             return {
                 "p1_nvd": res["p1_nvd"],
+                "p1_class": res.get("p1_class", 1 if p1 >= 0.5 else 0),
                 "p2_epss": res["p2_epss"],
+                "p2_class": res.get("p2_class", 1 if p2 >= 0.5 else 0),
                 "p3_cisa_kev": res["p3_org_risk"],
+                "p3_class": res.get("p3_class", 1 if p3 >= 0.5 else 0),
                 "p4_mitre_attack": res["p4_mitre_attack"],
+                "p4_class": res.get("p4_class", 1 if p4 >= 0.5 else 0),
+                "raw_probability": res["meta_exploitation_probability"],
+                "calibrated_probability": res["organization_adapted_probability"],
                 "meta_exploitation_probability": res["meta_exploitation_probability"],
                 "organization_adapted_probability": res["organization_adapted_probability"],
+                "meta_prediction_class": res.get("meta_prediction_class", 1 if res["meta_exploitation_probability"] >= 0.5 else 0),
+                "conflict_information": conflict_info,
                 "models_used": res.get("models_used", []),
                 "architecture": res.get("architecture", "")
             }
@@ -243,42 +284,33 @@ class FullAIRiskPipeline:
             p3 = IndividualRiskModels.model_3_cisa_kev(is_cisa_kev)
             p4 = IndividualRiskModels.model_4_mitre_attack(mitre_technique)
 
-<<<<<<< HEAD
-        meta_result = MetaModelEnsemble.predict_meta(
-            p1=p1,
-            p2=p2,
-            p3=p3,
-            p4=p4,
-            asset_criticality=asset_criticality if asset_criticality is not None else 5.0,
-            exposure_level=exposure_level or "INTERNAL",
-            incident_count=incident_count if incident_count is not None else 0
-        )
-        raw_p = meta_result["raw_probability"]
-        calibrated_p = meta_result["calibrated_probability"]
-
-        return {
-            "p1_nvd": p1,
-            "p2_epss": p2,
-            "p3_cisa_kev": p3,
-            "p4_mitre_attack": p4,
-            "raw_probability": raw_p,
-            "calibrated_probability": calibrated_p,
-            "meta_exploitation_probability": raw_p,
-            "organization_adapted_probability": calibrated_p,
-            "conflict_information": meta_result["conflict_analysis"]
-        }
-=======
-            meta_p = MetaModelEnsemble.combine_predictions(p1, p2, p3, p4)
-            org_adapted_p = OrganizationSpecificRiskModel.adapt_to_organization(
-                meta_p, asset_criticality, exposure_level, incident_count
+            meta_result = MetaModelEnsemble.predict_meta(
+                p1=p1,
+                p2=p2,
+                p3=p3,
+                p4=p4,
+                asset_criticality=asset_criticality if asset_criticality is not None else 5.0,
+                exposure_level=exposure_level or "INTERNAL",
+                incident_count=incident_count if incident_count is not None else 0
             )
+            raw_p = meta_result["raw_probability"]
+            calibrated_p = meta_result["calibrated_probability"]
 
             return {
                 "p1_nvd": p1,
+                "p1_class": 1 if p1 >= 0.5 else 0,
                 "p2_epss": p2,
+                "p2_class": 1 if p2 >= 0.5 else 0,
                 "p3_cisa_kev": p3,
+                "p3_class": 1 if p3 >= 0.5 else 0,
                 "p4_mitre_attack": p4,
-                "meta_exploitation_probability": meta_p,
-                "organization_adapted_probability": org_adapted_p
+                "p4_class": 1 if p4 >= 0.5 else 0,
+                "raw_probability": raw_p,
+                "calibrated_probability": calibrated_p,
+                "meta_exploitation_probability": raw_p,
+                "organization_adapted_probability": calibrated_p,
+                "meta_prediction_class": 1 if raw_p >= 0.5 else 0,
+                "conflict_information": meta_result.get("conflict_analysis"),
+                "models_used": ["Analytical Model 1", "Analytical Model 2", "Analytical Model 3", "Analytical Model 4", "Meta Ensemble"],
+                "architecture": "Analytical P1-P4 -> Meta Weighted Ensemble -> Calibrated Adaptation"
             }
->>>>>>> 244a01e0fcc9e5c68f6a2c770a4e2804c1f0662c

@@ -10,23 +10,31 @@ logger = logging.getLogger(__name__)
 
 class PlattCalibrator:
     """
-    Sigmoid / Platt Probability Calibrator.
-    Maps raw model output scores/probabilities into empirical calibrated probabilities:
-    P(y=1 | s) = 1 / (1 + exp(-(a * s + b)))
+    Standard Sigmoid / Platt Probability Calibrator (Platt 1999).
+    Maps raw probability scores into calibrated probabilities via log-odds:
+    logit(s) = log(s / (1 - s))
+    P(y=1 | s) = 1 / (1 + exp(-(a * logit(s) + b)))
+    
+    When a=1, b=0, this is the exact identity mapping: P(y=1 | s) = s.
     """
 
-    def __init__(self, learning_rate: float = 0.05, max_iter: int = 1500, l2_reg: float = 0.001):
+    def __init__(self, learning_rate: float = 0.05, max_iter: int = 2000, l2_reg: float = 0.001):
         self.learning_rate = learning_rate
         self.max_iter = max_iter
         self.l2_reg = l2_reg
-        self.a: float = 1.0  # slope
-        self.b: float = 0.0  # intercept
+        self.a: float = 1.0  # slope (initially 1.0)
+        self.b: float = 0.0  # intercept (initially 0.0)
         self.is_fitted: bool = False
 
     @staticmethod
     def _sigmoid(z: np.ndarray) -> np.ndarray:
         z_clipped = np.clip(z, -30.0, 30.0)
         return 1.0 / (1.0 + np.exp(-z_clipped))
+
+    @staticmethod
+    def _logit(s: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+        s_clipped = np.clip(s, eps, 1.0 - eps)
+        return np.log(s_clipped / (1.0 - s_clipped))
 
     def fit(self, raw_scores: np.ndarray, y_true: np.ndarray) -> "PlattCalibrator":
         """
@@ -40,6 +48,8 @@ class PlattCalibrator:
         if n_samples == 0:
             raise ValueError("Empty calibration dataset provided.")
 
+        logits = self._logit(s)
+
         # Platt target regularizer (Platt 1999) to prevent extreme logit divergence
         n_pos = np.sum(y == 1)
         n_neg = np.sum(y == 0)
@@ -47,16 +57,16 @@ class PlattCalibrator:
         t_neg = 1.0 / (n_neg + 2.0)
         targets = np.where(y == 1, t_pos, t_neg)
 
-        # Gradient descent optimization
+        # Gradient descent optimization starting from identity (a=1, b=0)
         a = 1.0
         b = 0.0
 
         for _ in range(self.max_iter):
-            z = a * s + b
+            z = a * logits + b
             p = self._sigmoid(z)
             err = p - targets
 
-            grad_a = (1.0 / n_samples) * np.sum(err * s) + (self.l2_reg * a)
+            grad_a = (1.0 / n_samples) * np.sum(err * logits) + (self.l2_reg * (a - 1.0))
             grad_b = (1.0 / n_samples) * np.sum(err)
 
             a -= self.learning_rate * grad_a
@@ -70,11 +80,11 @@ class PlattCalibrator:
     def calibrate(self, raw_scores: np.ndarray) -> np.ndarray:
         """Applies fitted Platt calibration to raw probabilities/scores."""
         if not self.is_fitted:
-            # If unfitted, identity pass-through
             return np.clip(np.asarray(raw_scores, dtype=float), 0.0, 1.0)
         
         s = np.asarray(raw_scores, dtype=float)
-        z = self.a * s + self.b
+        logits = self._logit(s)
+        z = self.a * logits + self.b
         calibrated = self._sigmoid(z)
         return np.clip(calibrated, 0.0, 1.0)
 

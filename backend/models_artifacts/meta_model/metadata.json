@@ -2,7 +2,7 @@
   "model_name": "Meta Model - Tabular Exploitability Predictor",
   "model_type": "TabularLogisticRegression",
   "version": "3.0.0-trainable",
-  "trained_timestamp": "2026-09-16T17:22:27.821547+00:00",
+  "trained_timestamp": "2026-09-16T18:03:48.812023+00:00",
   "random_state": 42,
   "input_features": [
     "p1",
@@ -19,31 +19,31 @@
     "std"
   ],
   "learned_coefficients": {
-    "p1": -0.0117,
-    "p2": 0.7592,
-    "p3": 1.4653,
-    "p4": -0.1693,
-    "asset_criticality": -0.0275,
-    "exposure_level": 0.6857,
-    "incident_count": 0.0107,
-    "severity_exploitation_conflict": -0.4949,
-    "kev_epss_conflict": 0.3183,
-    "threat_asset_exposure_conflict": -0.6218,
-    "spread": -0.3458,
-    "std": -0.1656
+    "p1": 0.9083,
+    "p2": 2.352,
+    "p3": 3.737,
+    "p4": 1.4526,
+    "asset_criticality": 0.0351,
+    "exposure_level": 1.0172,
+    "incident_count": 0.0432,
+    "severity_exploitation_conflict": -0.6848,
+    "kev_epss_conflict": -0.2004,
+    "threat_asset_exposure_conflict": -2.2011,
+    "spread": -1.3083,
+    "std": 2.8952
   },
-  "intercept": -0.7141,
+  "intercept": -3.8569,
   "output_type": "probability",
   "output_range": [
     0.0,
     1.0
   ],
   "performance_metrics": {
-    "accuracy": 0.6387,
-    "precision": 0.6347,
-    "recall": 0.3354,
-    "f1_score": 0.4389,
-    "roc_auc": 0.6487,
-    "brier_score": 0.2239
+    "accuracy": 0.7093,
+    "precision": 0.6828,
+    "recall": 0.5791,
+    "f1_score": 0.6267,
+    "roc_auc": 0.7589,
+    "brier_score": 0.1926
   }
 }
