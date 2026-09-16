@@ -22,11 +22,11 @@ export default function VerifyRecalculateView({ recommendations, onRefresh }) {
       <div className="flex justify-between items-center">
         <div>
           <span className="cyber-badge mb-1">Continuous Learning Loop</span>
-          <h2 className="text-xl font-bold text-[#E9BCB9] flex items-center gap-2">
-            <RefreshCcw className="w-6 h-6 text-[#ED9E5B]" />
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <RefreshCcw className="w-6 h-6 text-blue-600" />
             Impact Verification & Risk Recalculation
           </h2>
-          <p className="text-[#E9BCB9]/70 text-xs mt-1">
+          <p className="text-slate-500 text-xs mt-1">
             Measure real post-implementation impact & continuously update organization risk models with feedback data (incidents, environment changes)
           </p>
         </div>
@@ -34,14 +34,14 @@ export default function VerifyRecalculateView({ recommendations, onRefresh }) {
 
       <div className="grid grid-cols-1 gap-4">
         {recommendations.map((rec) => (
-          <div key={rec.id} className="cyber-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div key={rec.id} className="cyber-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-blue-300 transition-colors">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-[#ED9E5B]">{rec.id}</span>
-                <span className="cyber-badge text-[#E9BCB9]">{rec.status}</span>
+                <span className="font-mono text-xs font-bold text-blue-700">{rec.id}</span>
+                <span className="cyber-badge">{rec.status}</span>
               </div>
-              <h3 className="font-bold text-[#E9BCB9] text-sm mt-0.5">{rec.title}</h3>
-              <p className="text-xs text-[#E9BCB9]/70">{rec.description}</p>
+              <h3 className="font-bold text-slate-800 text-sm mt-0.5">{rec.title}</h3>
+              <p className="text-xs text-slate-500">{rec.description}</p>
             </div>
 
             <div>
@@ -57,13 +57,13 @@ export default function VerifyRecalculateView({ recommendations, onRefresh }) {
               )}
 
               {rec.status === 'VERIFIED' && (
-                <span className="cyber-badge border border-[#A34054] text-[#E9BCB9]">
-                  <ShieldCheck className="w-4 h-4 text-[#ED9E5B]" /> Recalculated & Verified
+                <span className="cyber-badge border border-emerald-300 text-emerald-700 bg-emerald-50">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" /> Recalculated & Verified
                 </span>
               )}
 
               {rec.status === 'PENDING' && (
-                <span className="text-xs text-[#E9BCB9]/70 italic">Awaiting Approval & Execution</span>
+                <span className="text-xs text-slate-400 italic">Awaiting Approval & Execution</span>
               )}
             </div>
           </div>

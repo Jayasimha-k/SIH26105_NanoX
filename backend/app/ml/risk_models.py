@@ -198,14 +198,52 @@ class FullAIRiskPipeline:
         incident_count: Optional[int] = 0
     ) -> Dict[str, Any]:
         """
+<<<<<<< HEAD
         Executes full prediction pipeline:
         asset + vulnerability -> P1/P2/P3/P4 -> conflict analysis -> meta-model -> raw probability -> calibrator -> calibrated probability -> EAL
+=======
+        Executes full AI workflow:
+        Uses the 5 trained production XGBoost models:
+        NVD/EPSS/KEV/MITRE -> Production XGBoost Base Models (P1-P4) -> Meta Model 5 -> Org-Specific Adaptation
+>>>>>>> 244a01e0fcc9e5c68f6a2c770a4e2804c1f0662c
         """
-        p1 = IndividualRiskModels.model_1_nvd_cvss_cwe(cvss_score, cwe_id)
-        p2 = IndividualRiskModels.model_2_epss(epss_score)
-        p3 = IndividualRiskModels.model_3_cisa_kev(is_cisa_kev)
-        p4 = IndividualRiskModels.model_4_mitre_attack(mitre_technique)
+        try:
+            from app.ml.production_loader import production_ml_engine
+            vuln_dict = {
+                "cvss_score": cvss_score,
+                "cwe_id": cwe_id,
+                "epss_score": epss_score,
+                "cisa_kev": is_cisa_kev,
+                "mitre_attack_technique": mitre_technique,
+                "exploitability_score": min(3.9, cvss_score * 0.35),
+                "impact_score": min(6.0, cvss_score * 0.65),
+                "attack_vector": "NETWORK" if cvss_score >= 7.0 else "LOCAL",
+                "complexity": "LOW",
+                "privileges_required": "NONE" if cvss_score >= 8.0 else "LOW"
+            }
+            asset_dict = {
+                "criticality_score": asset_criticality,
+                "exposure_level": exposure_level
+            }
+            res = production_ml_engine.predict_all(vuln_dict, asset_dict, incident_count)
+            return {
+                "p1_nvd": res["p1_nvd"],
+                "p2_epss": res["p2_epss"],
+                "p3_cisa_kev": res["p3_org_risk"],
+                "p4_mitre_attack": res["p4_mitre_attack"],
+                "meta_exploitation_probability": res["meta_exploitation_probability"],
+                "organization_adapted_probability": res["organization_adapted_probability"],
+                "models_used": res.get("models_used", []),
+                "architecture": res.get("architecture", "")
+            }
+        except Exception as e:
+            logger.warning(f"Falling back to analytical models due to: {e}")
+            p1 = IndividualRiskModels.model_1_nvd_cvss_cwe(cvss_score, cwe_id)
+            p2 = IndividualRiskModels.model_2_epss(epss_score)
+            p3 = IndividualRiskModels.model_3_cisa_kev(is_cisa_kev)
+            p4 = IndividualRiskModels.model_4_mitre_attack(mitre_technique)
 
+<<<<<<< HEAD
         meta_result = MetaModelEnsemble.predict_meta(
             p1=p1,
             p2=p2,
@@ -229,3 +267,18 @@ class FullAIRiskPipeline:
             "organization_adapted_probability": calibrated_p,
             "conflict_information": meta_result["conflict_analysis"]
         }
+=======
+            meta_p = MetaModelEnsemble.combine_predictions(p1, p2, p3, p4)
+            org_adapted_p = OrganizationSpecificRiskModel.adapt_to_organization(
+                meta_p, asset_criticality, exposure_level, incident_count
+            )
+
+            return {
+                "p1_nvd": p1,
+                "p2_epss": p2,
+                "p3_cisa_kev": p3,
+                "p4_mitre_attack": p4,
+                "meta_exploitation_probability": meta_p,
+                "organization_adapted_probability": org_adapted_p
+            }
+>>>>>>> 244a01e0fcc9e5c68f6a2c770a4e2804c1f0662c

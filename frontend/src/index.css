@@ -4,33 +4,33 @@
 
 @layer base {
   body {
-    @apply bg-[#0A0914] text-[#E9BCB9] min-h-screen selection:bg-[#A34054] selection:text-[#E9BCB9];
+    @apply bg-slate-50 text-slate-800 min-h-screen selection:bg-blue-600 selection:text-white;
   }
 }
 
-/* Custom Cyber / Luxury 6-Color Palette UI Styles - Professional Dark SIH Theme */
+/* Custom Cyber / Enterprise White & Blue UI Styles */
 .cyber-card {
-  @apply bg-[#141124] backdrop-blur-md border border-[#44174E]/80 rounded-xl p-5 shadow-2xl transition-all duration-200 hover:border-[#662249];
+  @apply bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-blue-300 text-slate-800;
 }
 
 .cyber-card-dark {
-  @apply bg-[#0D0B18] border border-[#44174E]/60 rounded-xl p-4 shadow-inner;
+  @apply bg-slate-50/80 border border-slate-200 rounded-xl p-4 shadow-inner text-slate-800;
 }
 
 .cyber-badge {
-  @apply px-2.5 py-1 text-xs font-semibold rounded-md uppercase tracking-wider inline-flex items-center gap-1.5 border border-[#662249] bg-[#662249]/30 text-[#E9BCB9];
+  @apply px-2.5 py-1 text-xs font-semibold rounded-md uppercase tracking-wider inline-flex items-center gap-1.5 border border-blue-200 bg-blue-50 text-blue-700;
 }
 
 .cyber-badge-peach {
-  @apply px-2.5 py-1 text-xs font-semibold rounded-md uppercase tracking-wider inline-flex items-center gap-1.5 border border-[#ED9E5B]/50 bg-[#ED9E5B]/15 text-[#ED9E5B];
+  @apply px-2.5 py-1 text-xs font-semibold rounded-md uppercase tracking-wider inline-flex items-center gap-1.5 border border-sky-200 bg-sky-50 text-sky-700;
 }
 
 .cyber-button {
-  @apply bg-gradient-to-r from-[#A34054] to-[#8A3345] hover:from-[#B84D63] hover:to-[#A34054] text-[#E9BCB9] font-bold px-4 py-2 rounded-lg shadow-lg shadow-[#A34054]/25 border border-[#ED9E5B]/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold px-4 py-2 rounded-lg shadow-sm shadow-blue-500/25 border border-blue-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .cyber-button-secondary {
-  @apply bg-[#0D0B18] hover:bg-[#1C1830] text-[#E9BCB9] font-medium px-4 py-2 rounded-lg border border-[#662249] transition-all flex items-center justify-center gap-2;
+  @apply bg-white hover:bg-slate-100 text-slate-700 font-medium px-4 py-2 rounded-lg border border-slate-200 transition-all flex items-center justify-center gap-2 shadow-sm;
 }
 
 /* Custom Scrollbars */
@@ -39,12 +39,12 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0A0914;
+  background: #F1F5F9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #44174E;
+  background: #CBD5E1;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #662249;
+  background: #94A3B8;
 }

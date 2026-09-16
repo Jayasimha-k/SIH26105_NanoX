@@ -5,6 +5,7 @@ import logging
 from typing import List, Dict, Any, Tuple
 from sqlalchemy.orm import Session
 from app.models.db_models import AuditBlock
+from app.services.blockchain.network import blockchain_network
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +33,10 @@ class LedgerService:
     ) -> AuditBlock:
         """
         Appends a new decision block to the cryptographic audit trail ledger.
-        Ensures strict hash chaining with the previous block.
+        Ensures strict hash chaining with the previous block, and broadcasts
+        the transaction to the decentralized multi-node consortium blockchain.
         """
-        # Get last block
+        # Get last block in local DB
         last_block = db.query(AuditBlock).order_by(AuditBlock.block_index.desc()).first()
         
         if last_block is None:
@@ -70,6 +72,32 @@ class LedgerService:
         db.add(new_block)
         db.commit()
         db.refresh(new_block)
+
+        # Broadcast to Decentralized Multi-Node Blockchain Network
+        try:
+            actor_role = "ciso"
+            u_lower = user_id.lower()
+            if "soc" in u_lower:
+                actor_role = "soc"
+            elif "audit" in u_lower:
+                actor_role = "auditor"
+            elif "compliance" in u_lower:
+                actor_role = "compliance"
+
+            # 1. Broadcast cryptographically signed transaction to all peer mempools
+            blockchain_network.broadcast_transaction(
+                action=action,
+                actor_role=actor_role,
+                actor_id=user_id,
+                payload=details
+            )
+
+            # 2. Mine PoW block & achieve consensus across the 4 nodes
+            miner_id = f"node_{actor_role}" if f"node_{actor_role}" in blockchain_network.nodes else "node_ciso"
+            blockchain_network.mine_and_consensus(miner_node_id=miner_id)
+            logger.info(f"Broadcasted & consensus-mined on decentralized blockchain network [{miner_id}]")
+        except Exception as e:
+            logger.error(f"Error syncing with decentralized blockchain nodes: {e}")
 
         logger.info(f"Recorded blockchain audit block #{block_index} [Hash: {block_hash[:12]}...]")
         return new_block
