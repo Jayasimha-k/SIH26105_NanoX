@@ -31,33 +31,63 @@ class TabularLogisticRegression:
         return 1.0 / (1.0 + np.exp(-z_clipped))
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> "TabularLogisticRegression":
-        """Fits model weights using gradient descent with L2 regularization."""
-        rng = random.Random(self.random_state)
-        n_samples, n_features = X.shape
+        """Fits model weights using standardized features and Adam optimization."""
+        X_arr = np.asarray(X, dtype=float)
+        y_arr = np.asarray(y, dtype=float)
+        n_samples, n_features = X_arr.shape
 
+        # Standardize features for stable multi-scale convergence
+        mean = np.mean(X_arr, axis=0)
+        scale = np.std(X_arr, axis=0)
+        scale[scale == 0.0] = 1.0
+        X_scaled = (X_arr - mean) / scale
+
+        rng = random.Random(self.random_state)
         weights = np.array([rng.gauss(0, 0.01) for _ in range(n_features)], dtype=float)
         bias = 0.0
 
-        for _ in range(self.max_iter):
-            linear_pred = np.dot(X, weights) + bias
+        # Adam optimizer state
+        m_w = np.zeros(n_features)
+        v_w = np.zeros(n_features)
+        m_b = 0.0
+        v_b = 0.0
+        beta1, beta2, eps = 0.9, 0.999, 1e-8
+
+        for t in range(1, self.max_iter + 1):
+            linear_pred = np.dot(X_scaled, weights) + bias
             predictions = self._sigmoid(linear_pred)
 
-            error = predictions - y
-            dw = (1.0 / n_samples) * np.dot(X.T, error) + (self.l2_reg * weights)
+            error = predictions - y_arr
+            dw = (1.0 / n_samples) * np.dot(X_scaled.T, error) + (self.l2_reg * weights)
             db = (1.0 / n_samples) * np.sum(error)
 
-            weights -= self.learning_rate * dw
-            bias -= self.learning_rate * db
+            # Adam updates
+            m_w = beta1 * m_w + (1.0 - beta1) * dw
+            v_w = beta2 * v_w + (1.0 - beta2) * (dw ** 2)
+            m_w_hat = m_w / (1.0 - beta1 ** t)
+            v_w_hat = v_w / (1.0 - beta2 ** t)
+            weights -= self.learning_rate * m_w_hat / (np.sqrt(v_w_hat) + eps)
 
-        self.coef_ = np.array([weights])
-        self.intercept_ = np.array([bias])
+            m_b = beta1 * m_b + (1.0 - beta1) * db
+            v_b = beta2 * v_b + (1.0 - beta2) * (db ** 2)
+            m_b_hat = m_b / (1.0 - beta1 ** t)
+            v_b_hat = v_b / (1.0 - beta2 ** t)
+            bias -= self.learning_rate * m_b_hat / (np.sqrt(v_b_hat) + eps)
+
+        # Express parameters in raw feature space for standard dot(X, coef) inference
+        raw_coef = weights / scale
+        raw_intercept = bias - np.sum((weights * mean) / scale)
+
+        self.coef_ = np.array([raw_coef])
+        self.intercept_ = np.array([raw_intercept])
         return self
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """Returns binary class probabilities [P(y=0), P(y=1)]."""
         if self.coef_ is None or self.intercept_ is None:
             raise ValueError("Model has not been fitted yet.")
-        linear_pred = np.dot(X, self.coef_[0]) + self.intercept_[0]
+        X_arr = np.asarray(X, dtype=float)
+        linear_pred = np.dot(X_arr, self.coef_[0]) + self.intercept_[0]
         prob_1 = self._sigmoid(linear_pred)
         prob_0 = 1.0 - prob_1
         return np.column_stack([prob_0, prob_1])

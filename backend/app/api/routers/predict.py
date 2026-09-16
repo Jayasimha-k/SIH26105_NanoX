@@ -72,7 +72,7 @@ def predict_vulnerability_risk(payload: RiskPredictRequest, db: Session = Depend
         p2_class=ai_output.get("p2_class", 1 if ai_output["p2_epss"] >= 0.5 else 0),
         p3_class=ai_output.get("p3_class", 1 if ai_output["p3_cisa_kev"] >= 0.5 else 0),
         p4_class=ai_output.get("p4_class", 1 if ai_output["p4_mitre_attack"] >= 0.5 else 0),
-        meta_prediction_class=ai_output.get("meta_prediction_class", 1 if ai_output["meta_exploitation_probability"] >= 0.5 else 0),
+        meta_prediction_class=ai_output.get("meta_prediction_class", 1 if ai_output.get("meta_exploitation_probability", 0.5) >= 0.5 else 0),
         probability_horizon="Annualized Expected Exploitation Frequency (Poisson Intensity Model)",
         models_used=ai_output.get("models_used", []),
         architecture=ai_output.get("architecture", "P1 + P2 + P3 + P4 -> Meta Model 5 -> Annual EAL")

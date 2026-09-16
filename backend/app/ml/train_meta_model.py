@@ -48,9 +48,10 @@ def generate_training_dataset(num_samples: int = 3000, random_state: int = 42) -
         # 1. Core Signals P1..P4
         p1 = round(min(1.0, max(0.0, rng.betavariate(5.0, 3.0))), 4)
         p2 = round(min(1.0, max(0.0, rng.betavariate(1.5, 4.0))), 4)
-        is_kev = rng.random() < 0.20
+        is_kev = rng.random() < 0.22
         p3 = 0.95 if is_kev else 0.20
-        p4 = rng.choice([0.60, 0.70, 0.75, 0.85, 0.88, 0.90])
+        # P4 covers critical initial access (0.75-0.90), execution (0.40-0.65), and discovery/default (0.10-0.25)
+        p4 = rng.choice([0.10, 0.15, 0.18, 0.20, 0.25, 0.45, 0.50, 0.55, 0.60, 0.65, 0.75, 0.78, 0.82, 0.88, 0.90])
 
         # 2. Organization Context
         asset_criticality = round(rng.uniform(1.0, 10.0), 2)
@@ -85,20 +86,20 @@ def generate_training_dataset(num_samples: int = 3000, random_state: int = 42) -
             std
         ]
 
-        # Latent exploitation likelihood
+        # Objective latent exploitation likelihood
         latent_score = (
-            0.35 * p2
-            + 0.40 * (p3 - 0.20) / 0.75
-            + 0.12 * p1
-            + 0.10 * p4
+            0.38 * p2
+            + 0.42 * (p3 - 0.20) / 0.75
+            + 0.10 * p1
+            + 0.15 * (p4 - 0.15) / 0.75
             + 0.15 * exposure_level
             + 0.05 * min(incident_count, 5.0) / 5.0
             - 0.35 * threat_exposure_conflict
             - 0.08 * severity_exp_conflict
-            + rng.gauss(0, 0.06)
+            + rng.gauss(0, 0.05)
         )
 
-        prob = 1.0 / (1.0 + np.exp(-5.5 * (latent_score - 0.42)))
+        prob = 1.0 / (1.0 + np.exp(-6.0 * (latent_score - 0.40)))
         y = 1 if (rng.random() < prob) else 0
 
         rows.append(row)
@@ -132,11 +133,11 @@ def train_and_save_meta_model(
     X_train, y_train = X[train_idx], y[train_idx]
     X_test, y_test = X[test_idx], y[test_idx]
 
-    # Train model
+    # Train model with standardized Adam optimization
     model = TabularLogisticRegression(
-        learning_rate=0.08,
-        max_iter=1500,
-        l2_reg=0.005,
+        learning_rate=0.05,
+        max_iter=2500,
+        l2_reg=0.001,
         random_state=random_state
     )
     model.fit(X_train, y_train)
