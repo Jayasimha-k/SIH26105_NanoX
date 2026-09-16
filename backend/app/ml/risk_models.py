@@ -227,6 +227,8 @@ class FullAIRiskPipeline:
                 "p2_epss": res["p2_epss"],
                 "p3_cisa_kev": res["p3_org_risk"],
                 "p4_mitre_attack": res["p4_mitre_attack"],
+                "raw_probability": res["meta_exploitation_probability"],
+                "calibrated_probability": res["organization_adapted_probability"],
                 "meta_exploitation_probability": res["meta_exploitation_probability"],
                 "organization_adapted_probability": res["organization_adapted_probability"],
                 "models_used": res.get("models_used", []),

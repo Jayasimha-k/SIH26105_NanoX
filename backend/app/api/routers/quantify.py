@@ -14,6 +14,9 @@ def get_risk_quantification_overview(db: Session = Depends(get_db)):
     vulns = db.query(Vulnerability).all()
     controls = db.query(SecurityControl).all()
 
+    active_controls = [c for c in controls if c.status in ["APPROVED", "EXECUTED", "VERIFIED"]]
+    effective_controls = active_controls if active_controls else controls
+
     total_pre_eal = 0.0
     asset_breakdown = []
 
@@ -34,6 +37,9 @@ def get_risk_quantification_overview(db: Session = Depends(get_db)):
             asset_pre_eal += pre
             total_pre_eal += pre
 
+        asset_post_eal = RiskEngine.calculate_eal_post(asset_pre_eal, effective_controls)
+        asset_reduction = RiskEngine.calculate_risk_reduction(asset_pre_eal, asset_post_eal)
+
         asset_breakdown.append({
             "asset_id": a.id,
             "asset_name": a.name,
@@ -41,13 +47,14 @@ def get_risk_quantification_overview(db: Session = Depends(get_db)):
             "criticality_score": a.criticality_score,
             "financial_value": a.financial_value,
             "exposure_level": a.exposure_level,
-            "pre_eal": round(asset_pre_eal, 2)
+            "pre_eal": round(asset_pre_eal, 2),
+            "post_eal": round(asset_post_eal, 2),
+            "risk_reduction": round(asset_reduction, 2)
         })
 
-    active_controls = [c for c in controls if c.status in ["APPROVED", "EXECUTED", "VERIFIED"]]
-    total_post_eal = RiskEngine.calculate_eal_post(total_pre_eal, active_controls)
+    total_post_eal = RiskEngine.calculate_eal_post(total_pre_eal, effective_controls)
     total_risk_reduction = RiskEngine.calculate_risk_reduction(total_pre_eal, total_post_eal)
-    total_cost = RiskEngine.calculate_total_cost(active_controls)
+    total_cost = RiskEngine.calculate_total_cost(effective_controls)
     rosi = RiskEngine.calculate_rosi(total_risk_reduction, total_cost)
 
     return {
@@ -60,5 +67,6 @@ def get_risk_quantification_overview(db: Session = Depends(get_db)):
         "active_controls_cost": round(total_cost, 2),
         "enterprise_rosi": rosi,
         "asset_breakdown": asset_breakdown,
+        "controls_mode": "active" if active_controls else "recommended",
         "fair_model_aligned": True
     }

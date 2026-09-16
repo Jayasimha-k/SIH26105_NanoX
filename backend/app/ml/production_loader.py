@@ -200,29 +200,88 @@ class ProductionMLInferenceEngine:
         df["vendor_count"] = 1
         df["product_count"] = 1
         df["reference_count"] = 3
+        if "cve_tag_count" in df.columns:
+            df["cve_tag_count"] = 1
 
+        # Defaults before parsing
         vector = vuln_data.get("attack_vector", "NETWORK").upper()
+        complexity = vuln_data.get("complexity", "LOW").upper()
+        privs = vuln_data.get("privileges_required", "NONE").upper()
+        ui = vuln_data.get("user_interaction", "NONE").upper()
+        scope = vuln_data.get("scope", "UNCHANGED").upper()
+        c_impact = vuln_data.get("confidentiality_impact", "HIGH").upper()
+        i_impact = vuln_data.get("integrity_impact", "HIGH").upper()
+        a_impact = vuln_data.get("availability_impact", "HIGH").upper()
+
+        # Parse cvss_vector string if available (e.g. CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)
+        cvss_vec = str(vuln_data.get("cvss_vector", ""))
+        if cvss_vec and "/" in cvss_vec:
+            for part in cvss_vec.split("/"):
+                if part.startswith("AV:"):
+                    mapping = {"N": "NETWORK", "A": "ADJACENT_NETWORK", "L": "LOCAL", "P": "PHYSICAL"}
+                    vector = mapping.get(part[3:], vector)
+                elif part.startswith("AC:"):
+                    complexity = "LOW" if part[3:] == "L" else "HIGH"
+                elif part.startswith("PR:"):
+                    privs = "NONE" if part[3:] == "N" else ("LOW" if part[3:] == "L" else "HIGH")
+                elif part.startswith("UI:"):
+                    ui = "NONE" if part[3:] == "N" else "REQUIRED"
+                elif part.startswith("S:"):
+                    scope = "CHANGED" if part[3:] == "C" else "UNCHANGED"
+                elif part.startswith("C:"):
+                    c_impact = "HIGH" if part[3:] == "H" else ("LOW" if part[3:] == "L" else "NONE")
+                elif part.startswith("I:"):
+                    i_impact = "HIGH" if part[3:] == "H" else ("LOW" if part[3:] == "L" else "NONE")
+                elif part.startswith("A:"):
+                    a_impact = "HIGH" if part[3:] == "H" else ("LOW" if part[3:] == "L" else "NONE")
+
+        # Map vector
         if f"cvss_attack_vector_{vector}" in df.columns:
             df[f"cvss_attack_vector_{vector}"] = 1
-        else:
+        elif "cvss_attack_vector_NETWORK" in df.columns:
             df["cvss_attack_vector_NETWORK"] = 1
 
-        if "cvss_attack_complexity_LOW" in df.columns:
+        # Map complexity
+        if f"cvss_attack_complexity_{complexity}" in df.columns:
+            df[f"cvss_attack_complexity_{complexity}"] = 1
+        elif "cvss_attack_complexity_LOW" in df.columns:
             df["cvss_attack_complexity_LOW"] = 1
-        if "cvss_privileges_required_NONE" in df.columns:
+
+        # Map privileges
+        if f"cvss_privileges_required_{privs}" in df.columns:
+            df[f"cvss_privileges_required_{privs}"] = 1
+        elif "cvss_privileges_required_NONE" in df.columns:
             df["cvss_privileges_required_NONE"] = 1
-        if "cvss_user_interaction_NONE" in df.columns:
+
+        # Map user interaction
+        if f"cvss_user_interaction_{ui}" in df.columns:
+            df[f"cvss_user_interaction_{ui}"] = 1
+        elif "cvss_user_interaction_NONE" in df.columns:
             df["cvss_user_interaction_NONE"] = 1
-        if "cvss_scope_UNCHANGED" in df.columns:
+
+        # Map scope
+        if f"cvss_scope_{scope}" in df.columns:
+            df[f"cvss_scope_{scope}"] = 1
+        elif "cvss_scope_UNCHANGED" in df.columns:
             df["cvss_scope_UNCHANGED"] = 1
-        if "confidentiality_impact_HIGH" in df.columns:
+
+        # Map CIA impacts
+        if f"confidentiality_impact_{c_impact}" in df.columns:
+            df[f"confidentiality_impact_{c_impact}"] = 1
+        elif "confidentiality_impact_HIGH" in df.columns:
             df["confidentiality_impact_HIGH"] = 1
-        if "integrity_impact_HIGH" in df.columns:
+
+        if f"integrity_impact_{i_impact}" in df.columns:
+            df[f"integrity_impact_{i_impact}"] = 1
+        elif "integrity_impact_HIGH" in df.columns:
             df["integrity_impact_HIGH"] = 1
-        if "availability_impact_HIGH" in df.columns:
+
+        if f"availability_impact_{a_impact}" in df.columns:
+            df[f"availability_impact_{a_impact}"] = 1
+        elif "availability_impact_HIGH" in df.columns:
             df["availability_impact_HIGH"] = 1
 
-        severity = "CRITICAL" if cvss >= 9.0 else ("HIGH" if cvss >= 7.0 else "MEDIUM")
+        severity = "CRITICAL" if cvss >= 9.0 else ("HIGH" if cvss >= 7.0 else ("MEDIUM" if cvss >= 4.0 else "LOW"))
         if f"cvss_severity_{severity}" in df.columns:
             df[f"cvss_severity_{severity}"] = 1
 
