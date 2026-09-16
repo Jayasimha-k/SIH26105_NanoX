@@ -8,19 +8,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        dark: {
-          900: '#0B0F17',
-          800: '#111827',
-          700: '#1F2937',
-          600: '#374151',
-        },
-        cyber: {
-          blue: '#00F0FF',
-          purple: '#7000FF',
-          green: '#10B981',
-          red: '#EF4444',
-          amber: '#F59E0B'
-        }
+        darkbg: '#0A0914',
+        cardbg: '#141124',
+        innerbg: '#0D0B18',
+        violet: '#44174E',
+        plum: '#662249',
+        crimson: '#A34054',
+        peach: '#ED9E5B',
+        rosy: '#E9BCB9',
       }
     },
   },

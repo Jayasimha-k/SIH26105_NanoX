@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
 from app.models.db_models import SecurityControl
+from app.ml.risk_models import FullAIRiskPipeline
 
 class RiskEngine:
     @staticmethod
@@ -40,8 +41,8 @@ class RiskEngine:
     @staticmethod
     def calculate_rosi(risk_reduction: float, total_cost: float) -> float:
         """
-        Return on Security Investment (ROSI):
-        ROSI % = ((Risk Reduction - Cost) / Cost) * 100
+        Return on Security Investment (ROSI %):
+        ROSI % = ((Risk Reduction - Total Cost) / Total Cost) * 100
         """
         if total_cost <= 0:
             return 0.0
@@ -59,6 +60,7 @@ class RiskEngine:
         risk_reduction = cls.calculate_risk_reduction(eal_pre, eal_post)
         total_cost = cls.calculate_total_cost(controls)
         rosi = cls.calculate_rosi(risk_reduction, total_cost)
+        risk_reduction_pct = round((risk_reduction / eal_pre * 100.0), 1) if eal_pre > 0 else 0.0
 
         return {
             "exploitation_probability": round(exploitation_prob, 4),
@@ -66,6 +68,7 @@ class RiskEngine:
             "eal_pre": eal_pre,
             "eal_post": eal_post,
             "risk_reduction": risk_reduction,
+            "risk_reduction_pct": risk_reduction_pct,
             "total_control_cost": total_cost,
             "rosi": rosi
         }

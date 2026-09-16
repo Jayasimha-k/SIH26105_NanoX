@@ -21,37 +21,39 @@ async function fetchJSON(endpoint, options = {}) {
 }
 
 export const api = {
-  // Auth
-  login: (username, password) => fetchJSON('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  // Step 1: Detect Data Collection
+  getPublicVulnerabilities: () => fetchJSON('/detect/vulnerabilities'),
+  getEnterpriseAssets: () => fetchJSON('/detect/assets'),
+  getIncidentHistory: () => fetchJSON('/detect/incidents'),
+  getSecurityControls: () => fetchJSON('/detect/controls'),
 
-  // Data endpoints
-  getAssets: () => fetchJSON('/assets/'),
-  getVulnerabilities: () => fetchJSON('/vulnerabilities/'),
-  getSecurityControls: () => fetchJSON('/optimization/controls'),
-  getRiskOverview: () => fetchJSON('/risk/overview'),
-  getRecommendations: () => fetchJSON('/recommendations/'),
-  getAuditBlocks: () => fetchJSON('/audit/blocks'),
-  verifyAuditLedger: () => fetchJSON('/audit/verify'),
-  getMLModelMetadata: () => fetchJSON('/ml/models'),
+  // Step 2: Predict AI Models (P1-P4 Ensemble & Org Adapt)
+  predictRisk: (asset_id, vulnerability_id) =>
+    fetchJSON('/predict/run', { method: 'POST', body: JSON.stringify({ asset_id, vulnerability_id }) }),
 
-  // Predictive & Optimization triggers
-  predictRisk: (asset_id, vulnerability_id, features) =>
-    fetchJSON('/ml/predict', { method: 'POST', body: JSON.stringify({ asset_id, vulnerability_id, features }) }),
+  // Step 3: Quantify Financial Risk (EAL)
+  getQuantificationOverview: () => fetchJSON('/quantify/overview'),
 
-  assessRisk: (asset_id, vulnerability_id, control_ids) =>
-    fetchJSON('/risk/assess', { method: 'POST', body: JSON.stringify({ asset_id, vulnerability_id, control_ids }) }),
-
+  // Steps 4 & 5: Optimize & Recommend (PuLP Solver)
   runOptimization: (budget, enforce_control_ids = [], exclude_control_ids = []) =>
-    fetchJSON('/optimization/run', { method: 'POST', body: JSON.stringify({ budget, enforce_control_ids, exclude_control_ids }) }),
+    fetchJSON('/optimize/run', { method: 'POST', body: JSON.stringify({ budget, enforce_control_ids, exclude_control_ids }) }),
 
-  simulateWhatIf: (budget, active_control_ids, threat_multiplier = 1.0) =>
-    fetchJSON('/optimization/what-if', { method: 'POST', body: JSON.stringify({ budget, active_control_ids, threat_multiplier }) }),
+  getRecommendations: () => fetchJSON('/optimize/recommendations'),
 
-  // Actions
+  // Step 6: Human-in-the-Loop Approvals
   approveRecommendation: (id, action, comments = '') =>
     fetchJSON(`/approvals/${id}`, { method: 'POST', body: JSON.stringify({ action, comments }) }),
 
+  // Step 7: Execute Controls
   markExecuted: (id) => fetchJSON(`/execution/execute/${id}`, { method: 'POST' }),
 
-  verifyExecution: (id) => fetchJSON(`/execution/verify/${id}`, { method: 'POST' })
+  // Step 8: Verify Impact & Continuous Learning Recalculation
+  triggerRecalculation: (id) => fetchJSON(`/recalculate/trigger/${id}`, { method: 'POST' }),
+
+  // Blockchain Audit Trail
+  getAuditBlocks: () => fetchJSON('/audit/blocks'),
+  verifyAuditLedger: () => fetchJSON('/audit/verify'),
+
+  // Executive Business Value & Standards Compliance
+  getFrameworkCompliance: () => fetchJSON('/business-value/compliance')
 };

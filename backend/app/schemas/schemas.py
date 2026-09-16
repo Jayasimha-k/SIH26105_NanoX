@@ -13,12 +13,6 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
-class UserCreate(BaseModel):
-    username: str
-    email: str
-    password: str
-    role: str = "SOC"
-
 class UserOut(BaseModel):
     id: int
     username: str
@@ -34,17 +28,18 @@ class UserOut(BaseModel):
 class AssetSchema(BaseModel):
     id: str
     name: str
-    asset_type: str
+    asset_type: str  # IT Asset, OT Asset, Cloud Infrastructure
     criticality_score: float
     financial_value: float
     ip_address: Optional[str] = None
     owner: Optional[str] = None
     exposure_level: str = "INTERNAL"
+    sla_hours: int = 24
 
     class Config:
         from_attributes = True
 
-# Vulnerability Schemas
+# Vulnerability Schemas (PDF Data Collection)
 class VulnerabilitySchema(BaseModel):
     id: str
     cve_id: str
@@ -52,6 +47,10 @@ class VulnerabilitySchema(BaseModel):
     cvss_score: float
     epss_score: float
     cisa_kev: bool = False
+    mitre_attack_technique: str = "T1190"
+    mitre_attack_name: str = "Exploit Public-Facing Application"
+    cwe_id: str = "CWE-787"
+    affected_products: str = "Standard System Component"
     attack_vector: str = "NETWORK"
     complexity: str = "LOW"
     privileges_required: str = "NONE"
@@ -60,12 +59,24 @@ class VulnerabilitySchema(BaseModel):
     class Config:
         from_attributes = True
 
-# Security Control Schemas
+# Incident History Schema
+class IncidentHistorySchema(BaseModel):
+    id: int
+    asset_id: str
+    incident_name: str
+    incident_type: str
+    loss_incurred: float
+    date_occurred: str
+
+    class Config:
+        from_attributes = True
+
+# Security Control Schema
 class SecurityControlSchema(BaseModel):
     id: str
     code: str
     name: str
-    category: str
+    category: str  # EDR, Firewall, SIEM, WAF, IAM, Patching
     cost: float
     effectiveness: float
     implementation_time_days: int = 7
@@ -75,42 +86,26 @@ class SecurityControlSchema(BaseModel):
     class Config:
         from_attributes = True
 
-# ML Prediction Schemas
-class PredictRequest(BaseModel):
+# Predict & Quantify Schemas
+class RiskPredictRequest(BaseModel):
     asset_id: str
     vulnerability_id: str
-    features: Optional[Dict[str, Any]] = None
 
-class PredictResponse(BaseModel):
+class RiskPredictResponse(BaseModel):
     asset_id: str
     vulnerability_id: str
-    base_model_predictions: Dict[str, float]
-    meta_model_prediction: float
-    exploitation_probability: float
+    p1_nvd: float
+    p2_epss: float
+    p3_cisa_kev: float
+    p4_mitre_attack: float
+    meta_exploitation_probability: float
+    organization_adapted_probability: float
     financial_impact: float
     eal_pre_control: float
-
-# Risk Engine Schemas
-class RiskAssessRequest(BaseModel):
-    asset_id: str
-    vulnerability_id: str
-    control_ids: List[str] = []
-
-class RiskAssessResponse(BaseModel):
-    asset_id: str
-    vulnerability_id: str
-    exploitation_probability: float
-    financial_impact: float
-    eal_pre_control: float
-    eal_post_control: float
-    risk_reduction: float
-    total_control_cost: float
-    rosi: float
 
 # Optimization Schemas
 class OptimizationRequest(BaseModel):
     budget: float
-    target_metric: str = "MAX_RISK_REDUCTION"
     enforce_control_ids: Optional[List[str]] = []
     exclude_control_ids: Optional[List[str]] = []
 
@@ -121,25 +116,11 @@ class OptimizationResponse(BaseModel):
     pre_eal: float
     post_eal: float
     risk_reduction: float
+    risk_reduction_pct: float
     rosi: float
     execution_time_ms: float
 
-# What-If Analysis Schemas
-class WhatIfRequest(BaseModel):
-    budget: float
-    active_control_ids: List[str]
-    threat_multiplier: float = 1.0
-
-class WhatIfResponse(BaseModel):
-    simulated_budget: float
-    active_control_count: int
-    total_cost: float
-    simulated_pre_eal: float
-    simulated_post_eal: float
-    simulated_risk_reduction: float
-    simulated_rosi: float
-
-# Recommendation & Approval Schemas
+# Recommendation Schema
 class RecommendationOut(BaseModel):
     id: str
     title: str

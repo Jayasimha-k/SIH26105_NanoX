@@ -4,23 +4,47 @@
 
 @layer base {
   body {
-    @apply bg-[#0B0F17] text-slate-100 min-h-screen selection:bg-cyan-500 selection:text-black;
+    @apply bg-[#0A0914] text-[#E9BCB9] min-h-screen selection:bg-[#A34054] selection:text-[#E9BCB9];
   }
 }
 
-/* Custom Cyber Glassmorphism Styles */
+/* Custom Cyber / Luxury 6-Color Palette UI Styles - Professional Dark SIH Theme */
 .cyber-card {
-  @apply bg-[#111827]/80 backdrop-blur-md border border-slate-800 rounded-xl p-5 shadow-xl transition-all duration-200 hover:border-slate-700;
+  @apply bg-[#141124] backdrop-blur-md border border-[#44174E]/80 rounded-xl p-5 shadow-2xl transition-all duration-200 hover:border-[#662249];
+}
+
+.cyber-card-dark {
+  @apply bg-[#0D0B18] border border-[#44174E]/60 rounded-xl p-4 shadow-inner;
 }
 
 .cyber-badge {
-  @apply px-2.5 py-1 text-xs font-semibold rounded-md uppercase tracking-wider inline-flex items-center gap-1.5;
+  @apply px-2.5 py-1 text-xs font-semibold rounded-md uppercase tracking-wider inline-flex items-center gap-1.5 border border-[#662249] bg-[#662249]/30 text-[#E9BCB9];
+}
+
+.cyber-badge-peach {
+  @apply px-2.5 py-1 text-xs font-semibold rounded-md uppercase tracking-wider inline-flex items-center gap-1.5 border border-[#ED9E5B]/50 bg-[#ED9E5B]/15 text-[#ED9E5B];
 }
 
 .cyber-button {
-  @apply bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold px-4 py-2 rounded-lg shadow-lg shadow-cyan-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply bg-gradient-to-r from-[#A34054] to-[#8A3345] hover:from-[#B84D63] hover:to-[#A34054] text-[#E9BCB9] font-bold px-4 py-2 rounded-lg shadow-lg shadow-[#A34054]/25 border border-[#ED9E5B]/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .cyber-button-secondary {
-  @apply bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium px-4 py-2 rounded-lg border border-slate-700 transition-all flex items-center justify-center gap-2;
+  @apply bg-[#0D0B18] hover:bg-[#1C1830] text-[#E9BCB9] font-medium px-4 py-2 rounded-lg border border-[#662249] transition-all flex items-center justify-center gap-2;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0914;
+}
+::-webkit-scrollbar-thumb {
+  background: #44174E;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #662249;
 }

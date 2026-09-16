@@ -1,0 +1,10 @@
+# Frontend Git Ignore Rules
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
