@@ -1,43 +1,52 @@
-import numpy as np
+import os
 import logging
-from typing import Dict, Any, List
+import numpy as np
+import joblib
+from typing import Dict, Any, List, Optional
+from app.ml.adapter import BaseModelAdapter
+from app.ml.conflict_detector import EvidenceConflictDetector
+from app.ml.calibrator import PlattCalibrator
 
 logger = logging.getLogger(__name__)
 
 class IndividualRiskModels:
     @staticmethod
-    def model_1_nvd_cvss_cwe(cvss_score: float, cwe_id: str) -> float:
+    def model_1_nvd_cvss_cwe(cvss_score: Optional[float], cwe_id: Optional[str]) -> float:
         """
         Model 1 (P1): NVD / CVSS / CWE Base Severity Model.
         Maps CVSS v3.1 score (0-10) and CWE vulnerability class to normalized severity index.
         """
-        base_p1 = min(1.0, max(0.0, cvss_score / 10.0))
-        # High impact CWE weight adjustments (e.g. CWE-787, CWE-89, CWE-79)
-        cwe_multiplier = 1.15 if cwe_id in ["CWE-787", "CWE-89", "CWE-78", "CWE-94"] else 1.0
+        cvss = 5.0 if cvss_score is None else float(cvss_score)
+        cwe = str(cwe_id or "").strip()
+        base_p1 = min(1.0, max(0.0, cvss / 10.0))
+        # High impact CWE weight adjustments (e.g. CWE-787, CWE-89, CWE-78, CWE-94)
+        cwe_multiplier = 1.15 if cwe in ["CWE-787", "CWE-89", "CWE-78", "CWE-94"] else 1.0
         return round(min(1.0, base_p1 * cwe_multiplier), 4)
 
     @staticmethod
-    def model_2_epss(epss_score: float) -> float:
+    def model_2_epss(epss_score: Optional[float]) -> float:
         """
         Model 2 (P2): FIRST EPSS (Exploit Prediction Scoring System) Model.
         Returns the raw probability of active exploitation in the wild (0.0 to 1.0).
         """
-        return round(min(1.0, max(0.0, epss_score)), 4)
+        epss = 0.05 if epss_score is None else float(epss_score)
+        return round(min(1.0, max(0.0, epss)), 4)
 
     @staticmethod
-    def model_3_cisa_kev(is_cisa_kev: bool) -> float:
+    def model_3_cisa_kev(is_cisa_kev: Optional[bool]) -> float:
         """
         Model 3 (P3): CISA Known Exploited Vulnerabilities (KEV) Model.
         Returns high confidence score (0.95) if actively exploited according to CISA, 0.20 otherwise.
         """
-        return 0.95 if is_cisa_kev else 0.20
+        return 0.95 if bool(is_cisa_kev) else 0.20
 
     @staticmethod
-    def model_4_mitre_attack(technique_id: str) -> float:
+    def model_4_mitre_attack(technique_id: Optional[str]) -> float:
         """
         Model 4 (P4): MITRE ATT&CK Technique Severity Model.
         Quantifies attack technique severity (e.g. T1190 Exploit Public-Facing App, T1068 Privilege Escalation).
         """
+        tid = str(technique_id or "T1190").strip().upper()
         high_severity_techniques = {
             "T1190": 0.90,  # Exploit Public-Facing Application
             "T1068": 0.85,  # Exploitation for Privilege Escalation
@@ -45,75 +54,178 @@ class IndividualRiskModels:
             "T1059": 0.75,  # Command and Scripting Interpreter
             "T1078": 0.70   # Valid Accounts
         }
-        return high_severity_techniques.get(technique_id, 0.60)
+        return high_severity_techniques.get(tid, 0.60)
 
 class MetaModelEnsemble:
-    @staticmethod
-    def combine_predictions(p1: float, p2: float, p3: float, p4: float) -> float:
+    _adapter: Optional[BaseModelAdapter] = None
+    _calibrator: Optional[PlattCalibrator] = None
+
+    @classmethod
+    def get_adapter(cls) -> BaseModelAdapter:
+        if cls._adapter is None:
+            models_root = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                "models_artifacts"
+            )
+            meta_dir = os.path.join(models_root, "meta_model")
+            cls._adapter = BaseModelAdapter(meta_dir)
+        return cls._adapter
+
+    @classmethod
+    def get_calibrator(cls) -> PlattCalibrator:
+        if cls._calibrator is None:
+            models_root = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                "models_artifacts"
+            )
+            calibrator_path = os.path.join(models_root, "calibrator", "calibrator.joblib")
+            if os.path.exists(calibrator_path):
+                try:
+                    cls._calibrator = joblib.load(calibrator_path)
+                    logger.info("Loaded probability calibrator artifact.")
+                except Exception as e:
+                    logger.error(f"Failed to load calibrator from {calibrator_path}: {e}")
+                    cls._calibrator = PlattCalibrator()
+            else:
+                cls._calibrator = PlattCalibrator()
+        return cls._calibrator
+
+    @classmethod
+    def predict_meta(
+        cls,
+        p1: float,
+        p2: float,
+        p3: float,
+        p4: float,
+        asset_criticality: float = 5.0,
+        exposure_level: str = "INTERNAL",
+        incident_count: int = 0
+    ) -> Dict[str, Any]:
         """
-        Meta Model Stacking Ensemble:
-        Combines P1 (NVD), P2 (EPSS), P3 (CISA KEV), P4 (MITRE ATT&CK) using ensemble weights.
-        P3 (CISA KEV) and P2 (EPSS) carry highest empirical weight for active threat exploitation.
+        Executes evidence -> conflict -> meta-model -> calibration pipeline:
+        Features -> Meta-Model -> raw_probability -> PlattCalibrator -> calibrated_probability
         """
-        weights = {"p1": 0.20, "p2": 0.35, "p3": 0.30, "p4": 0.15}
-        meta_p = (p1 * weights["p1"]) + (p2 * weights["p2"]) + (p3 * weights["p3"]) + (p4 * weights["p4"])
-        return round(min(1.0, max(0.0, meta_p)), 4)
+        exp_level = str(exposure_level or "INTERNAL").strip().upper()
+        crit = 5.0 if asset_criticality is None else float(asset_criticality)
+        inc_count = 0 if incident_count is None else int(incident_count)
+
+        conflict_analysis = EvidenceConflictDetector.evaluate(
+            p1=p1,
+            p2=p2,
+            p3=p3,
+            p4=p4,
+            exposure_level=exp_level
+        )
+
+        feature_vector = {
+            "p1": p1,
+            "p2": p2,
+            "p3": p3,
+            "p4": p4,
+            "asset_criticality": crit,
+            "exposure_level": exp_level,
+            "incident_count": inc_count,
+            "severity_exploitation_conflict": 1.0 if conflict_analysis["severity_exploitation_conflict"] else 0.0,
+            "kev_epss_conflict": 1.0 if conflict_analysis["kev_epss_conflict"] else 0.0,
+            "threat_asset_exposure_conflict": 1.0 if conflict_analysis["threat_asset_exposure_conflict"] else 0.0,
+            "spread": conflict_analysis["spread"],
+            "std": conflict_analysis["std"]
+        }
+
+        adapter = cls.get_adapter()
+        raw_meta_prob = round(float(adapter.predict(feature_vector)), 4)
+
+        calibrator = cls.get_calibrator()
+        calibrated_prob = round(float(calibrator.calibrate(np.array([raw_meta_prob]))[0]), 4)
+
+        return {
+            "raw_probability": raw_meta_prob,
+            "calibrated_probability": calibrated_prob,
+            "meta_probability": calibrated_prob,
+            "conflict_analysis": conflict_analysis
+        }
+
+    @classmethod
+    def combine_predictions(
+        cls,
+        p1: float,
+        p2: float,
+        p3: float,
+        p4: float,
+        asset_criticality: float = 5.0,
+        exposure_level: str = "INTERNAL",
+        incident_count: int = 0
+    ) -> float:
+        """
+        Backwards-compatible wrapper returning calibrated probability.
+        """
+        res = cls.predict_meta(
+            p1=p1,
+            p2=p2,
+            p3=p3,
+            p4=p4,
+            asset_criticality=asset_criticality,
+            exposure_level=exposure_level,
+            incident_count=incident_count
+        )
+        return res["calibrated_probability"]
 
 class OrganizationSpecificRiskModel:
     @staticmethod
     def adapt_to_organization(
         meta_prob: float,
-        asset_criticality: float,
-        exposure_level: str,
+        asset_criticality: float = 5.0,
+        exposure_level: str = "INTERNAL",
         incident_count: int = 0
     ) -> float:
         """
-        Organization-Specific Risk Model (Self-Learning & Adaptive):
-        Customizes meta-model probability using enterprise asset exposure, business criticality,
-        and past incident history.
+        Organization context (asset criticality, exposure level, incident count)
+        is natively learned by the tabular meta-model, replacing post-hoc heuristics.
         """
-        # Exposure multiplier
-        exp_factor = 1.25 if exposure_level == "INTERNET_FACING" else (1.0 if exposure_level == "INTERNAL" else 0.75)
-        # Criticality factor (normalized around 5.0 baseline)
-        crit_factor = asset_criticality / 5.0
-        # Incident history penalty
-        history_penalty = 1.0 + (min(incident_count, 5) * 0.05)
-
-        adapted_p = meta_prob * exp_factor * (crit_factor ** 0.5) * history_penalty
-        return round(min(1.0, max(0.0, adapted_p)), 4)
+        return round(min(1.0, max(0.0, meta_prob)), 4)
 
 class FullAIRiskPipeline:
     @classmethod
     def run_pipeline(
         cls,
-        cvss_score: float,
-        cwe_id: str,
-        epss_score: float,
-        is_cisa_kev: bool,
-        mitre_technique: str,
-        asset_criticality: float,
-        exposure_level: str,
-        incident_count: int = 0
-    ) -> Dict[str, float]:
+        cvss_score: Optional[float] = 5.0,
+        cwe_id: Optional[str] = "UNKNOWN",
+        epss_score: Optional[float] = 0.05,
+        is_cisa_kev: Optional[bool] = False,
+        mitre_technique: Optional[str] = "T1190",
+        asset_criticality: Optional[float] = 5.0,
+        exposure_level: Optional[str] = "INTERNAL",
+        incident_count: Optional[int] = 0
+    ) -> Dict[str, Any]:
         """
-        Executes full AI workflow (PDF Page 3 Architecture):
-        NVD/EPSS/KEV/MITRE -> Individual Models (P1-P4) -> Meta Model -> Org-Specific Risk Model
+        Executes full prediction pipeline:
+        asset + vulnerability -> P1/P2/P3/P4 -> conflict analysis -> meta-model -> raw probability -> calibrator -> calibrated probability -> EAL
         """
         p1 = IndividualRiskModels.model_1_nvd_cvss_cwe(cvss_score, cwe_id)
         p2 = IndividualRiskModels.model_2_epss(epss_score)
         p3 = IndividualRiskModels.model_3_cisa_kev(is_cisa_kev)
         p4 = IndividualRiskModels.model_4_mitre_attack(mitre_technique)
 
-        meta_p = MetaModelEnsemble.combine_predictions(p1, p2, p3, p4)
-        org_adapted_p = OrganizationSpecificRiskModel.adapt_to_organization(
-            meta_p, asset_criticality, exposure_level, incident_count
+        meta_result = MetaModelEnsemble.predict_meta(
+            p1=p1,
+            p2=p2,
+            p3=p3,
+            p4=p4,
+            asset_criticality=asset_criticality if asset_criticality is not None else 5.0,
+            exposure_level=exposure_level or "INTERNAL",
+            incident_count=incident_count if incident_count is not None else 0
         )
+        raw_p = meta_result["raw_probability"]
+        calibrated_p = meta_result["calibrated_probability"]
 
         return {
             "p1_nvd": p1,
             "p2_epss": p2,
             "p3_cisa_kev": p3,
             "p4_mitre_attack": p4,
-            "meta_exploitation_probability": meta_p,
-            "organization_adapted_probability": org_adapted_p
+            "raw_probability": raw_p,
+            "calibrated_probability": calibrated_p,
+            "meta_exploitation_probability": raw_p,
+            "organization_adapted_probability": calibrated_p,
+            "conflict_information": meta_result["conflict_analysis"]
         }

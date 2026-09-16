@@ -19,7 +19,7 @@ def predict_vulnerability_risk(payload: RiskPredictRequest, db: Session = Depend
     # Fetch incident count for asset
     incident_count = db.query(IncidentHistory).filter(IncidentHistory.asset_id == asset.id).count()
 
-    # Execute Full AI Pipeline: P1 (NVD) + P2 (EPSS) + P3 (CISA KEV) + P4 (MITRE ATT&CK) -> Meta Model -> Org Adapt
+    # Execute Pipeline: asset + vuln -> P1..P4 -> Conflict Analysis -> Tabular Meta Model -> Platt Calibrator -> EAL
     ai_output = FullAIRiskPipeline.run_pipeline(
         cvss_score=vuln.cvss_score,
         cwe_id=vuln.cwe_id,
@@ -31,10 +31,13 @@ def predict_vulnerability_risk(payload: RiskPredictRequest, db: Session = Depend
         incident_count=incident_count
     )
 
-    financial_impact = vuln.financial_impact_base * (asset.criticality_score / 5.0)
-    eal_pre = RiskEngine.calculate_eal_pre(ai_output["organization_adapted_probability"], financial_impact)
+    base_impact = vuln.financial_impact_base if vuln.financial_impact_base is not None else 1000000.0
+    crit = asset.criticality_score if asset.criticality_score is not None else 5.0
+    financial_impact = base_impact * (crit / 5.0)
 
-    # Save RiskAssessment record
+    eal_pre = RiskEngine.calculate_eal_pre(ai_output["calibrated_probability"], financial_impact)
+
+    # Save RiskAssessment record (database persistence preserved)
     record = RiskAssessment(
         asset_id=asset.id,
         vulnerability_id=vuln.id,
@@ -42,8 +45,8 @@ def predict_vulnerability_risk(payload: RiskPredictRequest, db: Session = Depend
         p2_epss=ai_output["p2_epss"],
         p3_kev=ai_output["p3_cisa_kev"],
         p4_mitre=ai_output["p4_mitre_attack"],
-        meta_prob=ai_output["meta_exploitation_probability"],
-        org_adapted_prob=ai_output["organization_adapted_probability"],
+        meta_prob=ai_output["raw_probability"],
+        org_adapted_prob=ai_output["calibrated_probability"],
         eal_pre=eal_pre,
         eal_post=eal_pre,
         risk_reduction=0.0
@@ -58,8 +61,11 @@ def predict_vulnerability_risk(payload: RiskPredictRequest, db: Session = Depend
         p2_epss=ai_output["p2_epss"],
         p3_cisa_kev=ai_output["p3_cisa_kev"],
         p4_mitre_attack=ai_output["p4_mitre_attack"],
-        meta_exploitation_probability=ai_output["meta_exploitation_probability"],
-        organization_adapted_probability=ai_output["organization_adapted_probability"],
+        raw_probability=ai_output["raw_probability"],
+        calibrated_probability=ai_output["calibrated_probability"],
+        meta_exploitation_probability=ai_output["raw_probability"],
+        organization_adapted_probability=ai_output["calibrated_probability"],
         financial_impact=round(financial_impact, 2),
-        eal_pre_control=eal_pre
+        eal_pre_control=eal_pre,
+        conflict_information=ai_output.get("conflict_information")
     )

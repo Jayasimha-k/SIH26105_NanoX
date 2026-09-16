@@ -98,10 +98,13 @@ class RiskPredictResponse(BaseModel):
     p2_epss: float
     p3_cisa_kev: float
     p4_mitre_attack: float
+    raw_probability: Optional[float] = None
+    calibrated_probability: Optional[float] = None
     meta_exploitation_probability: float
     organization_adapted_probability: float
     financial_impact: float
     eal_pre_control: float
+    conflict_information: Optional[Dict[str, Any]] = None
 
 # Optimization Schemas
 class OptimizationRequest(BaseModel):

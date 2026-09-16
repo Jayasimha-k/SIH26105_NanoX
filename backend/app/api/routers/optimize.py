@@ -26,7 +26,7 @@ def run_budget_optimization(payload: OptimizationRequest, db: Session = Depends(
                 asset_criticality=a.criticality_score, exposure_level=a.exposure_level,
                 incident_count=inc_count
             )
-            prob = ai_out["organization_adapted_probability"]
+            prob = ai_out["calibrated_probability"]
             impact = v.financial_impact_base * (a.criticality_score / 5.0)
             total_pre_eal += RiskEngine.calculate_eal_pre(prob, impact)
 

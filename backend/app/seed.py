@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from app.database import engine, Base, SessionLocal
 from app.models.db_models import User, Asset, Vulnerability, SecurityControl, Recommendation, IncidentHistory
 from app.services.ledger import LedgerService
+from app.utils.security import get_password_hash
 
 def seed_database():
     Base.metadata.create_all(bind=engine)
@@ -18,12 +19,13 @@ def seed_database():
 
         print("Seeding CyberOpt-RQ database with SIH PS 26105 datasets...")
 
-        # 1. Users
+        # 1. Users with secure bcrypt hashes
+        default_pwd = get_password_hash("CyberOpt@2026!")
         users = [
-            User(username="ciso_executive", email="ciso@cyberopt.internal", hashed_password="hashed_secret", role="CISO"),
-            User(username="soc_analyst", email="soc@cyberopt.internal", hashed_password="hashed_secret", role="SOC"),
-            User(username="security_lead", email="security@cyberopt.internal", hashed_password="hashed_secret", role="Security"),
-            User(username="it_remediation", email="it@cyberopt.internal", hashed_password="hashed_secret", role="IT")
+            User(username="ciso_executive", email="ciso@cyberopt.internal", hashed_password=default_pwd, role="CISO"),
+            User(username="soc_analyst", email="soc@cyberopt.internal", hashed_password=default_pwd, role="SOC"),
+            User(username="security_lead", email="security@cyberopt.internal", hashed_password=default_pwd, role="Security"),
+            User(username="it_remediation", email="it@cyberopt.internal", hashed_password=default_pwd, role="IT")
         ]
         db.add_all(users)
 

@@ -28,7 +28,7 @@ def get_risk_quantification_overview(db: Session = Depends(get_db)):
                 asset_criticality=a.criticality_score, exposure_level=a.exposure_level,
                 incident_count=inc_count
             )
-            prob = ai_out["organization_adapted_probability"]
+            prob = ai_out["calibrated_probability"]
             impact = v.financial_impact_base * (a.criticality_score / 5.0)
             pre = RiskEngine.calculate_eal_pre(prob, impact)
             asset_pre_eal += pre

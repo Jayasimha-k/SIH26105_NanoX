@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.db_models import Recommendation, ApprovalRecord, SecurityControl, User
 from app.schemas.schemas import ApprovalRequest, RecommendationOut
-from app.api.deps import get_current_user_optional
+from app.api.deps import get_current_user
 from app.services.ledger import LedgerService
 from app.services.websocket_manager import manager
 
@@ -14,7 +14,7 @@ async def process_approval(
     recommendation_id: str,
     payload: ApprovalRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_optional)
+    current_user: User = Depends(get_current_user)
 ):
     rec = db.query(Recommendation).filter(Recommendation.id == recommendation_id).first()
     if not rec:

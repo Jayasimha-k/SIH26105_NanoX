@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.db_models import Recommendation, SecurityControl, User
 from app.schemas.schemas import RecommendationOut
-from app.api.deps import get_current_user_optional
+from app.api.deps import get_current_user
 from app.services.ledger import LedgerService
 from app.services.websocket_manager import manager
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/recalculate", tags=["Step 8: Verify & Recalculate Co
 async def trigger_recalculation_and_verification(
     recommendation_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_optional)
+    current_user: User = Depends(get_current_user)
 ):
     rec = db.query(Recommendation).filter(Recommendation.id == recommendation_id).first()
     if not rec:

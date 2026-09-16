@@ -1,0 +1,79 @@
+{
+  "artifact_type": "ProbabilityCalibrator",
+  "calibration_method": "PlattSigmoidScaling",
+  "version": "1.0.0-platt",
+  "trained_timestamp": "2026-09-16T17:36:38.824783+00:00",
+  "parameters": {
+    "slope_a": 1.9033,
+    "intercept_b": -1.0359
+  },
+  "evaluation_summary": {
+    "dataset_split": {
+      "total_samples": 4000,
+      "train_samples": 2000,
+      "calibration_samples": 1000,
+      "test_samples": 1000,
+      "temporal_split_order": "Train -> Calibration -> Test (zero future leakage)"
+    },
+    "raw_vs_calibrated_metrics": {
+      "raw_brier_score": 0.2142,
+      "calibrated_brier_score": 0.2241,
+      "brier_score_improvement": -0.0098,
+      "raw_log_loss": 0.618,
+      "calibrated_log_loss": 0.6405,
+      "log_loss_improvement": -0.0225,
+      "raw_expected_calibration_error": 0.0633,
+      "calibrated_expected_calibration_error": 0.0909
+    },
+    "reliability_curve": {
+      "raw": {
+        "bin_pred_means": [
+          0.1834,
+          0.3346,
+          0.4857,
+          0.7146,
+          0.8164
+        ],
+        "bin_true_fractions": [
+          0.1429,
+          0.2721,
+          0.4105,
+          0.7105,
+          1.0
+        ],
+        "bin_counts": [
+          35,
+          408,
+          419,
+          114,
+          24
+        ],
+        "expected_calibration_error": 0.0633
+      },
+      "calibrated": {
+        "bin_pred_means": [
+          0.1,
+          0.3719,
+          0.4646,
+          0.6184,
+          0.9
+        ],
+        "bin_true_fractions": [
+          0.0,
+          0.2335,
+          0.3992,
+          0.8889,
+          0.0
+        ],
+        "bin_counts": [
+          0,
+          197,
+          749,
+          54,
+          0
+        ],
+        "expected_calibration_error": 0.0909
+      }
+    }
+  }
+}

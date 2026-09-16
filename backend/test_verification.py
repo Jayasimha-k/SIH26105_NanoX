@@ -3,12 +3,14 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from app.database import SessionLocal
+from app.database import SessionLocal, Base, engine
 from app.ml.risk_models import FullAIRiskPipeline
 from app.services.risk_engine import RiskEngine
 from app.services.optimizer import OptimizationEngine
 from app.services.ledger import LedgerService
 from app.models.db_models import SecurityControl, Asset, Vulnerability, IncidentHistory
+
+Base.metadata.create_all(bind=engine)
 
 def test_full_sih_pipeline():
     print("=== Testing CyberOpt-RQ Solution Pipeline (SIH PS-26105) ===")
