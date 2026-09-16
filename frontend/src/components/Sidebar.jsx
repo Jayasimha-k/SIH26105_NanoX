@@ -13,7 +13,7 @@ const allNavItems = [
   { id: 'approvals', label: 'CISO Decision & Approval Hub', icon: ShieldCheck, roles: ['CISO'] },
   { id: 'execution', label: 'Remediation & Execution Queue', icon: Wrench, roles: ['IT'] },
   { id: 'recalculate', label: 'Continuous Risk Recalculation', icon: RefreshCcw, roles: ['SOC', 'Security', 'IT'] },
-  { id: 'audit', label: 'Blockchain Audit Ledger', icon: Lock, roles: ['CISO', 'Security', 'IT'] },
+  { id: 'audit', label: 'Decentralized Blockchain Ledger', icon: Lock, roles: ['CISO', 'Security', 'IT', 'SOC'] },
   { id: 'business_value', label: 'Business Value & Compliance', icon: Award, roles: ['CISO'] },
 ];
 

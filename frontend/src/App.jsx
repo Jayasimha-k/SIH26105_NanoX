@@ -26,29 +26,40 @@ export default function App({ isClerkConfigured = true }) {
   const [demoAuthenticated, setDemoAuthenticated] = useState(false);
   const [wsClientRef, setWsClientRef] = useState(null);
 
-  // Realtime Inter-Team Messages State
-  const [interTeamMessages, setInterTeamMessages] = useState([
-    {
-      id: 'MSG-INIT-1',
-      sender_role: 'SOC Analyst',
-      recipient_role: 'CISO',
-      urgency: 'CRITICAL',
-      title: 'Active CVE-2024-21626 Exploitation Flagged',
-      body: 'CISA KEV confirms active wild exploitation vector on Customer Portal Cluster. Requesting EAL quantification & control approval.',
-      timestamp: '14:20',
-      target_tab: 'ai_quantification'
-    },
-    {
-      id: 'MSG-INIT-2',
-      sender_role: 'CISO',
-      recipient_role: 'IT Remediation Team',
-      urgency: 'WARNING',
-      title: 'Approved Control Execution Directive',
-      body: 'REC-001 (Zero-Trust Microsegmentation) approved for implementation. Please deploy controls.',
-      timestamp: '14:25',
-      target_tab: 'execution'
+  // Realtime Inter-Team Messages State with localStorage Persistence
+  const [interTeamMessages, setInterTeamMessages] = useState(() => {
+    const saved = localStorage.getItem('cyberopt_team_messages');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
     }
-  ]);
+    return [
+      {
+        id: 'MSG-INIT-1',
+        sender_role: 'SOC Analyst',
+        recipient_role: 'CISO',
+        urgency: 'CRITICAL',
+        title: 'Active CVE-2024-21626 Exploitation Flagged',
+        body: 'CISA KEV confirms active wild exploitation vector on Customer Portal Cluster. Requesting EAL quantification & control approval.',
+        timestamp: '14:20',
+        target_tab: 'ai_quantification'
+      },
+      {
+        id: 'MSG-INIT-2',
+        sender_role: 'CISO',
+        recipient_role: 'IT Remediation Team',
+        urgency: 'WARNING',
+        title: 'Approved Control Execution Directive',
+        body: 'REC-001 (Zero-Trust Microsegmentation) approved for implementation. Please deploy controls.',
+        timestamp: '14:25',
+        target_tab: 'execution'
+      }
+    ];
+  });
+
+  // Persist messages whenever updated
+  useEffect(() => {
+    localStorage.setItem('cyberopt_team_messages', JSON.stringify(interTeamMessages));
+  }, [interTeamMessages]);
 
   // Clerk hooks
   const { isSignedIn, isLoaded, user } = useUser();
@@ -108,7 +119,7 @@ export default function App({ isClerkConfigured = true }) {
     const client = new WebSocketClient(
       (newEvent) => {
         if (newEvent.event_type === 'INTER_TEAM_MESSAGE') {
-          setInterTeamMessages((prev) => [newEvent, ...prev]);
+          setInterTeamMessages((prev) => [newEvent, ...prev.filter(m => m.id !== newEvent.id)]);
         } else {
           reloadData();
         }
@@ -122,7 +133,7 @@ export default function App({ isClerkConfigured = true }) {
   }, []);
 
   const handleSendMessage = (msgObj) => {
-    setInterTeamMessages((prev) => [msgObj, ...prev]);
+    setInterTeamMessages((prev) => [msgObj, ...prev.filter(m => m.id !== msgObj.id)]);
     if (wsClientRef && wsClientRef.ws && wsClientRef.ws.readyState === WebSocket.OPEN) {
       wsClientRef.ws.send(JSON.stringify(msgObj));
     }
@@ -212,7 +223,6 @@ export default function App({ isClerkConfigured = true }) {
     <div className="min-h-screen flex flex-col bg-[#0A0914] text-[#E9BCB9] relative">
       <Header
         currentRole={currentRole}
-        setCurrentRole={handleRoleSelect}
         wsStatus={wsStatus}
         onSignOut={handleSignOut}
         isClerkConfigured={isClerkConfigured}
