@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberOptRQ — Attacker Console | SIH 26105 Demo</title>
+  <meta name="description" content="Controlled local attack simulation for SIH demonstration. Sends real attack events to the CyberOptRQ backend." />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@400;600;800;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #ef4444;
+      --red-dark: #991b1b;
+      --orange: #f97316;
+      --green: #22c55e;
+      --green-glow: rgba(34,197,94,0.25);
+      --amber: #f59e0b;
+      --slate-950: #020617;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-400: #94a3b8;
+      --slate-300: #cbd5e1;
+    }
+
+    body {
+      background: var(--slate-950);
+      color: var(--green);
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Scanline effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.07) 2px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    header {
+      border-bottom: 1px solid #16a34a33;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15,23,42,0.95);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header .logo {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 14px;
+      color: white;
+      letter-spacing: -0.5px;
+    }
+
+    header .logo span { color: var(--red); }
+
+    header .status-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    header .status-badge.idle {
+      color: var(--slate-400);
+      border-color: var(--slate-700);
+      background: rgba(51,65,85,0.3);
+    }
+
+    header .status-badge.active {
+      color: var(--red);
+      border-color: var(--red-dark);
+      background: rgba(153,27,27,0.2);
+      animation: pulse-red 1s infinite;
+    }
+
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    main {
+      flex: 1;
+      padding: 32px 24px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .terminal-header {
+      text-align: center;
+    }
+
+    .terminal-header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: clamp(28px, 5vw, 48px);
+      color: white;
+      line-height: 1.1;
+      letter-spacing: -1px;
+    }
+
+    .terminal-header h1 .accent { color: var(--red); }
+
+    .terminal-header p {
+      font-size: 12px;
+      color: var(--slate-400);
+      margin-top: 8px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+
+    .warning-banner {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 11px;
+      color: #fca5a5;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.6;
+    }
+
+    .warning-banner .icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    .architecture-diagram {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid #16a34a22;
+      border-radius: 14px;
+      padding: 20px;
+      font-size: 10px;
+      color: var(--slate-400);
+      text-align: center;
+    }
+
+    .architecture-diagram .title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--slate-400);
+      margin-bottom: 14px;
+    }
+
+    .arch-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .arch-node {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid;
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .arch-node.attacker { color: var(--red); border-color: #991b1b44; background: rgba(153,27,27,0.1); }
+    .arch-node.backend { color: var(--amber); border-color: #92400e44; background: rgba(146,64,14,0.1); }
+    .arch-node.dashboard { color: #60a5fa; border-color: #1e3a5f; background: rgba(30,58,95,0.3); }
+    .arch-node.badapple { color: var(--green); border-color: #14532d44; background: rgba(20,83,45,0.1); }
+    .arch-arrow { color: var(--slate-700); font-size: 14px; }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
+    }
+
+    .scenario-card {
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--slate-700);
+      border-radius: 14px;
+      padding: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .scenario-card:hover {
+      border-color: var(--red);
+      background: rgba(239,68,68,0.05);
+      transform: translateY(-1px);
+    }
+
+    .scenario-card.selected {
+      border-color: var(--red);
+      background: rgba(239,68,68,0.08);
+      box-shadow: 0 0 0 1px var(--red-dark);
+    }
+
+    .scenario-card .tag {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--red-dark);
+      color: var(--red);
+      background: rgba(153,27,27,0.15);
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .scenario-card h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      color: white;
+      margin-bottom: 6px;
+    }
+
+    .scenario-card p {
+      font-size: 10px;
+      color: var(--slate-400);
+      line-height: 1.6;
+    }
+
+    .controls-panel {
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--slate-700);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .controls-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--slate-800);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .controls-header h2 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .conn-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .conn-dot.green { background: var(--green); box-shadow: 0 0 6px var(--green-glow); }
+    .conn-dot.red { background: var(--red); }
+    .conn-dot.grey { background: var(--slate-400); }
+
+    .controls-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .btn-start {
+      width: 100%;
+      padding: 18px 24px;
+      border-radius: 12px;
+      border: 2px solid var(--red);
+      background: rgba(239,68,68,0.1);
+      color: var(--red);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-start:hover:not(:disabled) {
+      background: rgba(239,68,68,0.2);
+      box-shadow: 0 0 20px rgba(239,68,68,0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-start:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-start.active-state {
+      background: rgba(239,68,68,0.15);
+      border-color: var(--red);
+      color: white;
+      animation: attack-pulse 1.5s ease infinite;
+    }
+
+    @keyframes attack-pulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(239,68,68,0.3); }
+      50% { box-shadow: 0 0 30px rgba(239,68,68,0.6), 0 0 60px rgba(239,68,68,0.2); }
+    }
+
+    .btn-complete {
+      width: 100%;
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: 1px solid var(--slate-700);
+      background: rgba(51,65,85,0.3);
+      color: var(--amber);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-complete:hover:not(:disabled) {
+      background: rgba(245,158,11,0.1);
+      border-color: var(--amber);
+    }
+
+    .btn-complete:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-reset {
+      width: 100%;
+      padding: 10px 24px;
+      border-radius: 12px;
+      border: 1px solid var(--slate-700);
+      background: transparent;
+      color: var(--slate-400);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-reset:hover { color: white; border-color: var(--slate-500); }
+
+    .corr-id-display {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid #16a34a33;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 11px;
+    }
+
+    .corr-id-display .label {
+      color: var(--slate-400);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .corr-id-display .value {
+      color: var(--green);
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    .terminal-log {
+      background: rgba(0,0,0,0.6);
+      border: 1px solid #16a34a22;
+      border-radius: 14px;
+      padding: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .terminal-log .log-header {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--slate-400);
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ffffff11;
+    }
+
+    .log-entry {
+      font-size: 10px;
+      line-height: 1.7;
+      margin-bottom: 2px;
+    }
+
+    .log-entry .ts { color: var(--slate-400); margin-right: 6px; }
+    .log-entry.info { color: var(--green); }
+    .log-entry.warn { color: var(--amber); }
+    .log-entry.error { color: var(--red); }
+    .log-entry.system { color: #60a5fa; }
+    .log-entry.success { color: #4ade80; }
+
+    .cursor-blink::after {
+      content: '_';
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .status-card {
+      background: rgba(15,23,42,0.7);
+      border: 1px solid var(--slate-800);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .status-card .label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--slate-400);
+      margin-bottom: 4px;
+    }
+
+    .status-card .val {
+      font-size: 12px;
+      font-weight: 800;
+      color: white;
+    }
+
+    .status-card .val.green { color: var(--green); }
+    .status-card .val.red { color: var(--red); }
+    .status-card .val.amber { color: var(--amber); }
+
+    .links-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ext-link {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--slate-700);
+      color: var(--slate-300);
+      background: rgba(51,65,85,0.2);
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ext-link:hover {
+      color: white;
+      border-color: var(--slate-500);
+      background: rgba(51,65,85,0.4);
+    }
+
+    footer {
+      border-top: 1px solid #ffffff11;
+      padding: 14px 24px;
+      font-size: 10px;
+      color: var(--slate-400);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">CyberOpt<span>RQ</span> — Attacker Console</div>
+    <div id="headerBadge" class="status-badge idle">● SIH DEMO MODE</div>
+  </header>
+
+  <main>
+    <div class="terminal-header">
+      <h1>CONTROLLED ATTACK <span class="accent">SIMULATION</span><br>CONSOLE</h1>
+      <p>SIH Problem Statement 26105 — Offline Demonstration<br>
+      Sends real attack event to CyberOptRQ Backend. Dashboard and Bad Apple Visualizer synchronize via /demo/attack/state.</p>
+    </div>
+
+    <div class="warning-banner">
+      <span class="icon">⚠</span>
+      <div>
+        <strong>AUTHORIZED DEMONSTRATION ONLY.</strong><br>
+        This console generates a controlled demo event. It does NOT send fake risk values to the dashboard.
+        The CyberOptRQ risk pipeline (P1→P6→EAL) runs independently from the backend.
+        Bad Apple Visualizer is a cinematic layer only — it does NOT calculate risk.
+      </div>
+    </div>
+
+    <div class="architecture-diagram">
+      <div class="title">Three-App Architecture</div>
+      <div class="arch-flow">
+        <span class="arch-node attacker">① Attacker Console</span>
+        <span class="arch-arrow">→</span>
+        <span class="arch-node backend">⚙ CyberOptRQ Backend<br><small style="font-weight:400;font-size:9px">POST /demo/attack/start</small></span>
+        <span class="arch-arrow">→</span>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span class="arch-node dashboard">② CyberOptRQ Dashboard<br><small style="font-weight:400;font-size:9px">GET /demo/attack/state</small></span>
+          <span class="arch-node badapple">③ Bad Apple Visualizer<br><small style="font-weight:400;font-size:9px">GET /demo/attack/state</small></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attack Scenario Selection -->
+    <div>
+      <div class="label" style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--slate-400);margin-bottom:12px">SELECT ATTACK SCENARIO</div>
+      <div class="scenario-grid">
+        <div class="scenario-card selected" data-scenario="controlled_local_attack" onclick="selectScenario(this)">
+          <span class="tag">Default</span>
+          <h3>Controlled Local Attack</h3>
+          <p>Simulates a local network intrusion against org assets. Triggers CVE detection flow in the dashboard.</p>
+        </div>
+        <div class="scenario-card" data-scenario="ransomware_demo" onclick="selectScenario(this)">
+          <span class="tag">Ransomware</span>
+          <h3>Ransomware Simulation</h3>
+          <p>Lateral movement + encryption pattern. High EAL impact. Triggers critical response in CISO dashboard.</p>
+        </div>
+        <div class="scenario-card" data-scenario="supply_chain_demo" onclick="selectScenario(this)">
+          <span class="tag">Supply Chain</span>
+          <h3>Supply Chain Exploit</h3>
+          <p>Third-party dependency compromise. Tests blast radius evaluation in the P4 MITRE ATT&CK model.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="controls-panel">
+      <div class="controls-header">
+        <h2>Attack Event Controller</h2>
+        <div class="conn-status">
+          <div id="connDot" class="conn-dot grey"></div>
+          <span id="connText" style="color:var(--slate-400)">Checking backend...</span>
+        </div>
+      </div>
+      <div class="controls-body">
+        <div class="status-grid">
+          <div class="status-card">
+            <div class="label">Demo Status</div>
+            <div id="demoStatus" class="val">IDLE</div>
+          </div>
+          <div class="status-card">
+            <div class="label">Backend Endpoint</div>
+            <div class="val" style="font-size:10px">/api/v1/demo/attack/start</div>
+          </div>
+          <div class="status-card">
+            <div class="label">Selected Scenario</div>
+            <div id="selectedScenario" class="val" style="font-size:10px">controlled_local_attack</div>
+          </div>
+        </div>
+
+        <div id="corrIdDisplay" class="corr-id-display" style="display:none">
+          <div class="label">Active Correlation ID</div>
+          <div id="corrIdValue" class="value cursor-blink"></div>
+        </div>
+
+        <button id="btnStart" class="btn-start" onclick="startAttack()">
+          [ ENTER ] — START CONTROLLED ATTACK
+        </button>
+
+        <button id="btnComplete" class="btn-complete" onclick="completeAttack()" disabled>
+          [ COMPLETE ] — End Attack Simulation
+        </button>
+
+        <div class="links-bar">
+          <a class="ext-link" onclick="openApp('dashboard')">📊 Open Dashboard</a>
+          <a class="ext-link" onclick="openApp('badapple')">🎬 Open Bad Apple</a>
+          <a class="ext-link" onclick="checkState()">🔍 Check Attack State</a>
+          <button class="btn-reset" onclick="resetDemo()">[ RESET ]</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal Log -->
+    <div class="terminal-log">
+      <div class="log-header">DEMO SYSTEM LOG ↓</div>
+      <div id="logContainer"></div>
+      <div class="log-entry info cursor-blink" id="cursor-line">root@cyberoptrq-demo:~$&nbsp;</div>
+    </div>
+  </main>
+
+  <footer>
+    SIH Problem Statement 26105 — Team Nano X — CyberOptRQ Demonstration System &nbsp;|&nbsp;
+    Attacker Console is separated from the main dashboard and Bad Apple visualizer by design.
+  </footer>
+
+  <script>
+    const API_BASE = 'http://localhost:8000/api/v1';
+    let currentCorrId = null;
+    let selectedScenario = 'controlled_local_attack';
+    let attackActive = false;
+    let pollingTimer = null;
+
+    function ts() {
+      return new Date().toTimeString().split(' ')[0];
+    }
+
+    function log(msg, type = 'info') {
+      const container = document.getElementById('logContainer');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.innerHTML = `<span class="ts">[${ts()}]</span>${msg}`;
+      container.appendChild(entry);
+      const logDiv = container.parentElement;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function selectScenario(el) {
+      document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedScenario = el.dataset.scenario;
+      document.getElementById('selectedScenario').textContent = selectedScenario;
+      log(`Scenario selected: ${selectedScenario}`, 'system');
+    }
+
+    async function checkBackend() {
+      try {
+        const res = await fetch(`${API_BASE}/demo/attack/state`);
+        if (res.ok) {
+          const data = await res.json();
+          setConnected(true);
+          if (data.status === 'ATTACK_STARTED' && data.active) {
+            currentCorrId = data.correlation_id;
+            updateAttackActive(true, data.correlation_id);
+            log(`Backend already has active attack: ${data.correlation_id}`, 'warn');
+          }
+          return data;
+        }
+      } catch (e) {
+        setConnected(false);
+      }
+      return null;
+    }
+
+    function setConnected(ok) {
+      const dot = document.getElementById('connDot');
+      const text = document.getElementById('connText');
+      if (ok) {
+        dot.className = 'conn-dot green';
+        text.style.color = 'var(--green)';
+        text.textContent = 'Backend Connected';
+      } else {
+        dot.className = 'conn-dot red';
+        text.style.color = 'var(--red)';
+        text.textContent = 'Backend Offline (start uvicorn)';
+      }
+    }
+
+    function updateAttackActive(active, corrId) {
+      attackActive = active;
+      const btnStart = document.getElementById('btnStart');
+      const btnComplete = document.getElementById('btnComplete');
+      const demoStatus = document.getElementById('demoStatus');
+      const headerBadge = document.getElementById('headerBadge');
+      const corrDisplay = document.getElementById('corrIdDisplay');
+      const corrValue = document.getElementById('corrIdValue');
+
+      if (active) {
+        btnStart.disabled = true;
+        btnStart.classList.add('active-state');
+        btnStart.textContent = '⚡ ATTACK IN PROGRESS...';
+        btnComplete.disabled = false;
+        demoStatus.textContent = 'ATTACK_STARTED';
+        demoStatus.className = 'val red';
+        headerBadge.textContent = '⚡ ATTACK ACTIVE';
+        headerBadge.className = 'status-badge active';
+        corrDisplay.style.display = 'block';
+        corrValue.textContent = corrId;
+        currentCorrId = corrId;
+      } else {
+        btnStart.disabled = false;
+        btnStart.classList.remove('active-state');
+        btnStart.textContent = '[ ENTER ] — START CONTROLLED ATTACK';
+        btnComplete.disabled = true;
+        demoStatus.textContent = 'IDLE';
+        demoStatus.className = 'val';
+        headerBadge.textContent = '● SIH DEMO MODE';
+        headerBadge.className = 'status-badge idle';
+        corrDisplay.style.display = 'none';
+        corrValue.textContent = '';
+        currentCorrId = null;
+      }
+    }
+
+    async function startAttack() {
+      log('Initiating controlled attack simulation...', 'warn');
+      log(`Scenario: ${selectedScenario}`, 'system');
+      console.log(`[ATTACKER] Attack launched: scenario=${selectedScenario}, asset=ASSET-001`);
+      console.log(`[ATTACKER] Attack event dispatched to ${API_BASE}/demo/attack/start`);
+
+      try {
+        const res = await fetch(`${API_BASE}/demo/attack/start`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scenario: selectedScenario,
+            organization_id: 'org_abc_tech',
+            asset_id: 'ASSET-001'
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
+          log(`ERROR: ${err.detail || res.status}`, 'error');
+          console.error(`[ATTACKER] Error starting attack: ${err.detail || res.status}`);
+          return;
+        }
+
+        const data = await res.json();
+        console.log(`[ATTACKER] Correlation ID received: ${data.correlation_id}`);
+        console.log('[ATTACKER] Backend broadcasting ATTACK_STARTED state');
+        log(`Attack event created: ${data.correlation_id}`, 'success');
+        log(`Event type: ${data.event}`, 'success');
+        log(`Organization: ${data.organization_id} | Asset: ${data.asset_id}`, 'system');
+        log('Backend is now broadcasting ATTACK_STARTED state.', 'system');
+        log('→ CyberOptRQ Dashboard should detect attack via /demo/attack/state', 'system');
+        log('→ Bad Apple Visualizer should start cinematic visualization', 'system');
+        log('Dashboard risk values come from P1-P6 pipeline, NOT from this console.', 'info');
+
+        updateAttackActive(true, data.correlation_id);
+
+        // Start polling for state confirmation
+        startPolling();
+      } catch (e) {
+        log(`NETWORK ERROR: Cannot reach ${API_BASE}. Is uvicorn running?`, 'error');
+        console.error(`[ATTACKER] Network error reaching ${API_BASE}:`, e);
+        setConnected(false);
+      }
+    }
+
+    async function completeAttack() {
+      if (!currentCorrId) {
+        log('No active attack to complete.', 'warn');
+        return;
+      }
+
+      log(`Completing attack simulation: ${currentCorrId}`, 'warn');
+      console.log(`[ATTACKER] Completing attack simulation: ${currentCorrId}`);
+
+      try {
+        const res = await fetch(`${API_BASE}/demo/attack/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correlation_id: currentCorrId })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: 'Unknown' }));
+          log(`ERROR completing: ${err.detail}`, 'error');
+          return;
+        }
+
+        const data = await res.json();
+        console.log(`[ATTACKER] Attack completed: ${data.event}`);
+        log(`Attack completed: ${data.event}`, 'success');
+        log('→ Bad Apple Visualizer will transition to end state.', 'system');
+        log('→ Dashboard can now record observed outcome.', 'system');
+
+        updateAttackActive(false, null);
+        stopPolling();
+      } catch (e) {
+        log(`NETWORK ERROR: ${e.message}`, 'error');
+        console.error(`[ATTACKER] Error completing attack:`, e);
+      }
+    }
+
+    async function checkState() {
+      const data = await checkBackend();
+      if (data) {
+        log(`Current state: ${JSON.stringify({
+          status: data.status,
+          correlation_id: data.correlation_id,
+          scenario: data.scenario,
+          active: data.active
+        })}`, 'system');
+      }
+    }
+
+    async function resetDemo() {
+      try {
+        console.log('[ATTACKER] Resetting demo state...');
+        const res = await fetch(`${API_BASE}/demo/attack/reset`, { method: 'POST' });
+        if (res.ok) {
+          console.log('[ATTACKER] Demo state reset to IDLE');
+          log('Demo state reset to IDLE.', 'info');
+          updateAttackActive(false, null);
+          stopPolling();
+        }
+      } catch (e) {
+        log(`Reset error: ${e.message}`, 'error');
+        console.error('[ATTACKER] Reset error:', e);
+      }
+    }
+
+    function openApp(which) {
+      if (which === 'dashboard') {
+        window.open('http://localhost:5173', '_blank');
+        log('Opening CyberOptRQ Dashboard...', 'system');
+      } else if (which === 'badapple') {
+        window.open('http://localhost:5174', '_blank');
+        log('Opening Bad Apple Visualizer...', 'system');
+      }
+    }
+
+    function startPolling() {
+      if (pollingTimer) return;
+      pollingTimer = setInterval(async () => {
+        await checkBackend();
+      }, 5000);
+    }
+
+    function stopPolling() {
+      if (pollingTimer) {
+        clearInterval(pollingTimer);
+        pollingTimer = null;
+      }
+    }
+
+    // Init
+    window.addEventListener('load', async () => {
+      log('CyberOptRQ Attacker Console initialized.', 'system');
+      log(`API Base: ${API_BASE}`, 'system');
+      log('Architecture: Attacker Console → Backend → [Dashboard + Bad Apple]', 'info');
+      log('Bad Apple does NOT detect attacks. Dashboard runs P1-P6 independently.', 'info');
+      log('Checking backend connectivity...', 'system');
+
+      const state = await checkBackend();
+      if (state) {
+        log(`Backend OK. Current state: ${state.status}`, 'success');
+      } else {
+        log('Backend not reachable. Start: uvicorn app.main:app --port 8000 (in backend/ dir)', 'error');
+      }
+
+      log('Select a scenario and press [ ENTER ] to start attack simulation.', 'info');
+    });
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !document.getElementById('btnStart').disabled) {
+        startAttack();
+      }
+    });
+  </script>
+</body>
+</html>

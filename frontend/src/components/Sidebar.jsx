@@ -2,12 +2,13 @@ import React from 'react';
 import {
   LayoutDashboard, Database, Server, DollarSign, Zap,
   ShieldCheck, Wrench, RefreshCcw, Lock, Award, Eye,
-  AlertOctagon, CheckSquare, Layers, FileText, Brain
+  AlertOctagon, CheckSquare, Layers, FileText, Brain, Mail
 } from 'lucide-react';
 
 const roleMenus = {
   CISO: [
     { id: 'dashboard', label: 'Executive Risk Overview', icon: LayoutDashboard },
+    { id: 'intelligence', label: 'Continuous Intel & HITL', icon: Mail },
     { id: 'threat_intel', label: 'Threat Intelligence', icon: Database },
     { id: 'ai_quantification', label: 'Financial Risk (FAIR EAL)', icon: DollarSign },
     { id: 'continual_learning', label: 'Continual Learning (Governance)', icon: Brain },
@@ -15,7 +16,16 @@ const roleMenus = {
     { id: 'approvals', label: 'Approval Center', icon: ShieldCheck },
     { id: 'audit', label: 'Audit & Compliance', icon: Lock }
   ],
+  CFO: [
+    { id: 'dashboard', label: 'Executive Financial View', icon: LayoutDashboard },
+    { id: 'intelligence', label: 'Financial Intelligence & HITL', icon: DollarSign },
+    { id: 'ai_quantification', label: 'Financial Loss (EAL)', icon: Layers },
+    { id: 'optimizer', label: 'Budget Optimization', icon: Zap },
+    { id: 'approvals', label: 'Capital Allocations', icon: ShieldCheck },
+    { id: 'audit', label: 'Audit & Compliance', icon: Lock }
+  ],
   SOC: [
+    { id: 'intelligence', label: 'Continuous Intelligence', icon: Mail },
     { id: 'threat_intel', label: 'Threat Intelligence', icon: Database },
     { id: 'vulnerabilities', label: 'Active Vulnerabilities', icon: AlertOctagon },
     { id: 'asset_inventory', label: 'Asset Exposure', icon: Server },
@@ -24,6 +34,7 @@ const roleMenus = {
     { id: 'incidents', label: 'Incident & Loss Log', icon: FileText }
   ],
   Security: [
+    { id: 'intelligence', label: 'Continuous Threat Feed', icon: Mail },
     { id: 'ai_quantification', label: 'Risk Assessment', icon: Eye },
     { id: 'asset_inventory', label: 'Asset Risk Portfolio', icon: Server },
     { id: 'continual_learning', label: 'Continual Learning & Drift', icon: Brain },
@@ -49,6 +60,7 @@ export default function Sidebar({ activeTab, setActiveTab, currentRole = 'CISO' 
         <div className="px-3 py-2 mb-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
           <span className="text-xs font-bold text-slate-800">
             {currentRole === 'CISO' && 'CISO Workspace'}
+            {currentRole === 'CFO' && 'CFO Financial Intelligence'}
             {currentRole === 'SOC' && 'SOC Operations'}
             {currentRole === 'Security' && 'Security Lead'}
             {currentRole === 'IT' && 'IT Remediation'}

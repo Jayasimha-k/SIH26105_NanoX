@@ -1,0 +1,31 @@
+From: SANS NewsBites <newsbites@sans.org>
+To: CyberOptRQ Intel Mailbox <intel@cyberoptrq.example>
+Subject: SANS NewsBites: Vol. 28, Num. 71 - Apache ActiveMQ RCE CVE-2023-46604 Exploited by Ransomware
+Date: Mon, 14 Sep 2026 14:15:00 +0000
+Message-ID: <sans-newsbites-20260914-002@sans.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+SANS NewsBites
+Volume 28, Number 71
+
+TOP STORY:
+Vulnerability: CVE-2023-46604
+Vendor: Apache Software Foundation
+Product: Apache ActiveMQ
+Affected Versions: 5.18.0 through 5.18.2, 5.17.0 through 5.17.5
+Vulnerability Type: Remote Code Execution
+Attack Vector: NETWORK
+MITRE ATT&CK Technique: T1190 (Exploit Public-Facing Application)
+Exploitation Status: ACTIVE_IN_THE_WILD
+Attack Outcome: EXPLOITATION_REPORTED
+Affected Sector: Financial Services, Manufacturing, Healthcare
+Publication Date: 2026-09-14
+
+DETAILS:
+Ransomware operators are actively weaponizing CVE-2023-46604 in Apache ActiveMQ to gain initial access to enterprise infrastructure. The vulnerability enables an unauthenticated attacker with network access to execute arbitrary shell commands by manipulating serialized class types in the OpenWire protocol.
+
+MITIGATION:
+Upgrade to Apache ActiveMQ 5.18.3, 5.17.6, or newer versions immediately. Restrict OpenWire broker port (61616) to trusted internal subnets.
+
+Confidence: 0.91

@@ -1,0 +1,38 @@
+From: SANS @RISK Team <at-risk@sans.org>
+To: CyberOptRQ Intel Mailbox <intel@cyberoptrq.example>
+Subject: SANS @RISK: Vol. 24, Issue 38 - Active Exploitation of CVE-2024-21626 in Production Runtimes
+Date: Wed, 16 Sep 2026 08:30:00 +0000
+Message-ID: <sans-risk-20260916-001@sans.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+SANS @RISK: Critical Threat Briefing
+Volume 24, Issue 38
+
+NOTABLE VULNERABILITY SUMMARY:
+Vulnerability: CVE-2024-21626
+Vendor: Open Containers Initiative / runc
+Product: runc Container Runtime
+Affected Versions: runc versions prior to 1.1.12
+Vulnerability Type: Container Escape / Privilege Escalation
+Attack Vector: NETWORK / LOCAL EXECUTION
+MITRE ATT&CK Technique: T1068 (Exploitation for Privilege Escalation)
+Threat Actor: Undisclosed Threat Group (UNC-4841 Activity)
+Exploitation Status: ACTIVE_IN_THE_WILD
+Attack Outcome: SUCCESSFUL EXPLOITATION OBSERVED
+Affected Sector: Cloud Infrastructure, Healthcare, Enterprise Financials
+Publication Date: 2026-09-16
+
+EXECUTIVE ANALYSIS:
+Security researchers and telemetry sources confirm active in-the-wild exploitation of CVE-2024-21626. Threat actors are leveraging an internal file descriptor leak in runc to escape container boundaries and compromise host operating systems (Linux kernels on AWS and hybrid clusters). Successful exploitation grants root privileges on the hosting node, enabling lateral movement and sensitive credential theft.
+
+RECOMMENDED CONTROLS & REMEDIATION:
+- Upgrade runc to version 1.1.12 or later across all containerized workloads.
+- NIST-PR.AC-1: Enforce strict access control hardening and host-level container sandboxing.
+- CIS Control 4.1: Isolate management planes and public-facing container hosts.
+
+POTENTIAL BUSINESS IMPACT:
+High risk of full cluster takeover and intellectual property exfiltration. Financial impact estimated at ₹2,500,000 to ₹5,000,000 per affected production server.
+
+Source URL: https://www.sans.org/newsletters/at-risk/vol24-issue38
+Confidence: 0.94

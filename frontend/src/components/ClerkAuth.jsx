@@ -15,7 +15,8 @@ import {
   Activity,
   Database,
   Wrench,
-  KeyRound
+  KeyRound,
+  DollarSign
 } from 'lucide-react';
 
 const ClerkContext = createContext({
@@ -131,6 +132,12 @@ export function SignIn({ onSelectRole, step = 1, setStep, onBypassDemo }) {
       title: 'CISO',
       icon: Shield,
       badge: 'Executive Governance'
+    },
+    {
+      id: 'CFO',
+      title: 'CFO',
+      icon: DollarSign,
+      badge: 'Financial Risk & Capital'
     },
     {
       id: 'SOC',

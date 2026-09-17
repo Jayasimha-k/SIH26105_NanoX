@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bad Apple — CyberOptRQ Attack Visualizer | SIH 26105</title>
+  <meta name="description" content="Bad Apple cinematic visualizer for the CyberOptRQ SIH demonstration. Synchronizes with attack events from the backend. Does NOT calculate risk." />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@400;600;800;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #ef4444;
+      --red-dark: #7f1d1d;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --slate-950: #020617;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-400: #94a3b8;
+      --white: #ffffff;
+    }
+
+    body {
+      background: #000;
+      color: var(--white);
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Scanline overlay */
+    #scanlines {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.15) 3px,
+        rgba(0,0,0,0.15) 6px
+      );
+      pointer-events: none;
+      z-index: 90;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    /* Main video / visualization area */
+    #visualizer {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    video#badAppleVideo {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: none;
+      filter: contrast(1.1) brightness(0.9);
+    }
+
+    /* ASCII / canvas fallback when no video */
+    canvas#asciiCanvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    /* Idle state */
+    #idleOverlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      background: #000;
+      z-index: 10;
+      transition: opacity 0.8s;
+    }
+
+    #idleOverlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .idle-logo {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: clamp(32px, 6vw, 72px);
+      color: white;
+      text-align: center;
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+
+    .idle-logo .red { color: var(--red); }
+
+    .idle-subtitle {
+      font-size: clamp(10px, 2vw, 14px);
+      color: var(--slate-400);
+      text-align: center;
+      max-width: 500px;
+      line-height: 1.8;
+    }
+
+    .status-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid var(--slate-800);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .status-ring.waiting {
+      border-color: var(--slate-800);
+      animation: ring-pulse 2s ease infinite;
+    }
+
+    .status-ring.active {
+      border-color: var(--red);
+      animation: ring-attack 1s ease infinite;
+      box-shadow: 0 0 40px rgba(239,68,68,0.4);
+    }
+
+    @keyframes ring-pulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(148,163,184,0.1); }
+      50% { box-shadow: 0 0 20px rgba(148,163,184,0.1); }
+    }
+
+    @keyframes ring-attack {
+      0%, 100% { box-shadow: 0 0 20px rgba(239,68,68,0.4), 0 0 60px rgba(239,68,68,0.1); }
+      50% { box-shadow: 0 0 40px rgba(239,68,68,0.7), 0 0 100px rgba(239,68,68,0.2); }
+    }
+
+    /* HUD overlay (shown during attack) */
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      display: none;
+    }
+
+    #hud.visible { display: block; }
+
+    .hud-corner {
+      position: absolute;
+      padding: 12px 16px;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.8;
+    }
+
+    .hud-top-left {
+      top: 16px;
+      left: 16px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+    }
+
+    .hud-top-right {
+      top: 16px;
+      right: 16px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      text-align: right;
+    }
+
+    .hud-bottom-left {
+      bottom: 16px;
+      left: 16px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 8px;
+    }
+
+    .hud-bottom-right {
+      bottom: 16px;
+      right: 16px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      text-align: right;
+    }
+
+    .hud-label {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--slate-400);
+    }
+
+    .hud-value {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--red);
+    }
+
+    .hud-value.green { color: var(--green); }
+
+    .hud-corr-id {
+      font-size: 10px;
+      color: var(--amber);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    /* Glitch effect */
+    @keyframes glitch {
+      0% { transform: translate(0); filter: none; }
+      10% { transform: translate(-3px, 1px); filter: hue-rotate(60deg); }
+      20% { transform: translate(3px, -1px); filter: none; }
+      30% { transform: translate(-1px, 2px); filter: hue-rotate(-30deg); }
+      40% { transform: translate(2px, -1px); filter: none; }
+      100% { transform: translate(0); filter: none; }
+    }
+
+    .glitch-active {
+      animation: glitch 0.3s ease infinite;
+    }
+
+    /* Controls bar */
+    #controlBar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 20px;
+      background: rgba(0,0,0,0.9);
+      border-top: 1px solid #ffffff11;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      pointer-events: all;
+      transition: opacity 0.5s;
+    }
+
+    #controlBar.hidden { opacity: 0; pointer-events: none; }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ctrl-btn {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: transparent;
+      pointer-events: all;
+    }
+
+    .ctrl-btn.primary { color: var(--red); border-color: var(--red-dark); }
+    .ctrl-btn.primary:hover { background: rgba(239,68,68,0.1); }
+    .ctrl-btn.secondary { color: var(--slate-400); border-color: var(--slate-800); }
+    .ctrl-btn.secondary:hover { color: white; border-color: var(--slate-600); }
+
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--slate-400);
+    }
+
+    .sync-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--slate-400);
+    }
+
+    .sync-dot.active { background: var(--red); animation: ring-attack 1s infinite; }
+    .sync-dot.connected { background: var(--green); }
+
+    /* Video load prompt */
+    #videoLoadPrompt {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 200;
+    }
+
+    #videoLoadPrompt.hidden { display: none; }
+
+    .prompt-box {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 480px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .prompt-box h2 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .prompt-box p {
+      font-size: 11px;
+      color: var(--slate-400);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .prompt-box input[type="file"] {
+      display: none;
+    }
+
+    .file-label {
+      display: inline-block;
+      padding: 10px 20px;
+      border: 1px solid var(--slate-700);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      background: rgba(51,65,85,0.3);
+      transition: all 0.2s;
+      margin-bottom: 10px;
+    }
+
+    .file-label:hover { background: rgba(51,65,85,0.6); }
+
+    .skip-btn {
+      display: block;
+      font-size: 10px;
+      color: var(--slate-400);
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 8px;
+    }
+
+    .skip-btn:hover { color: white; }
+  </style>
+</head>
+<body>
+  <!-- YouTube iframe replaces local video -- no file loading needed -->
+  <!-- (hidden in idle, shown on ATTACK_STARTED) -->
+
+  <div id="scanlines"></div>
+
+  <!-- Idle state -->
+  <div id="idleOverlay">
+    <div class="status-ring waiting" id="statusRing">⏸</div>
+    <div class="idle-logo">BAD <span class="red">APPLE</span><br>VISUALIZER</div>
+    <div class="idle-subtitle">
+      CyberOptRQ SIH 26105 — Separate cinematic visualization layer.<br>
+      Waiting for attack event from CyberOptRQ Backend.<br>
+      <br>
+      <span style="color:#334155;font-size:10px">
+        Architecture: Attacker Console → Backend → <strong style="color:var(--red)">Bad Apple (here)</strong><br>
+        This interface does NOT detect attacks or calculate risk.
+      </span>
+    </div>
+    <div id="idleStatusText" style="font-size:10px;color:var(--slate-400)">Polling /demo/attack/state...</div>
+  </div>
+
+  <!-- YouTube player (shown during attack) -->
+  <div id="visualizer">
+    <div id="videoContainer">
+      <iframe
+        id="youtubePlayer"
+        style="display:none;width:100%;height:100%;border:0;position:absolute;inset:0;"
+        src=""
+        allow="autoplay; encrypted-media"
+        allowfullscreen
+      ></iframe>
+      <canvas id="asciiCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-corner hud-top-left">
+      <div class="hud-label">Event Status</div>
+      <div class="hud-value" id="hudStatus">ATTACK_STARTED</div>
+      <div class="hud-label" style="margin-top:4px">Scenario</div>
+      <div style="font-size:11px;color:white;font-weight:700" id="hudScenario">—</div>
+    </div>
+
+    <div class="hud-corner hud-top-right">
+      <div class="hud-label">Correlation ID</div>
+      <div class="hud-corr-id" id="hudCorrId">—</div>
+      <div class="hud-label" style="margin-top:4px">Started</div>
+      <div style="font-size:10px;color:var(--amber)" id="hudStarted">—</div>
+    </div>
+
+    <div class="hud-corner hud-bottom-left">
+      <div class="hud-label">CyberOptRQ Backend</div>
+      <div class="hud-value green" id="hudBackend">CONNECTED</div>
+      <div class="hud-label" style="margin-top:4px">Visualization Role</div>
+      <div style="font-size:9px;color:var(--slate-400);max-width:200px">Cinematic layer only. Risk values come from P1–P6 pipeline in dashboard.</div>
+    </div>
+
+    <div class="hud-corner hud-bottom-right">
+      <div class="hud-label">Bad Apple</div>
+      <div style="font-size:11px;color:white;font-weight:800" id="hudVideoState">PLAYING</div>
+      <div class="hud-label" style="margin-top:4px">SIH 26105</div>
+      <div style="font-size:9px;color:var(--slate-400)">Team Nano X</div>
+    </div>
+  </div>
+
+  <!-- Controls bar -->
+  <div id="controlBar">
+    <div class="ctrl-group">
+      <div class="sync-status">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncText">Polling backend...</span>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <button class="ctrl-btn secondary" onclick="manualSync()">↻ Sync Now</button>
+      <button class="ctrl-btn secondary" onclick="toggleHud()">HUD</button>
+      <button class="ctrl-btn secondary" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+      <button class="ctrl-btn primary" onclick="window.open('http://localhost:8080', '_blank')">🎯 Attacker Console</button>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:8000/api/v1';
+    const POLL_INTERVAL_MS = 3000;
+
+    let currentState = 'IDLE';
+    let pollTimer = null;
+    let hasVideo = false;
+    let hudVisible = true;
+    let videoObjectUrl = null;
+    let ctrlBarTimer = null;
+
+    // ASCII fallback animation
+    const ASCII_CHARS = ' .:-=+*#%@';
+    let asciiAnimFrame = null;
+    let useAscii = false;
+    let glitchActive = false;
+
+    // ────────────────────────────────────────────────────────────
+    // VIDEO LOADING
+    // ────────────────────────────────────────────────────────────
+    function loadVideoFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
+      videoObjectUrl = URL.createObjectURL(file);
+
+      const vid = document.getElementById('badAppleVideo');
+      vid.src = videoObjectUrl;
+      vid.style.display = 'none';
+      hasVideo = true;
+      useAscii = false;
+
+      document.getElementById('videoLoadPrompt').classList.add('hidden');
+      startPolling();
+    }
+
+    function skipVideoLoad() {
+      document.getElementById('videoLoadPrompt').classList.add('hidden');
+      useAscii = true;
+      hasVideo = false;
+      initAsciiCanvas();
+      startPolling();
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // ASCII CANVAS FALLBACK
+    // ────────────────────────────────────────────────────────────
+    function initAsciiCanvas() {
+      const canvas = document.getElementById('asciiCanvas');
+      const W = Math.floor(window.innerWidth / 8);
+      const H = Math.floor(window.innerHeight / 14);
+      canvas.width = W;
+      canvas.height = H;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      drawAsciiIdle(canvas, W, H);
+    }
+
+    function drawAsciiIdle(canvas, W, H) {
+      const ctx = canvas.getContext('2d');
+      let t = 0;
+
+      function frame() {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, W, H);
+
+        if (glitchActive) {
+          ctx.fillStyle = `hsl(${Math.random()*360}, 100%, 50%)`;
+        } else {
+          ctx.fillStyle = currentState === 'ATTACK_STARTED' ? '#ef4444' : '#334155';
+        }
+
+        const pattern = currentState === 'ATTACK_STARTED'
+          ? generateAttackPattern(W, H, t)
+          : generateIdlePattern(W, H, t);
+
+        ctx.font = `8px "JetBrains Mono"`;
+        for (let y = 0; y < H; y++) {
+          for (let x = 0; x < W; x++) {
+            const char = pattern[y * W + x];
+            if (char && char !== ' ') {
+              ctx.fillText(char, x * 8, y * 14);
+            }
+          }
+        }
+        t++;
+        asciiAnimFrame = requestAnimationFrame(frame);
+      }
+
+      if (asciiAnimFrame) cancelAnimationFrame(asciiAnimFrame);
+      frame();
+    }
+
+    function generateIdlePattern(W, H, t) {
+      const data = new Array(W * H).fill(' ');
+      // Ripple pattern
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const dx = x - W/2, dy = y - H/2;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          const wave = Math.sin(dist * 0.4 - t * 0.05);
+          if (wave > 0.3) {
+            const idx = Math.floor((wave * 0.7) * (ASCII_CHARS.length - 2));
+            data[y * W + x] = ASCII_CHARS[Math.max(0, idx)];
+          }
+        }
+      }
+      return data;
+    }
+
+    function generateAttackPattern(W, H, t) {
+      const data = new Array(W * H).fill(' ');
+      // Chaotic attack pattern
+      const chars = '@#%*!';
+      for (let i = 0; i < W * H * 0.15; i++) {
+        const x = Math.floor(Math.random() * W);
+        const y = Math.floor(Math.random() * H);
+        data[y * W + x] = chars[Math.floor(Math.random() * chars.length)];
+      }
+      // Propagating wave from center
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const dx = x - W/2, dy = y - H/2;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          const wave = Math.sin(dist * 0.3 - t * 0.12);
+          if (wave > 0.5) {
+            const idx = Math.floor(wave * 4);
+            data[y * W + x] = '#%@*'[idx] || '#';
+          }
+        }
+      }
+      return data;
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // BACKEND POLLING
+    // ────────────────────────────────────────────────────────────
+    async function pollState() {
+      try {
+        const res = await fetch(`${API_BASE}/demo/attack/state`);
+        if (!res.ok) throw new Error('Non-OK response');
+        const data = await res.json();
+        setSyncConnected(true);
+        handleStateChange(data);
+      } catch (e) {
+        setSyncConnected(false);
+      }
+    }
+
+    function handleStateChange(data) {
+      const newStatus = data.status;
+
+      if (newStatus === currentState) return;
+
+      const prev = currentState;
+      currentState = newStatus;
+
+      if (newStatus === 'ATTACK_STARTED') {
+        onAttackStarted(data);
+      } else if (newStatus === 'ATTACK_COMPLETED') {
+        onAttackCompleted(data);
+      } else {
+        onIdle();
+      }
+
+      updateHud(data);
+    }
+
+    function onAttackStarted(data) {
+      console.log(`[BAD APPLE] Visualization start requested for correlation=${data.correlation_id || 'UNKNOWN'}`);
+
+      // Hide idle, show visualization
+      document.getElementById('idleOverlay').classList.add('hidden');
+      document.getElementById('hud').classList.add('visible');
+      document.getElementById('scanlines').style.opacity = '1';
+      document.getElementById('statusRing').className = 'status-ring active';
+      document.getElementById('statusRing').textContent = '⚡';
+      document.getElementById('syncDot').className = 'sync-dot active';
+
+      // Start YouTube playback (autoplay+mute bypasses browser restrictions)
+      const yt = document.getElementById('youtubePlayer');
+      yt.src = 'https://www.youtube.com/embed/9lNZ_Rnr7Jc?autoplay=1&mute=1&loop=1&playlist=9lNZ_Rnr7Jc&controls=0&rel=0&modestbranding=1&iv_load_policy=3';
+      yt.style.display = 'block';
+      console.log('[BAD APPLE] Playback started (YouTube muted autoplay: active)');
+      document.getElementById('hudVideoState').textContent = 'PLAYING (YOUTUBE)';
+
+      triggerGlitch();
+      hideControlBar();
+    }
+
+    function onAttackCompleted(data) {
+      console.log('[BAD APPLE] Attack completed - stopping YouTube playback');
+      // Clear src to stop YouTube
+      const yt = document.getElementById('youtubePlayer');
+      yt.src = '';
+      yt.style.display = 'none';
+      document.getElementById('hudVideoState').textContent = 'COMPLETED';
+
+      document.getElementById('scanlines').style.opacity = '0.3';
+      document.getElementById('syncDot').className = 'sync-dot connected';
+      document.getElementById('hud').querySelector('#hudStatus').textContent = 'ATTACK_COMPLETED';
+      document.getElementById('hud').querySelector('#hudStatus').style.color = 'var(--amber)';
+
+      showControlBar();
+    }
+
+    function onIdle() {
+      console.log('[BAD APPLE] Reset to IDLE');
+      document.getElementById('idleOverlay').classList.remove('hidden');
+      document.getElementById('hud').classList.remove('visible');
+      document.getElementById('scanlines').style.opacity = '0';
+      document.getElementById('statusRing').className = 'status-ring waiting';
+      document.getElementById('statusRing').textContent = '⏸';
+      document.getElementById('syncDot').className = 'sync-dot connected';
+
+      // Stop YouTube
+      const yt = document.getElementById('youtubePlayer');
+      yt.src = '';
+      yt.style.display = 'none';
+
+      showControlBar();
+    }
+
+    function triggerGlitch() {
+      glitchActive = true;
+      const container = document.getElementById('videoContainer');
+      container.classList.add('glitch-active');
+      setTimeout(() => {
+        glitchActive = false;
+        container.classList.remove('glitch-active');
+      }, 600);
+    }
+
+    function updateHud(data) {
+      document.getElementById('hudStatus').textContent = data.status;
+      document.getElementById('hudCorrId').textContent = data.correlation_id || '—';
+      document.getElementById('hudScenario').textContent = data.scenario || '—';
+      document.getElementById('hudStarted').textContent = data.started_at
+        ? new Date(data.started_at).toLocaleTimeString()
+        : '—';
+    }
+
+    function setSyncConnected(ok) {
+      const dot = document.getElementById('syncDot');
+      const text = document.getElementById('syncText');
+      const idleStatus = document.getElementById('idleStatusText');
+
+      if (ok) {
+        if (currentState !== 'ATTACK_STARTED') {
+          dot.className = 'sync-dot connected';
+        }
+        text.textContent = `Backend connected | Status: ${currentState}`;
+        idleStatus.textContent = `Backend connected — waiting for ATTACK_STARTED event...`;
+        document.getElementById('hudBackend').textContent = 'CONNECTED';
+      } else {
+        dot.className = 'sync-dot';
+        text.textContent = 'Backend offline — start uvicorn';
+        idleStatus.textContent = 'Cannot reach backend at ' + API_BASE;
+        document.getElementById('hudBackend').textContent = 'OFFLINE';
+        document.getElementById('hudBackend').style.color = 'var(--red)';
+      }
+    }
+
+    function startPolling() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollState(); // immediate check
+      pollTimer = setInterval(pollState, POLL_INTERVAL_MS);
+    }
+
+    function manualSync() {
+      pollState();
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // UI HELPERS
+    // ────────────────────────────────────────────────────────────
+    function toggleHud() {
+      hudVisible = !hudVisible;
+      document.getElementById('hud').style.display = hudVisible ? 'block' : 'none';
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    function hideControlBar() {
+      if (ctrlBarTimer) clearTimeout(ctrlBarTimer);
+      ctrlBarTimer = setTimeout(() => {
+        document.getElementById('controlBar').classList.add('hidden');
+      }, 3000);
+    }
+
+    function showControlBar() {
+      document.getElementById('controlBar').classList.remove('hidden');
+      if (ctrlBarTimer) clearTimeout(ctrlBarTimer);
+    }
+
+    document.addEventListener('mousemove', () => {
+      showControlBar();
+      if (currentState === 'ATTACK_STARTED') hideControlBar();
+    });
+
+    // ────────────────────────────────────────────────────────────
+    // INIT & EMBED MODE
+    // ────────────────────────────────────────────────────────────
+    function autoInitVideo() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isEmbed = urlParams.get('embed') === 'true' || window.self !== window.top;
+
+      if (isEmbed) {
+        document.body.classList.add('embed-mode');
+        const ctrlBar = document.getElementById('controlBar');
+        if (ctrlBar) ctrlBar.style.display = 'none';
+      }
+
+      // YouTube mode: no local file needed — just start polling for attack state
+      console.log('[BAD APPLE] YouTube mode active. Polling for attack state...');
+      hasVideo = false;
+      useAscii = false;
+      startPolling();
+    }
+
+    window.addEventListener('load', () => {
+      autoInitVideo();
+    });
+
+    window.addEventListener('resize', () => {
+      if (useAscii) {
+        const canvas = document.getElementById('asciiCanvas');
+        if (canvas) {
+          const W = Math.floor(window.innerWidth / 8);
+          const H = Math.floor(window.innerHeight / 14);
+          canvas.width = W;
+          canvas.height = H;
+          canvas.style.width = window.innerWidth + 'px';
+          canvas.style.height = window.innerHeight + 'px';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

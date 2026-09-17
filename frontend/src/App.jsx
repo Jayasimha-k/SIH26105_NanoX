@@ -15,11 +15,12 @@ import AuditView from './components/views/AuditView';
 import BusinessValueView from './components/views/BusinessValueView';
 import ThreatIntelView from './components/views/ThreatIntelView';
 import ContinualLearningView from './components/views/ContinualLearningView';
+import IntelligenceCenterView from './components/views/IntelligenceCenterView';
 
 import { api } from './services/api';
 import { WebSocketClient } from './services/websocket';
 import { useUser, useClerk } from './components/ClerkAuth';
-import { ShieldCheck, Eye, Database, Wrench } from 'lucide-react';
+import { ShieldCheck, Eye, Database, Wrench, DollarSign } from 'lucide-react';
 
 export default function App({ isClerkConfigured = true }) {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -28,6 +29,9 @@ export default function App({ isClerkConfigured = true }) {
   const [demoAuthenticated, setDemoAuthenticated] = useState(false);
   const [wsClientRef, setWsClientRef] = useState(null);
   const [isMessengerOpen, setIsMessengerOpen] = useState(false);
+
+  // Attack Mode & Demo Synchronization State
+  const [attackState, setAttackState] = useState({ active: false, status: 'IDLE' });
 
   // Realtime Inter-Team Messages State with localStorage Persistence
   const [interTeamMessages, setInterTeamMessages] = useState(() => {
@@ -72,6 +76,7 @@ export default function App({ isClerkConfigured = true }) {
   const handleRoleSelect = (roleKey) => {
     setCurrentRole(roleKey);
     if (roleKey === 'CISO') setActiveTab('dashboard');
+    if (roleKey === 'CFO') setActiveTab('intelligence');
     if (roleKey === 'SOC') setActiveTab('threat_intel');
     if (roleKey === 'Security') setActiveTab('ai_quantification');
     if (roleKey === 'IT') setActiveTab('execution');
@@ -119,9 +124,86 @@ export default function App({ isClerkConfigured = true }) {
   useEffect(() => {
     reloadData();
 
+    // Check demo attack state immediately
+    api.getDemoAttackState().then((state) => {
+      if (state) {
+        setAttackState({
+          active: state.active || state.status === 'ATTACK_STARTED',
+          status: state.status,
+          correlation_id: state.correlation_id,
+          scenario: state.scenario,
+          organization_id: state.organization_id,
+          asset_id: state.asset_id,
+          started_at: state.started_at,
+          pipeline: state.pipeline || null,
+        });
+      }
+    }).catch(() => {});
+
+    // Fast polling interval (1.2s) as ultra-resilient sync fallback
+    const interval = setInterval(() => {
+      api.getDemoAttackState().then((state) => {
+        if (state) {
+          setAttackState((prev) => {
+            if (prev.status !== state.status || prev.correlation_id !== state.correlation_id) {
+              const isNowActive = state.active || state.status === 'ATTACK_STARTED';
+              if (isNowActive && !prev.active) {
+                console.log(`[DASHBOARD] ATTACK_STARTED received via polling: correlation_id=${state.correlation_id}`);
+                console.log(`[DASHBOARD] Entering ATTACK MODE: Target Asset=${state.asset_id}`);
+                setActiveTab('dashboard');
+                reloadData();
+              } else if (!isNowActive && prev.active) {
+                console.log('[DASHBOARD] Attack completed/reset detected via polling');
+                reloadData();
+              }
+              return {
+                active: isNowActive,
+                status: state.status,
+                correlation_id: state.correlation_id,
+                scenario: state.scenario,
+                organization_id: state.organization_id,
+                asset_id: state.asset_id,
+                started_at: state.started_at,
+                pipeline: state.pipeline || prev.pipeline,
+              };
+            }
+            return prev;
+          });
+        }
+      }).catch(() => {});
+    }, 1200);
+
     const client = new WebSocketClient(
       (newEvent) => {
-        if (newEvent.event_type === 'INTER_TEAM_MESSAGE') {
+        if (newEvent.event_type === 'ATTACK_STARTED' || newEvent.status === 'ATTACK_STARTED') {
+          console.log(`[DASHBOARD] ATTACK_STARTED received via WebSocket: correlation_id=${newEvent.correlation_id}`);
+          console.log(`[DASHBOARD] Entering ATTACK MODE: Target Asset=${newEvent.asset_id || 'ASSET-001'}`);
+          setAttackState({
+            active: true,
+            status: 'ATTACK_STARTED',
+            correlation_id: newEvent.correlation_id,
+            scenario: newEvent.scenario,
+            organization_id: newEvent.organization_id,
+            asset_id: newEvent.asset_id,
+            started_at: newEvent.timestamp || newEvent.started_at,
+            pipeline: newEvent.pipeline || null,
+          });
+          setActiveTab('dashboard');
+          reloadData();
+        } else if (newEvent.event_type === 'ATTACK_COMPLETED' || newEvent.status === 'ATTACK_COMPLETED') {
+          console.log(`[DASHBOARD] ATTACK_COMPLETED received: correlation_id=${newEvent.correlation_id}`);
+          setAttackState((prev) => ({
+            ...prev,
+            active: false,
+            status: 'ATTACK_COMPLETED',
+            pipeline: prev.pipeline ? { ...prev.pipeline, status: 'REMEDIATED' } : null
+          }));
+          reloadData();
+        } else if (newEvent.event_type === 'DEMO_RESET' || newEvent.status === 'IDLE') {
+          console.log('[DASHBOARD] DEMO_RESET received - restoring baseline state');
+          setAttackState({ active: false, status: 'IDLE', pipeline: null });
+          reloadData();
+        } else if (newEvent.event_type === 'INTER_TEAM_MESSAGE') {
           setInterTeamMessages((prev) => [newEvent, ...prev.filter(m => m.id !== newEvent.id)]);
         } else {
           reloadData();
@@ -132,7 +214,10 @@ export default function App({ isClerkConfigured = true }) {
     client.connect();
     setWsClientRef(client);
 
-    return () => client.disconnect();
+    return () => {
+      clearInterval(interval);
+      client.disconnect();
+    };
   }, []);
 
   const handleSendMessage = (msgObj) => {
@@ -166,6 +251,11 @@ export default function App({ isClerkConfigured = true }) {
       icon: ShieldCheck,
       color: "border-slate-200 bg-white"
     },
+    CFO: {
+      title: "CFO Financial Intelligence & Capital Allocation",
+      icon: DollarSign,
+      color: "border-slate-200 bg-white"
+    },
     SOC: {
       title: "SOC Operations Center",
       icon: Database,
@@ -195,6 +285,12 @@ export default function App({ isClerkConfigured = true }) {
             onNavigate={setActiveTab}
             recommendations={recommendations}
             onRefresh={reloadData}
+            attackState={attackState}
+            onCompleteAttack={async (corrId) => {
+              await api.completeAttackDemo(corrId);
+              setAttackState((prev) => ({ ...prev, active: false, status: 'ATTACK_COMPLETED' }));
+              reloadData();
+            }}
           />
         );
       case 'threat_intel':
@@ -266,6 +362,8 @@ export default function App({ isClerkConfigured = true }) {
         );
       case 'business_value':
         return <BusinessValueView />;
+      case 'intelligence':
+        return <IntelligenceCenterView currentRole={currentRole} onRefresh={reloadData} />;
       default:
         return (
           <DashboardView
@@ -273,6 +371,12 @@ export default function App({ isClerkConfigured = true }) {
             onNavigate={setActiveTab}
             recommendations={recommendations}
             onRefresh={reloadData}
+            attackState={attackState}
+            onCompleteAttack={async (corrId) => {
+              await api.completeAttackDemo(corrId);
+              setAttackState((prev) => ({ ...prev, active: false, status: 'ATTACK_COMPLETED' }));
+              reloadData();
+            }}
           />
         );
     }

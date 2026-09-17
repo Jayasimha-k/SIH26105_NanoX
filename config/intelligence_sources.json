@@ -1,0 +1,97 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-09-17T07:00:00Z",
+  "sources": [
+    {
+      "source_id": "sans_at_risk",
+      "source_name": "SANS @RISK",
+      "category": "CYBERSECURITY",
+      "type": "email_newsletter",
+      "feed_url": "https://www.sans.org/newsletters/at-risk/",
+      "email_patterns": ["*@sans.org", "*at-risk*@sans.org", "*newsletters@sans.org"],
+      "enabled": true,
+      "trust_level": "HIGH",
+      "organization_relevance": "CRITICAL_INFRASTRUCTURE",
+      "polling_frequency": "WEEKLY",
+      "parser_type": "sans_risk_parser"
+    },
+    {
+      "source_id": "sans_newsbites",
+      "source_name": "SANS NewsBites",
+      "category": "CYBERSECURITY",
+      "type": "email_newsletter",
+      "feed_url": "https://www.sans.org/newsletters/newsbites/",
+      "email_patterns": ["*newsbites*@sans.org", "*@sans.org"],
+      "enabled": true,
+      "trust_level": "HIGH",
+      "organization_relevance": "ENTERPRISE_SOFTWARE",
+      "polling_frequency": "SEMIWEEKLY",
+      "parser_type": "sans_newsbites_parser"
+    },
+    {
+      "source_id": "cisa_alerts",
+      "source_name": "CISA Cybersecurity Advisories",
+      "category": "CYBERSECURITY",
+      "type": "email_newsletter",
+      "feed_url": "https://www.cisa.gov/news-events/cybersecurity-advisories",
+      "email_patterns": ["*@cisa.dhs.gov", "*advisories@cisa.gov"],
+      "enabled": true,
+      "trust_level": "AUTHORITATIVE",
+      "organization_relevance": "GOVERNMENT_ENTERPRISE",
+      "polling_frequency": "DAILY",
+      "parser_type": "cisa_alert_parser"
+    },
+    {
+      "source_id": "bleeping_computer",
+      "source_name": "BleepingComputer Daily",
+      "category": "CYBERSECURITY",
+      "type": "email_newsletter",
+      "feed_url": "https://www.bleepingcomputer.com/",
+      "email_patterns": ["*@bleepingcomputer.com"],
+      "enabled": true,
+      "trust_level": "MEDIUM",
+      "organization_relevance": "ACTIVE_EXPLOITS",
+      "polling_frequency": "DAILY",
+      "parser_type": "generic_cyber_parser"
+    },
+    {
+      "source_id": "morning_brew",
+      "source_name": "Morning Brew Financial",
+      "category": "FINANCIAL",
+      "type": "email_newsletter",
+      "feed_url": "https://www.morningbrew.com/daily",
+      "email_patterns": ["*@morningbrew.com", "*daily@morningbrew.com"],
+      "enabled": true,
+      "trust_level": "HIGH",
+      "organization_relevance": "MACRO_MARKETS",
+      "polling_frequency": "DAILY",
+      "parser_type": "financial_newsletter_parser"
+    },
+    {
+      "source_id": "ft_firstft",
+      "source_name": "Financial Times FirstFT",
+      "category": "FINANCIAL",
+      "type": "email_newsletter",
+      "feed_url": "https://www.ft.com/firstft",
+      "email_patterns": ["*@ft.com", "*firstft@ft.com"],
+      "enabled": true,
+      "trust_level": "AUTHORITATIVE",
+      "organization_relevance": "ENTERPRISE_VALUATION",
+      "polling_frequency": "DAILY",
+      "parser_type": "financial_newsletter_parser"
+    },
+    {
+      "source_id": "money_stuff",
+      "source_name": "Bloomberg Money Stuff",
+      "category": "FINANCIAL",
+      "type": "email_newsletter",
+      "feed_url": "https://www.bloomberg.com/opinion/authors/ARbTQlRLRjE/matt-levine",
+      "email_patterns": ["*@bloomberg.net", "*moneystuff@bloomberg.com"],
+      "enabled": true,
+      "trust_level": "HIGH",
+      "organization_relevance": "CORPORATE_FINANCE",
+      "polling_frequency": "DAILY",
+      "parser_type": "financial_newsletter_parser"
+    }
+  ]
+}

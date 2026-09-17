@@ -1,4 +1,5 @@
 # Continual Learning & Model Governance Engine
+
 ## SIH Problem Statement 26105 (CyberOpt-RQ)
 
 ---
@@ -61,6 +62,7 @@ Continual learning operates exclusively on the **Organization-Specific Risk Adap
 ```
 
 #### Evidence Qualification Rules:
+
 1. **No Raw Feed Training**: Raw CVE announcements or unconfirmed threat alerts are strictly prohibited from entering the training dataset.
 2. **Deterministic Deduplication**: Every evidence item is fingerprinted using a SHA-256 hash of its operational context. Duplicate items are rejected.
 3. **Verified Ground Truth**: Records must have an explicit `target_label`:
@@ -83,6 +85,7 @@ The candidate model is a regularized L2 Logistic Regression adaptation model tra
 * `impact_scale` (Financial loss in Millions INR)
 
 #### Statistical Governance Gates:
+
 To prevent model degradation or feedback loops, a candidate must pass all validation gates before promotion:
 1. **Brier Calibration Gate**: Candidate Brier score must satisfy $Brier_{cand} \le Brier_{champ} + 0.05$. (Brier score measures probability calibration accuracy; lower is better).
 2. **ROC-AUC Discriminative Gate**: Candidate ROC-AUC must satisfy $AUC_{cand} \ge \max(0.65, AUC_{champ} - 0.05)$.
@@ -114,6 +117,7 @@ Every candidate promotion event is permanently anchored to the Hyperledger Fabri
 * **Immutable Audit Trail**: Enables external regulators and auditors (e.g., CERT-In, RBI Cyber Security Framework, ISO 27001) to verify model lineage and tamper-resistance.
 
 #### Anchored Event Payload Schema:
+
 ```json
 {
   "event_type": "MODEL_GOVERNANCE_PROMOTION",

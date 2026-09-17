@@ -101,5 +101,47 @@ export const api = {
   getLearningDrift: (orgId = 'Hospital A') =>
     fetchJSON(`/learning/drift?org_id=${encodeURIComponent(orgId)}`),
   seedDemoLearningEvidence: (orgId = 'Hospital A', count = 25) =>
-    fetchJSON('/learning/seed-demo', { method: 'POST', body: JSON.stringify({ organization_id: orgId, count }) })
+    fetchJSON('/learning/seed-demo', { method: 'POST', body: JSON.stringify({ organization_id: orgId, count }) }),
+
+  // Step 10: Continuous Intelligence, Newsletter Ingestion & HITL Engine
+  getOrganizations: () => fetchJSON('/intelligence/organizations'),
+  registerOrganization: (payload) => fetchJSON('/intelligence/organizations/register', { method: 'POST', body: JSON.stringify(payload) }),
+  getEmailConnections: (orgId = 'org_abc_tech') => fetchJSON(`/intelligence/email/connections?organization_id=${encodeURIComponent(orgId)}`),
+  connectEmail: (payload) => fetchJSON('/intelligence/email/connect', { method: 'POST', body: JSON.stringify(payload) }),
+  syncEmail: (connId = null, orgId = 'org_abc_tech') => fetchJSON('/intelligence/email/sync', { method: 'POST', body: JSON.stringify({ connection_id: connId, organization_id: orgId }) }),
+  getIngestedEmails: (orgId = 'org_abc_tech') => fetchJSON(`/intelligence/emails?organization_id=${encodeURIComponent(orgId)}`),
+  getIntelligenceEvents: (category = null, orgId = 'org_abc_tech') => fetchJSON(`/intelligence/events?${category ? `category=${category}&` : ''}organization_id=${encodeURIComponent(orgId)}`),
+  getIntelligenceReviewQueue: (role = 'CISO', orgId = 'org_abc_tech') => fetchJSON(`/intelligence/review-queue?role=${encodeURIComponent(role)}&organization_id=${encodeURIComponent(orgId)}`),
+  confirmIntelligence: (eventId, role = 'CISO', reviewerId = 'CISO-Lead', reason = '') =>
+    fetchJSON(`/intelligence/${eventId}/confirm`, { method: 'POST', body: JSON.stringify({ decision: 'CONFIRM', reviewer_role: role, reviewer_id: reviewerId, reason }) }),
+  correctIntelligence: (eventId, corrections, role = 'CISO', reviewerId = 'CISO-Lead', reason = '') =>
+    fetchJSON(`/intelligence/${eventId}/correct`, { method: 'POST', body: JSON.stringify({ decision: 'CORRECT', reviewer_role: role, reviewer_id: reviewerId, corrections, reason }) }),
+  rejectIntelligence: (eventId, role = 'CISO', reviewerId = 'CISO-Lead', reason = '') =>
+    fetchJSON(`/intelligence/${eventId}/reject`, { method: 'POST', body: JSON.stringify({ decision: 'REJECT', reviewer_role: role, reviewer_id: reviewerId, reason }) }),
+  investigateIntelligence: (eventId, role = 'CISO', reviewerId = 'CISO-Lead') =>
+    fetchJSON(`/intelligence/${eventId}/investigate`, { method: 'POST', body: JSON.stringify({ decision: 'NEED_INVESTIGATION', reviewer_role: role, reviewer_id: reviewerId }) }),
+  recordIntelligenceOutcome: (eventId, outcomeState = 'EXPLOITED_SUCCESSFULLY', lossInr = 3500000.0, notes = '') =>
+    fetchJSON(`/intelligence/${eventId}/outcome`, { method: 'POST', body: JSON.stringify({ outcome_state: outcomeState, observed_loss_inr: lossInr, notes }) }),
+  getPredictionOutcomes: (orgId = 'org_abc_tech') => fetchJSON(`/intelligence/outcomes?organization_id=${encodeURIComponent(orgId)}`),
+  getIntelligenceModelFeedback: (orgId = 'org_abc_tech') => fetchJSON(`/intelligence/model-feedback?organization_id=${encodeURIComponent(orgId)}`),
+  trainIntelligenceCandidate: (orgId = 'org_abc_tech') => fetchJSON('/intelligence/model-feedback/train-candidate', { method: 'POST', body: JSON.stringify({ organization_id: orgId }) }),
+  approveIntelligenceCandidate: (candVer) => fetchJSON(`/intelligence/model-feedback/${candVer}/approve`, { method: 'POST' }),
+  rejectIntelligenceCandidate: (candVer, reason = '') => fetchJSON(`/intelligence/model-feedback/${candVer}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  getIntelligenceSources: () => fetchJSON('/intelligence/sources'),
+  triggerIntelligenceOfflineDemo: (workflow = 'ALL', orgId = 'org_abc_tech') =>
+    fetchJSON('/intelligence/offline-demo', { method: 'POST', body: JSON.stringify({ workflow, organization_id: orgId }) }),
+  getModelVersions: () => fetchJSON('/intelligence/model-versions'),
+
+  // Organization Data & Model 6 Information
+  getOrganizationProfile: (orgId = 'org_abc_tech') => fetchJSON(`/predict/organization-profile?org_id=${encodeURIComponent(orgId)}`),
+  getModel6Info: () => fetchJSON('/predict/model6-info'),
+
+  // Attack Demo Event System (for Attacker Console <-> Dashboard <-> Bad Apple)
+  startAttackDemo: (scenario = 'controlled_local_attack') =>
+    fetchJSON('/demo/attack/start', { method: 'POST', body: JSON.stringify({ scenario }) }),
+  completeAttackDemo: (correlationId) =>
+    fetchJSON('/demo/attack/complete', { method: 'POST', body: JSON.stringify({ correlation_id: correlationId }) }),
+  resetAttackDemo: () =>
+    fetchJSON('/demo/attack/reset', { method: 'POST' }),
+  getDemoAttackState: () => fetchJSON('/demo/attack/state'),
 };

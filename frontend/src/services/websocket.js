@@ -8,13 +8,21 @@ export class WebSocketClient {
 
   connect() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/events`;
+    const host = window.location.hostname;
+    const port = window.location.port;
+
+    // Connect to backend on port 8000 for local dev or via host proxy
+    const isLocalDev = port === '5173' || host === 'localhost' || host === '127.0.0.1';
+    const wsUrl = isLocalDev
+      ? `${protocol}//${host}:8000/ws/events`
+      : `${protocol}//${window.location.host}/ws/events`;
 
     try {
+      console.log('[DASHBOARD] WebSocket connecting to:', wsUrl);
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
+        console.log('[DASHBOARD] WebSocket connected successfully');
         if (this.onStatusChange) this.onStatusChange('CONNECTED');
         this.startPing();
       };
@@ -23,6 +31,7 @@ export class WebSocketClient {
         try {
           const data = JSON.parse(event.data);
           if (data.event_type !== 'PONG' && this.onMessage) {
+            console.log('[DASHBOARD] WebSocket message received:', data.event_type || data.event || data.status);
             this.onMessage(data);
           }
         } catch (e) {
@@ -33,11 +42,12 @@ export class WebSocketClient {
       this.ws.onclose = () => {
         if (this.onStatusChange) this.onStatusChange('DISCONNECTED');
         this.stopPing();
-        // Reconnect attempt after 3s
-        setTimeout(() => this.connect(), 3000);
+        // Reconnect attempt after 2s
+        setTimeout(() => this.connect(), 2000);
       };
 
-      this.ws.onerror = () => {
+      this.ws.onerror = (err) => {
+        console.warn('[DASHBOARD] WebSocket error, fallback to polling:', err);
         if (this.onStatusChange) this.onStatusChange('ERROR');
       };
     } catch (err) {

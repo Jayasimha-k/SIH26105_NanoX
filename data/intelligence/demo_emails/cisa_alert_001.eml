@@ -1,0 +1,31 @@
+From: CISA Advisories <advisories@cisa.gov>
+To: CyberOptRQ Intel Mailbox <intel@cyberoptrq.example>
+Subject: CISA Alert AA26-258A: Active Weaponization of Ivanti Connect Secure Zero-Day CVE-2024-21887
+Date: Tue, 15 Sep 2026 11:00:00 +0000
+Message-ID: <cisa-alert-20260915-003@cisa.gov>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+CYBERSECURITY AND INFRASTRUCTURE SECURITY AGENCY
+CYBERSECURITY ADVISORY AA26-258A
+
+SUMMARY:
+Vulnerability: CVE-2024-21887
+Vendor: Ivanti
+Product: Connect Secure / Policy Secure Gateway
+Affected Versions: 9.x, 22.x
+Vulnerability Type: Command Injection
+Attack Vector: NETWORK
+MITRE ATT&CK Technique: T1190 (Exploit Public-Facing Application)
+Exploitation Status: CONFIRMED_EXPLOITATION_IN_WILD
+Attack Outcome: EXPLOITED_SUCCESSFULLY
+Affected Sector: Critical Infrastructure, Government, Technology
+Publication Date: 2026-09-15
+
+TECHNICAL OVERVIEW:
+CISA and partner agencies have observed widespread scanning and successful exploitation targeting Ivanti Connect Secure instances. Attackers inject commands into web components to extract admin credentials, bypass multifactor authentication, and establish permanent web shells.
+
+CISA DIRECTIVE:
+Apply vendor patch immediately or disconnect public interfaces. Review network logs for outbound connections to suspect IP addresses.
+
+Confidence: 0.96

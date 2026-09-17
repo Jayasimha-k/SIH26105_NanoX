@@ -223,3 +223,194 @@ class ModelGovernanceRecord(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
+# ==============================================================================
+# CONTINUOUS INTELLIGENCE, EMAIL INGESTION & HITL MODEL REFINEMENT TABLES
+# ==============================================================================
+
+class Organization(Base):
+    __tablename__ = "organizations"
+
+    id = Column(String, primary_key=True, index=True)  # e.g., "org_abc_tech" or "ABC Technologies"
+    name = Column(String, nullable=False, unique=True)
+    domain = Column(String, nullable=False)
+    industry = Column(String, nullable=False, default="Technology")
+    country_region = Column(String, default="India / South Asia")
+    technology_stack = Column(JSON, default=list)  # ["AWS", "Linux", "Apache", "Microsoft", "runc"]
+    cloud_providers = Column(JSON, default=list)   # ["AWS", "Azure", "GCP"]
+    critical_assets = Column(JSON, default=list)   # [{"id": "ASSET-001", "name": "Production Server", "criticality": 9.0}]
+    business_assets = Column(JSON, default=list)
+    security_controls = Column(JSON, default=list)
+    existing_vulnerabilities = Column(JSON, default=list)  # ["CVE-2024-21626", "CVE-2023-46604"]
+    financial_exposure = Column(Float, default=3500000.0)  # in INR
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+class IntelligenceSourceRecord(Base):
+    __tablename__ = "intelligence_sources"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_id = Column(String, unique=True, index=True, nullable=False)
+    source_name = Column(String, nullable=False)
+    category = Column(String, nullable=False)  # CYBERSECURITY, FINANCIAL
+    type = Column(String, default="email_newsletter")
+    feed_url = Column(String, nullable=True)
+    email_patterns = Column(JSON, default=list)
+    trust_level = Column(String, default="HIGH")
+    enabled = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class EmailConnectionRecord(Base):
+    __tablename__ = "email_connections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    connection_id = Column(String, unique=True, index=True, nullable=False)
+    organization_id = Column(String, index=True, nullable=False)
+    provider = Column(String, nullable=False)  # GMAIL, OUTLOOK, IMAP, DEDICATED, OFFLINE
+    email_address = Column(String, nullable=False)
+    folder_label = Column(String, default="CyberOptRQ-Intelligence")
+    status = Column(String, default="CONNECTED")  # CONNECTED, DISCONNECTED, ERROR, SYNCING
+    last_sync = Column(DateTime, nullable=True)
+    processed_count = Column(Integer, default=0)
+    error_message = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class EmailMessageRecord(Base):
+    __tablename__ = "email_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    message_id = Column(String, unique=True, index=True, nullable=False)
+    connection_id = Column(String, nullable=True)
+    organization_id = Column(String, index=True, nullable=False)
+    source_id = Column(String, nullable=False)
+    sender = Column(String, nullable=False)
+    recipient = Column(String, nullable=False)
+    subject = Column(String, nullable=False)
+    date_str = Column(String, nullable=True)
+    content_hash = Column(String, unique=True, index=True, nullable=False)
+    raw_path = Column(String, nullable=True)
+    body_text = Column(Text, nullable=False)
+    status = Column(String, default="RECEIVED")  # RECEIVED, PARSED, PENDING_EXTRACTION, PROCESSED, FAILED
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class IntelligenceEventRecord(Base):
+    __tablename__ = "intelligence_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(String, unique=True, index=True, nullable=False)
+    correlation_id = Column(String, index=True, nullable=False)
+    organization_id = Column(String, index=True, nullable=False)
+    message_id = Column(String, nullable=True)
+    category = Column(String, nullable=False)  # CYBERSECURITY, FINANCIAL
+    source_name = Column(String, nullable=False)
+    cve = Column(String, nullable=True, index=True)
+    affected_product = Column(String, nullable=True)
+    version = Column(String, nullable=True)
+    attack_technique = Column(String, nullable=True)
+    threat_actor = Column(String, nullable=True)
+    exploitation_observed = Column(Boolean, default=False)
+    reported_outcome = Column(String, default="UNKNOWN")
+    confidence = Column(Float, default=0.85)
+    financial_impact_est = Column(Float, nullable=True)
+    raw_extraction_json = Column(Text, nullable=False)
+    status = Column(String, default="EXTRACTED")  # EXTRACTED, MATCHED, IN_REVIEW, VALIDATED, REJECTED
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class OrgIntelligenceMatchRecord(Base):
+    __tablename__ = "organization_intelligence_matches"
+
+    id = Column(Integer, primary_key=True, index=True)
+    match_id = Column(String, unique=True, index=True, nullable=False)
+    event_id = Column(String, index=True, nullable=False)
+    organization_id = Column(String, index=True, nullable=False)
+    matched_asset_id = Column(String, nullable=True)
+    matched_asset_name = Column(String, nullable=True)
+    matched_vulnerability_id = Column(String, nullable=True)
+    previous_prediction_id = Column(Integer, nullable=True)
+    previous_predicted_risk = Column(Float, nullable=True)
+    previous_eal = Column(Float, nullable=True)
+    relevance_level = Column(String, default="HIGH")  # HIGH, MEDIUM, LOW, NONE
+    relevance_reasons_json = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class HumanReviewRecord(Base):
+    __tablename__ = "human_reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    review_id = Column(String, unique=True, index=True, nullable=False)
+    event_id = Column(String, index=True, nullable=False)
+    organization_id = Column(String, index=True, nullable=False)
+    reviewer_id = Column(String, nullable=False)
+    reviewer_role = Column(String, nullable=False)  # CISO, CFO, SECURITY_ANALYST, FINANCE_ANALYST
+    decision = Column(String, nullable=False)  # CONFIRM, CORRECT, REJECT, NEED_INVESTIGATION
+    original_extraction_json = Column(Text, nullable=False)
+    corrected_extraction_json = Column(Text, nullable=True)
+    reason = Column(Text, nullable=True)
+    correlation_id = Column(String, index=True, nullable=False)
+    reviewed_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class ObservedOutcomeRecord(Base):
+    __tablename__ = "observed_outcomes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    outcome_id = Column(String, unique=True, index=True, nullable=False)
+    event_id = Column(String, index=True, nullable=False)
+    organization_id = Column(String, index=True, nullable=False)
+    correlation_id = Column(String, index=True, nullable=False)
+    outcome_state = Column(String, nullable=False)  # EXPLOITED_SUCCESSFULLY, EXPLOIT_ATTEMPTED_FAILED, EXPLOITATION_REPORTED, NO_EXPLOITATION_OBSERVED, UNKNOWN, PENDING_INVESTIGATION
+    observed_loss_inr = Column(Float, nullable=True)
+    observation_notes = Column(Text, nullable=True)
+    observed_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class PredictionOutcomeComparisonRecord(Base):
+    __tablename__ = "prediction_outcomes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    comparison_id = Column(String, unique=True, index=True, nullable=False)
+    prediction_id = Column(Integer, nullable=True)
+    correlation_id = Column(String, index=True, nullable=False)
+    organization_id = Column(String, index=True, nullable=False)
+    cve = Column(String, nullable=True)
+    predicted_risk_prob = Column(Float, nullable=False)
+    observed_outcome_binary = Column(Integer, nullable=False)  # 1 = Exploited, 0 = Defended/Benign
+    observed_state = Column(String, nullable=False)
+    calibration_error = Column(Float, nullable=False)
+    brier_score_contribution = Column(Float, nullable=False)
+    model_version = Column(String, default="v1.0.0")
+    comparison_summary = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class FinancialIntelligenceRecord(Base):
+    __tablename__ = "financial_intelligence_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    financial_id = Column(String, unique=True, index=True, nullable=False)
+    event_id = Column(String, index=True, nullable=False)
+    correlation_id = Column(String, index=True, nullable=False)
+    organization_id = Column(String, index=True, nullable=False)
+    company = Column(String, nullable=False)
+    ticker = Column(String, nullable=True)
+    sector = Column(String, nullable=True)
+    market_event = Column(String, nullable=True)
+    newsletter_claim = Column(Text, nullable=False)
+    newsletter_forecast = Column(Text, nullable=False)
+    cyberoptrq_forecast = Column(Text, nullable=True)
+    risk_signal = Column(String, default="MODERATE")  # LOW, MODERATE, HIGH
+    volatility_signal = Column(String, default="LOW")
+    relevant_exposure_inr = Column(Float, default=0.0)
+    confidence = Column(Float, default=0.85)
+    actual_observed_outcome = Column(Text, nullable=True)
+    forecast_accuracy = Column(Float, nullable=True)
+    outcome_observed_at = Column(DateTime, nullable=True)
+    cfo_review_status = Column(String, default="PENDING")  # PENDING, CONFIRMED, CORRECTED, REJECTED
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
