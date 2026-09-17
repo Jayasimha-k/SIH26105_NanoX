@@ -1,0 +1,57 @@
+{
+  "description": "Configurable Threat Intelligence Source Registry for SIH 26105",
+  "version": "1.0.0",
+  "offline_mode_default": true,
+  "sources": [
+    {
+      "id": "src_cisa_advisories",
+      "name": "CISA Cybersecurity Advisories",
+      "type": "rss",
+      "url": "https://www.cisa.gov/cybersecurity-advisories/all.xml",
+      "enabled": true,
+      "parser": "cisa_rss_parser",
+      "last_successful_fetch": null,
+      "last_processed_item": null
+    },
+    {
+      "id": "src_thehackernews",
+      "name": "The Hacker News Feed",
+      "type": "rss",
+      "url": "https://feeds.feedburner.com/TheHackersNews",
+      "enabled": true,
+      "parser": "standard_rss_parser",
+      "last_successful_fetch": null,
+      "last_processed_item": null
+    },
+    {
+      "id": "src_bleepingcomputer",
+      "name": "BleepingComputer Security News",
+      "type": "rss",
+      "url": "https://www.bleepingcomputer.com/feed/",
+      "enabled": true,
+      "parser": "standard_rss_parser",
+      "last_successful_fetch": null,
+      "last_processed_item": null
+    },
+    {
+      "id": "src_offline_demo_feed",
+      "name": "Local Air-Gapped Demo Threat Feed",
+      "type": "local_json",
+      "url": "data/threats/demo_threat_feed.json",
+      "enabled": true,
+      "parser": "local_json_parser",
+      "last_successful_fetch": "2026-09-16T10:00:00Z",
+      "last_processed_item": "DEMO-THREAT-2026-003"
+    },
+    {
+      "id": "src_local_vulnerabilities",
+      "name": "Local NVD / KEV Cached Threat Database",
+      "type": "local_json",
+      "url": "data/threats/vulnerabilities.json",
+      "enabled": true,
+      "parser": "local_vulnerabilities_parser",
+      "last_successful_fetch": "2026-09-16T10:00:00Z",
+      "last_processed_item": "CVE-2024-21626"
+    }
+  ]
+}

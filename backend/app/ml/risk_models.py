@@ -245,19 +245,19 @@ class FullAIRiskPipeline:
             p2 = res["p2_epss"]
             p3 = res["p3_org_risk"]
             p4 = res["p4_mitre_attack"]
-            spread = max(p1, p2, p3, p4) - min(p1, p2, p3, p4)
-            conflict_reasons = []
-            if abs(p1 - p2) > 0.4:
-                conflict_reasons.append(f"CVSS severity (P1: {p1:.2f}) diverges significantly from EPSS probability (P2: {p2:.2f})")
-            if abs(p3 - p1) > 0.4:
-                conflict_reasons.append(f"Organizational exposure (P3: {p3:.2f}) diverges from theoretical severity (P1: {p1:.2f})")
             
-            conflict_info = {
-                "has_conflict": spread >= 0.4,
-                "spread": round(spread, 4),
-                "conflict_reasons": conflict_reasons,
-                "evidence_freshness": "CURRENT (Synced Live)"
-            }
+            p1_sev = IndividualRiskModels.model_1_nvd_cvss_cwe(cvss_score, cwe_id) if cvss_score is not None else p1
+            p2_epss = IndividualRiskModels.model_2_epss(epss_score) if epss_score is not None else p2
+            p3_kev = IndividualRiskModels.model_3_cisa_kev(is_cisa_kev) if is_cisa_kev is not None else p3
+            p4_att = IndividualRiskModels.model_4_mitre_attack(mitre_technique) if mitre_technique is not None else p4
+            
+            conflict_info = EvidenceConflictDetector.evaluate(
+                p1=p1_sev,
+                p2=p2_epss,
+                p3=p3_kev,
+                p4=p4_att,
+                exposure_level=exposure_level or "INTERNAL"
+            )
 
             return {
                 "p1_nvd": res["p1_nvd"],

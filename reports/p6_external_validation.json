@@ -1,0 +1,146 @@
+{
+  "evaluation_timestamp": "2026-09-16T23:36:26.637720Z",
+  "model_artifact": "models/p6/CyberOptRQ_P6_CIC2017_XGBoost_v1.pkl",
+  "training_dataset": "CIC-IDS2017",
+  "external_validation_dataset": "UNSW-NB15 (Testing Set)",
+  "external_rows": 82332,
+  "feature_compatibility": {
+    "total_p6_features": 56,
+    "harmonized_features": 16,
+    "unobserved_features": 40,
+    "harmonization_ratio": 0.2857
+  },
+  "threshold_independent_metrics": {
+    "roc_auc": 0.7067,
+    "pr_auc": 0.7207,
+    "brier_score": 0.53792,
+    "ece": 0.54069
+  },
+  "standard_threshold_evaluation": {
+    "threshold": 0.5,
+    "accuracy": 0.44939999028324346,
+    "balanced_accuracy": 0.5,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1_score": 0.0,
+    "mcc": 0.0,
+    "true_negatives": 37000,
+    "false_positives": 0,
+    "false_negatives": 45332,
+    "true_positives": 0
+  },
+  "calibrated_threshold_evaluation": {
+    "threshold": 0.01128331758081913,
+    "accuracy": 0.7278093572365545,
+    "balanced_accuracy": 0.7373223580502766,
+    "precision": 0.8237204835611796,
+    "recall": 0.6433203917762287,
+    "f1_score": 0.7224286563614745,
+    "mcc": 0.4769026808278025,
+    "true_negatives": 30759,
+    "false_positives": 6241,
+    "false_negatives": 16169,
+    "true_positives": 29163
+  },
+  "category_breakdown": {
+    "Analysis": {
+      "type": "ATTACK",
+      "count": 677,
+      "mean_prob": 0.016666,
+      "median_prob": 0.017577,
+      "max_prob": 0.039704,
+      "standard_acc_recall": 0.0,
+      "calibrated_acc_recall": 91.14
+    },
+    "Backdoor": {
+      "type": "ATTACK",
+      "count": 583,
+      "mean_prob": 0.016468,
+      "median_prob": 0.017577,
+      "max_prob": 0.039704,
+      "standard_acc_recall": 0.0,
+      "calibrated_acc_recall": 88.51
+    },
+    "DoS": {
+      "type": "ATTACK",
+      "count": 4089,
+      "mean_prob": 0.014204,
+      "median_prob": 0.016821,
+      "max_prob": 0.039704,
+      "standard_acc_recall": 0.0,
+      "calibrated_acc_recall": 71.26
+    },
+    "Exploits": {
+      "type": "ATTACK",
+      "count": 11132,
+      "mean_prob": 0.008458,
+      "median_prob": 0.00569,
+      "max_prob": 0.039704,
+      "standard_acc_recall": 0.0,
+      "calibrated_acc_recall": 29.39
+    },
+    "Fuzzers": {
+      "type": "ATTACK",
+      "count": 6062,
+      "mean_prob": 0.01011,
+      "median_prob": 0.007069,
+      "max_prob": 0.058874,
+      "standard_acc_recall": 0.0,
+      "calibrated_acc_recall": 39.99
+    },
+    "Generic": {
+      "type": "ATTACK",
+      "count": 18871,
+      "mean_prob": 0.0136,
+      "median_prob": 0.014005,
+      "max_prob": 0.057776,
+      "standard_acc_recall": 0.0,
+      "calibrated_acc_recall": 93.98
+    },
+    "Normal": {
+      "type": "BENIGN",
+      "count": 37000,
+      "mean_prob": 0.007801,
+      "median_prob": 0.005516,
+      "max_prob": 0.056627,
+      "standard_acc_recall": 100.0,
+      "calibrated_acc_recall": 83.13
+    },
+    "Reconnaissance": {
+      "type": "ATTACK",
+      "count": 3496,
+      "mean_prob": 0.009083,
+      "median_prob": 0.004753,
+      "max_prob": 0.039704,
+      "standard_acc_recall": 0.0,
+      "calibrated_acc_recall": 42.82
+    },
+    "Shellcode": {
+      "type": "ATTACK",
+      "count": 378,
+      "mean_prob": 0.011379,
+      "median_prob": 0.008434,
+      "max_prob": 0.026,
+      "standard_acc_recall": 0.0,
+      "calibrated_acc_recall": 48.15
+    },
+    "Worms": {
+      "type": "ATTACK",
+      "count": 44,
+      "mean_prob": 0.007721,
+      "median_prob": 0.007466,
+      "max_prob": 0.02143,
+      "standard_acc_recall": 0.0,
+      "calibrated_acc_recall": 13.64
+    }
+  },
+  "cic_ids2017_baseline_comparison": {
+    "cic_roc_auc": 0.98954,
+    "cic_pr_auc": 0.9463,
+    "cic_f1": 0.8742,
+    "cic_mcc": 0.85952,
+    "cic_brier": 0.02105,
+    "delta_roc_auc": -0.2828,
+    "delta_pr_auc": -0.2256
+  }
+}

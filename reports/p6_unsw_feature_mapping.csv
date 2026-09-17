@@ -1,0 +1,90 @@
+source_feature,target_p6_feature,mapping_type,status,reason
+dur,Flow Duration,unit_scale (dur * 1e6),DERIVED_COMPATIBLE,"UNSW 'dur' is in seconds; scaled by 1,000,000 to match CIC microsecond flow duration."
+spkts,Total Fwd Packets,identity,DIRECT_MATCH,Direct semantic match: source-to-destination packet count.
+dpkts,Total Backward Packets,identity,DIRECT_MATCH,Direct semantic match: destination-to-source packet count.
+sbytes,Total Length of Fwd Packets,identity,DIRECT_MATCH,Direct semantic match: source-to-destination payload bytes.
+dbytes,Total Length of Bwd Packets,identity,DIRECT_MATCH,Direct semantic match: destination-to-source payload bytes.
+NONE,Fwd Packet Length Max,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Fwd Packet Length Max'.
+NONE,Fwd Packet Length Min,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Fwd Packet Length Min'.
+smean,Fwd Packet Length Mean,identity,DIRECT_MATCH,Direct semantic match: mean forward packet size.
+NONE,Fwd Packet Length Std,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Fwd Packet Length Std'.
+NONE,Bwd Packet Length Max,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Bwd Packet Length Max'.
+NONE,Bwd Packet Length Min,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Bwd Packet Length Min'.
+dmean,Bwd Packet Length Mean,identity,DIRECT_MATCH,Direct semantic match: mean backward packet size.
+NONE,Bwd Packet Length Std,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Bwd Packet Length Std'.
+"sbytes, dbytes, dur",Flow Bytes/s,derived ((sbytes + dbytes) / dur),DERIVED_COMPATIBLE,Computed aggregate byte throughput: total bytes divided by duration.
+rate,Flow Packets/s,identity,DIRECT_MATCH,Direct match: UNSW 'rate' represents (spkts + dpkts) / dur.
+NONE,Flow IAT Mean,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Flow IAT Mean'.
+NONE,Flow IAT Std,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Flow IAT Std'.
+NONE,Flow IAT Max,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Flow IAT Max'.
+NONE,Flow IAT Min,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Flow IAT Min'.
+NONE,Fwd IAT Total,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Fwd IAT Total'.
+sinpkt,Fwd IAT Mean,unit_scale (sinpkt * 1000),DERIVED_COMPATIBLE,UNSW 'sinpkt' is in ms; scaled to microseconds to match CIC-IDS2017.
+NONE,Fwd IAT Std,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Fwd IAT Std'.
+NONE,Fwd IAT Max,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Fwd IAT Max'.
+NONE,Fwd IAT Min,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Fwd IAT Min'.
+NONE,Bwd IAT Total,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Bwd IAT Total'.
+dinpkt,Bwd IAT Mean,unit_scale (dinpkt * 1000),DERIVED_COMPATIBLE,UNSW 'dinpkt' is in ms; scaled to microseconds to match CIC-IDS2017.
+NONE,Bwd IAT Std,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Bwd IAT Std'.
+NONE,Bwd IAT Max,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Bwd IAT Max'.
+NONE,Bwd IAT Min,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Bwd IAT Min'.
+NONE,Fwd PSH Flags,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Fwd PSH Flags'.
+NONE,Fwd Header Length,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Fwd Header Length'.
+NONE,Bwd Header Length,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Bwd Header Length'.
+"spkts, dur",Fwd Packets/s,derived (spkts / dur),DERIVED_COMPATIBLE,Forward transmission rate computed as forward packets divided by duration.
+"dpkts, dur",Bwd Packets/s,derived (dpkts / dur),DERIVED_COMPATIBLE,Backward transmission rate computed as backward packets divided by duration.
+NONE,Min Packet Length,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Min Packet Length'.
+NONE,Max Packet Length,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Max Packet Length'.
+"sbytes, dbytes, spkts, dpkts",Packet Length Mean,derived ((sbytes + dbytes) / (spkts + dpkts)),DERIVED_COMPATIBLE,Identical calculation to average packet size across bidirectional flow.
+NONE,Packet Length Std,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Packet Length Std'.
+NONE,FIN Flag Count,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'FIN Flag Count'.
+NONE,SYN Flag Count,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'SYN Flag Count'.
+NONE,RST Flag Count,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'RST Flag Count'.
+NONE,PSH Flag Count,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'PSH Flag Count'.
+NONE,ACK Flag Count,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'ACK Flag Count'.
+NONE,URG Flag Count,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'URG Flag Count'.
+NONE,ECE Flag Count,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'ECE Flag Count'.
+"dpkts, spkts",Down/Up Ratio,derived (dpkts / spkts),DERIVED_COMPATIBLE,Backward to forward packet ratio.
+"sbytes, dbytes, spkts, dpkts",Average Packet Size,derived ((sbytes + dbytes) / (spkts + dpkts)),DERIVED_COMPATIBLE,Mean packet size across all bidirectional packets in flow.
+NONE,act_data_pkt_fwd,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'act_data_pkt_fwd'.
+NONE,Active Mean,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Active Mean'.
+NONE,Active Std,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Active Std'.
+NONE,Active Max,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Active Max'.
+NONE,Active Min,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Active Min'.
+NONE,Idle Mean,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Idle Mean'.
+NONE,Idle Std,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Idle Std'.
+NONE,Idle Max,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Idle Max'.
+NONE,Idle Min,none,NOT_AVAILABLE,Argus/Bro feature extractor in UNSW-NB15 does not compute or extract 'Idle Min'.
+sttl,NONE,none,INCOMPATIBLE,Source Time to Live (OS stack dependent)
+dttl,NONE,none,INCOMPATIBLE,Destination Time to Live (OS stack dependent)
+sloss,NONE,none,INCOMPATIBLE,Source packet retransmissions / drops
+dloss,NONE,none,INCOMPATIBLE,Destination packet retransmissions / drops
+service,NONE,none,INCOMPATIBLE,"Application service protocol string (e.g. http, dns)"
+Sload,NONE,none,INCOMPATIBLE,Source bits per second
+Dload,NONE,none,INCOMPATIBLE,Destination bits per second
+swin,NONE,none,INCOMPATIBLE,Source TCP window advertisement (purged OS fingerprint)
+dwin,NONE,none,INCOMPATIBLE,Destination TCP window advertisement (purged OS fingerprint)
+stcpb,NONE,none,INCOMPATIBLE,Source TCP base sequence number
+dtcpb,NONE,none,INCOMPATIBLE,Destination TCP base sequence number
+trans_depth,NONE,none,INCOMPATIBLE,HTTP pipelined transaction depth
+res_bdy_len,NONE,none,INCOMPATIBLE,HTTP response body content length
+Sjit,NONE,none,INCOMPATIBLE,Source jitter in milliseconds
+Djit,NONE,none,INCOMPATIBLE,Destination jitter in milliseconds
+tcprtt,NONE,none,INCOMPATIBLE,TCP connection handshake round-trip time
+synack,NONE,none,INCOMPATIBLE,TCP SYN to SYNACK duration
+ackdat,NONE,none,INCOMPATIBLE,TCP SYNACK to ACK duration
+is_sm_ips_ports,NONE,none,INCOMPATIBLE,Boolean indicator if src IP == dst IP and src port == dst port
+ct_state_ttl,NONE,none,INCOMPATIBLE,Count of connections with specific state and TTL
+ct_flw_http_mthd,NONE,none,INCOMPATIBLE,Count of HTTP methods in flow
+is_ftp_login,NONE,none,INCOMPATIBLE,Binary indicator of FTP login session
+ct_ftp_cmd,NONE,none,INCOMPATIBLE,Count of FTP commands in session
+ct_srv_src,NONE,none,INCOMPATIBLE,Count of connections with same service and src IP in 100-connection window
+ct_srv_dst,NONE,none,INCOMPATIBLE,Count of connections with same service and dst IP in 100-connection window
+ct_dst_ltm,NONE,none,INCOMPATIBLE,Count of connections to same dst IP in 100-connection window
+ct_src_ltm,NONE,none,INCOMPATIBLE,Count of connections from same src IP in 100-connection window
+ct_src_dport_ltm,NONE,none,INCOMPATIBLE,Count of connections with same src IP and dst port in window
+ct_dst_sport_ltm,NONE,none,INCOMPATIBLE,Count of connections with same dst IP and src port in window
+ct_dst_src_ltm,NONE,none,INCOMPATIBLE,Count of connections with same src and dst IP in window
+state,NONE,none,INCOMPATIBLE,"Categorical TCP state machine string (FIN, CON, INT, etc.)"
+proto,NONE,none,INCOMPATIBLE,"Transaction protocol string (tcp, udp, unas, etc.)"
+id,NONE,none,INCOMPATIBLE,Sequential row identifier

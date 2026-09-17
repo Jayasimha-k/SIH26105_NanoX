@@ -2,7 +2,7 @@
   "artifact_type": "ProbabilityCalibrator",
   "calibration_method": "PlattSigmoidScaling",
   "version": "1.0.0-platt",
-  "trained_timestamp": "2026-09-16T18:03:58.147488+00:00",
+  "trained_timestamp": "2026-09-17T00:18:15.472987+00:00",
   "parameters": {
     "slope_a": 1.0469,
     "intercept_b": 0.0964

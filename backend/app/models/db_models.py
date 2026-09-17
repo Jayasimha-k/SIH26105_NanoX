@@ -134,3 +134,22 @@ class AuditBlock(Base):
     details_json = Column(Text, nullable=False)
     previous_hash = Column(String, nullable=False)
     block_hash = Column(String, nullable=False)
+
+class ThreatIntelligenceRecord(Base):
+    __tablename__ = "threat_intelligence_records"
+
+    threat_id = Column(String, primary_key=True, index=True)
+    cve = Column(String, nullable=True, index=True)
+    source = Column(String, nullable=False)
+    source_url = Column(String, nullable=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    published_at = Column(String, nullable=True)
+    first_seen_at = Column(DateTime, default=datetime.datetime.utcnow)
+    validation_status = Column(String, default="PENDING_VALIDATION")  # VALIDATED, PENDING_VALIDATION, REJECTED
+    affected_product = Column(String, nullable=True)
+    attack_type = Column(String, nullable=True)
+    raw_hash = Column(String, unique=True, index=True, nullable=False)
+    processed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    model_assessment_status = Column(String, default="PENDING")  # PENDING, ASSESSED, INELIGIBLE
+

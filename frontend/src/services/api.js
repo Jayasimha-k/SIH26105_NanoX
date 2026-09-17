@@ -66,6 +66,17 @@ export const api = {
     fetchJSON('/blockchain/resolve-conflicts', { method: 'POST' }),
   getBlockchainSmartContracts: () => fetchJSON('/blockchain/smart-contracts'),
   getConsortiumDirectory: () => fetchJSON('/blockchain/directory'),
+  getBlockchainStats: () => fetchJSON('/blockchain/stats'),
+  verifyConsortiumIntegrity: () => fetchJSON('/blockchain/verify-all'),
+
+  // Continuous Threat Intelligence & Offline Feeds
+  getThreatIntelligenceRecords: (status) =>
+    fetchJSON(`/threat-intelligence/records${status ? `?validation_status=${status}` : ''}`),
+  triggerThreatIngestion: (offlineMode = true) =>
+    fetchJSON('/threat-intelligence/ingest', { method: 'POST', body: JSON.stringify({ offline_mode: offlineMode }) }),
+  triggerThreatReassessment: (threatId = null, organizationId = 'Hospital A') =>
+    fetchJSON('/threat-intelligence/reassess', { method: 'POST', body: JSON.stringify({ threat_id: threatId, organization_id: organizationId }) }),
+  getThreatSources: () => fetchJSON('/threat-intelligence/sources'),
 
   // Executive Business Value & Standards Compliance
   getFrameworkCompliance: () => fetchJSON('/business-value/compliance')

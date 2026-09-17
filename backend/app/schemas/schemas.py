@@ -47,13 +47,13 @@ class VulnerabilitySchema(BaseModel):
     cvss_score: float
     epss_score: float
     cisa_kev: bool = False
-    mitre_attack_technique: str = "T1190"
-    mitre_attack_name: str = "Exploit Public-Facing Application"
-    cwe_id: str = "CWE-787"
-    affected_products: str = "Standard System Component"
-    attack_vector: str = "NETWORK"
-    complexity: str = "LOW"
-    privileges_required: str = "NONE"
+    mitre_attack_technique: Optional[str] = "T1190"
+    mitre_attack_name: Optional[str] = "Exploit Public-Facing Application"
+    cwe_id: Optional[str] = "CWE-787"
+    affected_products: Optional[str] = "Standard System Component"
+    attack_vector: Optional[str] = "NETWORK"
+    complexity: Optional[str] = "LOW"
+    privileges_required: Optional[str] = "NONE"
     financial_impact_base: float
 
     class Config:

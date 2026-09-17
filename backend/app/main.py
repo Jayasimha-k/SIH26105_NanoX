@@ -5,7 +5,7 @@ from app.config import settings
 from app.database import engine, Base
 from app.api.routers import (
     auth, detect, predict, quantify, optimize,
-    approvals, execution, recalculate, audit, blockchain, business_value, ws
+    approvals, execution, recalculate, audit, blockchain, business_value, ws, threat_intelligence
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +40,7 @@ app.include_router(recalculate.router, prefix=settings.API_V1_STR)
 app.include_router(audit.router, prefix=settings.API_V1_STR)
 app.include_router(blockchain.router, prefix=settings.API_V1_STR)
 app.include_router(business_value.router, prefix=settings.API_V1_STR)
+app.include_router(threat_intelligence.router, prefix=settings.API_V1_STR)
 app.include_router(ws.router)
 
 @app.get("/")

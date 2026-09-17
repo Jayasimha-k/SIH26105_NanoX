@@ -1,0 +1,177 @@
+{
+  "dataset_name": "UNSW-NB15",
+  "audit_timestamp": "2026-09-16T23:34:43.873153Z",
+  "total_size_mb": 687.29,
+  "files_scanned": [
+    {
+      "file_path": "data/unsw_nb15/NUSW-NB15_features.csv",
+      "file_name": "NUSW-NB15_features.csv",
+      "size_mb": 0.0,
+      "line_count": 50
+    },
+    {
+      "file_path": "data/unsw_nb15/NUSW-NB15_GT.csv",
+      "file_name": "NUSW-NB15_GT.csv",
+      "size_mb": 82.42,
+      "line_count": 188914
+    },
+    {
+      "file_path": "data/unsw_nb15/The UNSW-NB15 description.pdf",
+      "file_name": "The UNSW-NB15 description.pdf",
+      "size_mb": 0.18,
+      "line_count": 771
+    },
+    {
+      "file_path": "data/unsw_nb15/UNSW-NB15_1.csv",
+      "file_name": "UNSW-NB15_1.csv",
+      "size_mb": 161.15,
+      "line_count": 700001
+    },
+    {
+      "file_path": "data/unsw_nb15/UNSW-NB15_2.csv",
+      "file_name": "UNSW-NB15_2.csv",
+      "size_mb": 157.57,
+      "line_count": 700001
+    },
+    {
+      "file_path": "data/unsw_nb15/UNSW-NB15_3.csv",
+      "file_name": "UNSW-NB15_3.csv",
+      "size_mb": 147.43,
+      "line_count": 700001
+    },
+    {
+      "file_path": "data/unsw_nb15/UNSW-NB15_4.csv",
+      "file_name": "UNSW-NB15_4.csv",
+      "size_mb": 93.07,
+      "line_count": 440044
+    },
+    {
+      "file_path": "data/unsw_nb15/UNSW-NB15_LIST_EVENTS.csv",
+      "file_name": "UNSW-NB15_LIST_EVENTS.csv",
+      "size_mb": 0.0,
+      "line_count": 209
+    },
+    {
+      "file_path": "data/unsw_nb15/Training and Testing Sets/UNSW_NB15_testing-set.csv",
+      "file_name": "UNSW_NB15_testing-set.csv",
+      "size_mb": 14.67,
+      "line_count": 82333
+    },
+    {
+      "file_path": "data/unsw_nb15/Training and Testing Sets/UNSW_NB15_training-set.csv",
+      "file_name": "UNSW_NB15_training-set.csv",
+      "size_mb": 30.8,
+      "line_count": 175342
+    }
+  ],
+  "benchmark_partitions": {
+    "testing_set": {
+      "file": "UNSW_NB15_testing-set.csv",
+      "rows": 82332,
+      "columns": 45,
+      "label_distribution": {
+        "1": 45332,
+        "0": 37000
+      },
+      "attack_category_distribution": {
+        "Normal": 37000,
+        "Generic": 18871,
+        "Exploits": 11132,
+        "Fuzzers": 6062,
+        "DoS": 4089,
+        "Reconnaissance": 3496,
+        "Analysis": 677,
+        "Backdoor": 583,
+        "Shellcode": 378,
+        "Worms": 44
+      },
+      "null_count": 0,
+      "duplicate_rows": 26387
+    },
+    "training_set": {
+      "file": "UNSW_NB15_training-set.csv",
+      "rows": 175341,
+      "columns": 45,
+      "label_distribution": {
+        "1": 119341,
+        "0": 56000
+      },
+      "attack_category_distribution": {
+        "Normal": 56000,
+        "Generic": 40000,
+        "Exploits": 33393,
+        "Fuzzers": 18184,
+        "DoS": 12264,
+        "Reconnaissance": 10491,
+        "Analysis": 2000,
+        "Backdoor": 1746,
+        "Shellcode": 1133,
+        "Worms": 130
+      },
+      "null_count": 0,
+      "duplicate_rows": 67601
+    },
+    "combined_total_rows": 257673
+  },
+  "raw_flow_lines_estimate": 2540047,
+  "dash_missing_indicators": {
+    "service": {
+      "test_dash_count": 47153,
+      "test_dash_pct": 57.27
+    }
+  },
+  "leakage_assessment": {
+    "id_column": {
+      "status": "IDENTIFIER_PRESENT",
+      "column": "id",
+      "description": "Sequential row counter (1 to N) in test and train CSVs. Must be excluded from features to prevent order memorization."
+    },
+    "network_ip_ports": {
+      "status": "EXCLUDED_IN_BENCHMARK_SETS",
+      "columns": [
+        "srcip",
+        "sport",
+        "dstip",
+        "dsport"
+      ],
+      "description": "Present in raw UNSW-NB15_1..4.csv, but already removed from official training/testing sets. Absent in test_df."
+    },
+    "timestamps": {
+      "status": "EXCLUDED_IN_BENCHMARK_SETS",
+      "columns": [
+        "Stime",
+        "Ltime"
+      ],
+      "description": "Epoch start/end timestamps exist in raw CSVs, but were excluded from official benchmark partitions."
+    },
+    "operating_system_fingerprints": {
+      "status": "POTENTIAL_LEAKAGE_DETECTED",
+      "columns": [
+        "sttl",
+        "dttl",
+        "swin",
+        "dwin"
+      ],
+      "description": "Source/destination TTL (sttl/dttl) and TCP window advertisements (swin/dwin) directly reflect OS defaults (e.g. Linux TTL 64 vs Windows TTL 128). In UNSW-NB15, attack packets frequently originate from automated tools with distinct TTL values."
+    },
+    "temporal_window_connection_counts": {
+      "status": "DATASET_SPECIFIC_AGGREGATION",
+      "columns": [
+        "ct_srv_src",
+        "ct_state_ttl",
+        "ct_dst_ltm",
+        "ct_src_dport_ltm",
+        "ct_dst_sport_ltm",
+        "ct_dst_src_ltm",
+        "ct_src_ltm",
+        "ct_srv_dst"
+      ],
+      "description": "Connection count aggregations computed over 100-connection windows by the authors. These are synthetic window aggregations unique to UNSW-NB15 and absent from CIC-IDS2017."
+    }
+  },
+  "feature_types": {
+    "int64_count": 30,
+    "float64_count": 11,
+    "object_count": 4
+  }
+}

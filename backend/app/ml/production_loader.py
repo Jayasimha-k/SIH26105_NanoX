@@ -105,10 +105,10 @@ class ProductionMLInferenceEngine:
         df["publication_year"] = int(vuln_data.get("publication_year", 2024))
         df["cwe_count"] = 1
 
-        vector = vuln_data.get("attack_vector", "NETWORK")
-        complexity = vuln_data.get("complexity", "LOW")
-        privileges = vuln_data.get("privileges_required", "NONE")
-        cwe = vuln_data.get("cwe_id", "CWE-787")
+        vector = str(vuln_data.get("attack_vector") or "NETWORK")
+        complexity = str(vuln_data.get("complexity") or "LOW")
+        privileges = str(vuln_data.get("privileges_required") or "NONE")
+        cwe = str(vuln_data.get("cwe_id") or "CWE-787")
         severity = "CRITICAL" if cvss >= 9.0 else ("HIGH" if cvss >= 7.0 else ("MEDIUM" if cvss >= 4.0 else "LOW"))
 
         df["cvss_attack_vector"] = pd.Series([vector], dtype="category")
@@ -204,14 +204,14 @@ class ProductionMLInferenceEngine:
             df["cve_tag_count"] = 1
 
         # Defaults before parsing
-        vector = vuln_data.get("attack_vector", "NETWORK").upper()
-        complexity = vuln_data.get("complexity", "LOW").upper()
-        privs = vuln_data.get("privileges_required", "NONE").upper()
-        ui = vuln_data.get("user_interaction", "NONE").upper()
-        scope = vuln_data.get("scope", "UNCHANGED").upper()
-        c_impact = vuln_data.get("confidentiality_impact", "HIGH").upper()
-        i_impact = vuln_data.get("integrity_impact", "HIGH").upper()
-        a_impact = vuln_data.get("availability_impact", "HIGH").upper()
+        vector = str(vuln_data.get("attack_vector") or "NETWORK").upper()
+        complexity = str(vuln_data.get("complexity") or "LOW").upper()
+        privs = str(vuln_data.get("privileges_required") or "NONE").upper()
+        ui = str(vuln_data.get("user_interaction") or "NONE").upper()
+        scope = str(vuln_data.get("scope") or "UNCHANGED").upper()
+        c_impact = str(vuln_data.get("confidentiality_impact") or "HIGH").upper()
+        i_impact = str(vuln_data.get("integrity_impact") or "HIGH").upper()
+        a_impact = str(vuln_data.get("availability_impact") or "HIGH").upper()
 
         # Parse cvss_vector string if available (e.g. CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)
         cvss_vec = str(vuln_data.get("cvss_vector", ""))

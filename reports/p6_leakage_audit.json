@@ -1,0 +1,568 @@
+{
+  "audit_timestamp": "2026-09-16T23:22:43Z",
+  "total_audited_features": 68,
+  "summary": {
+    "SAFE_BEHAVIORAL": 56,
+    "POTENTIAL_LEAKAGE": 12
+  },
+  "direct_identifiers_status": {
+    "Flow ID": "ABSENT (CLEAN)",
+    "Source IP": "ABSENT (CLEAN)",
+    "Destination IP": "ABSENT (CLEAN)",
+    "Source Port": "ABSENT (CLEAN)",
+    "Destination Port": "REMOVED IN INITIAL AUDIT",
+    "Timestamp": "ABSENT (CLEAN)",
+    "Filename / Capture ID": "ABSENT (CLEAN)"
+  },
+  "split_methodology_audit": {
+    "current_method": "Stratified Random Row Splitting across pooled captures",
+    "leakage_risk": "HIGH (Contemporaneous burst correlation between train and test partitions)",
+    "remediation": "Sequential Chronological Partitioning (First 70% Train, Middle 15% Val, Final 15% Test) to enforce strict temporal quarantine"
+  },
+  "feature_details": [
+    {
+      "rank": 1,
+      "feature": "Flow Duration",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 2,
+      "feature": "Total Fwd Packets",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 3,
+      "feature": "Total Backward Packets",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 4,
+      "feature": "Total Length of Fwd Packets",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 5,
+      "feature": "Total Length of Bwd Packets",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 6,
+      "feature": "Fwd Packet Length Max",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 7,
+      "feature": "Fwd Packet Length Min",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 8,
+      "feature": "Fwd Packet Length Mean",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 9,
+      "feature": "Fwd Packet Length Std",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 10,
+      "feature": "Bwd Packet Length Max",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 11,
+      "feature": "Bwd Packet Length Min",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 12,
+      "feature": "Bwd Packet Length Mean",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 13,
+      "feature": "Bwd Packet Length Std",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 14,
+      "feature": "Flow Bytes/s",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 15,
+      "feature": "Flow Packets/s",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 16,
+      "feature": "Flow IAT Mean",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 17,
+      "feature": "Flow IAT Std",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 18,
+      "feature": "Flow IAT Max",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 19,
+      "feature": "Flow IAT Min",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 20,
+      "feature": "Fwd IAT Total",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 21,
+      "feature": "Fwd IAT Mean",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 22,
+      "feature": "Fwd IAT Std",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 23,
+      "feature": "Fwd IAT Max",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 24,
+      "feature": "Fwd IAT Min",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 25,
+      "feature": "Bwd IAT Total",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 26,
+      "feature": "Bwd IAT Mean",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 27,
+      "feature": "Bwd IAT Std",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 28,
+      "feature": "Bwd IAT Max",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 29,
+      "feature": "Bwd IAT Min",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 30,
+      "feature": "Fwd PSH Flags",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 31,
+      "feature": "Fwd URG Flags",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "Near-Zero Variance Flag",
+      "finding": "Extremely sparse / near-zero variance flag in dataset",
+      "recommendation": "REMOVE to enforce statistical robustness"
+    },
+    {
+      "rank": 32,
+      "feature": "Fwd Header Length",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 33,
+      "feature": "Bwd Header Length",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 34,
+      "feature": "Fwd Packets/s",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 35,
+      "feature": "Bwd Packets/s",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 36,
+      "feature": "Min Packet Length",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 37,
+      "feature": "Max Packet Length",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 38,
+      "feature": "Packet Length Mean",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 39,
+      "feature": "Packet Length Std",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 40,
+      "feature": "Packet Length Variance",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "Redundant / Duplicate Feature",
+      "finding": "Duplicate of 'Packet Length Std': Collinear mathematical square of Packet Length Std",
+      "recommendation": "REMOVE to eliminate multicollinearity and artificial tree dominance"
+    },
+    {
+      "rank": 41,
+      "feature": "FIN Flag Count",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 42,
+      "feature": "SYN Flag Count",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 43,
+      "feature": "RST Flag Count",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 44,
+      "feature": "PSH Flag Count",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 45,
+      "feature": "ACK Flag Count",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 46,
+      "feature": "URG Flag Count",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 47,
+      "feature": "CWE Flag Count",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "Near-Zero Variance Flag",
+      "finding": "Extremely sparse / near-zero variance flag in dataset",
+      "recommendation": "REMOVE to enforce statistical robustness"
+    },
+    {
+      "rank": 48,
+      "feature": "ECE Flag Count",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 49,
+      "feature": "Down/Up Ratio",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 50,
+      "feature": "Average Packet Size",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 51,
+      "feature": "Avg Fwd Segment Size",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "Redundant / Duplicate Feature",
+      "finding": "Duplicate of 'Fwd Packet Length Mean': Exact mathematical duplicate (difference = 0.0)",
+      "recommendation": "REMOVE to eliminate multicollinearity and artificial tree dominance"
+    },
+    {
+      "rank": 52,
+      "feature": "Avg Bwd Segment Size",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "Redundant / Duplicate Feature",
+      "finding": "Duplicate of 'Bwd Packet Length Mean': Exact mathematical duplicate (difference = 0.0)",
+      "recommendation": "REMOVE to eliminate multicollinearity and artificial tree dominance"
+    },
+    {
+      "rank": 53,
+      "feature": "Subflow Fwd Packets",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "Redundant / Duplicate Feature",
+      "finding": "Duplicate of 'Total Fwd Packets': Exact mathematical duplicate (difference = 0.0)",
+      "recommendation": "REMOVE to eliminate multicollinearity and artificial tree dominance"
+    },
+    {
+      "rank": 54,
+      "feature": "Subflow Fwd Bytes",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "Redundant / Duplicate Feature",
+      "finding": "Duplicate of 'Total Length of Fwd Packets': Exact mathematical duplicate (difference = 0.0)",
+      "recommendation": "REMOVE to eliminate multicollinearity and artificial tree dominance"
+    },
+    {
+      "rank": 55,
+      "feature": "Subflow Bwd Packets",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "Redundant / Duplicate Feature",
+      "finding": "Duplicate of 'Total Backward Packets': Exact mathematical duplicate (difference = 0.0)",
+      "recommendation": "REMOVE to eliminate multicollinearity and artificial tree dominance"
+    },
+    {
+      "rank": 56,
+      "feature": "Subflow Bwd Bytes",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "Redundant / Duplicate Feature",
+      "finding": "Duplicate of 'Total Length of Bwd Packets': Exact collinear duplicate (correlation = 1.000)",
+      "recommendation": "REMOVE to eliminate multicollinearity and artificial tree dominance"
+    },
+    {
+      "rank": 57,
+      "feature": "Init_Win_bytes_forward",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "OS / Stack Fingerprint",
+      "finding": "Fingerprints client OS TCP stack implementation (e.g. Linux 29200 vs Windows 8192)",
+      "recommendation": "REMOVE to prevent testbed machine fingerprinting"
+    },
+    {
+      "rank": 58,
+      "feature": "Init_Win_bytes_backward",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "OS / Stack Fingerprint",
+      "finding": "Fingerprints server OS TCP stack implementation (e.g. 235 custom tool window)",
+      "recommendation": "REMOVE to prevent testbed machine fingerprinting"
+    },
+    {
+      "rank": 59,
+      "feature": "act_data_pkt_fwd",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 60,
+      "feature": "min_seg_size_forward",
+      "classification": "POTENTIAL_LEAKAGE",
+      "category": "OS / Stack Fingerprint",
+      "finding": "Reflects fixed TCP option header length of the operating system",
+      "recommendation": "REMOVE to prevent testbed machine fingerprinting"
+    },
+    {
+      "rank": 61,
+      "feature": "Active Mean",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 62,
+      "feature": "Active Std",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 63,
+      "feature": "Active Max",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 64,
+      "feature": "Active Min",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 65,
+      "feature": "Idle Mean",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 66,
+      "feature": "Idle Std",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 67,
+      "feature": "Idle Max",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    },
+    {
+      "rank": 68,
+      "feature": "Idle Min",
+      "classification": "SAFE_BEHAVIORAL",
+      "category": "Statistical Flow Dynamics",
+      "finding": "Pure behavioral telemetry (packet sizes, inter-arrival times, throughput rates, standard flags)",
+      "recommendation": "RETAIN"
+    }
+  ]
+}

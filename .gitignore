@@ -36,10 +36,12 @@ env.bak/
 venv.bak/
 .venv_org_risk/
 
-# --- Archives & Large Raw Zips ---
+# --- Archives & Large Raw Zips & Datasets ---
 *.zip
 *.tar.gz
 CyberOptRQ_Production_Models-20260916T120030Z-1-001/
+data/cic_ids2017/
+data/unsw_nb15/
 
 # --- Hyperledger Fabric Private Crypto Material ---
 fabric/crypto-config/

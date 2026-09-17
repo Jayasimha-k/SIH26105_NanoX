@@ -1,0 +1,121 @@
+{
+  "dataset": "CIC-IDS2017",
+  "source_column": "Label",
+  "target_column": "is_malicious",
+  "classes": {
+    "0": "BENIGN",
+    "1": "MALICIOUS"
+  },
+  "mapping_rules": {
+    "BENIGN": {
+      "binary_label": 0,
+      "category": "Benign Traffic",
+      "attack_type": "None"
+    },
+    "DoS Hulk": {
+      "binary_label": 1,
+      "category": "Denial of Service",
+      "attack_type": "DoS"
+    },
+    "PortScan": {
+      "binary_label": 1,
+      "category": "Reconnaissance",
+      "attack_type": "Probe"
+    },
+    "DDoS": {
+      "binary_label": 1,
+      "category": "Distributed Denial of Service",
+      "attack_type": "DDoS"
+    },
+    "DoS GoldenEye": {
+      "binary_label": 1,
+      "category": "Denial of Service",
+      "attack_type": "DoS"
+    },
+    "FTP-Patator": {
+      "binary_label": 1,
+      "category": "Brute Force",
+      "attack_type": "Authentication Brute Force"
+    },
+    "SSH-Patator": {
+      "binary_label": 1,
+      "category": "Brute Force",
+      "attack_type": "Authentication Brute Force"
+    },
+    "DoS slowloris": {
+      "binary_label": 1,
+      "category": "Denial of Service",
+      "attack_type": "DoS"
+    },
+    "DoS Slowhttptest": {
+      "binary_label": 1,
+      "category": "Denial of Service",
+      "attack_type": "DoS"
+    },
+    "Bot": {
+      "binary_label": 1,
+      "category": "Botnet Activity",
+      "attack_type": "Botnet"
+    },
+    "Web Attack \ufffd Brute Force": {
+      "binary_label": 1,
+      "category": "Web Application Attack",
+      "attack_type": "Web Attack"
+    },
+    "Web Attack - Brute Force": {
+      "binary_label": 1,
+      "category": "Web Application Attack",
+      "attack_type": "Web Attack"
+    },
+    "Web Attack \ufffd XSS": {
+      "binary_label": 1,
+      "category": "Web Application Attack",
+      "attack_type": "Web Attack"
+    },
+    "Web Attack - XSS": {
+      "binary_label": 1,
+      "category": "Web Application Attack",
+      "attack_type": "Web Attack"
+    },
+    "Infiltration": {
+      "binary_label": 1,
+      "category": "Privilege Escalation / Infiltration",
+      "attack_type": "Infiltration"
+    },
+    "Web Attack \ufffd Sql Injection": {
+      "binary_label": 1,
+      "category": "Web Application Attack",
+      "attack_type": "Web Attack"
+    },
+    "Web Attack - Sql Injection": {
+      "binary_label": 1,
+      "category": "Web Application Attack",
+      "attack_type": "Web Attack"
+    },
+    "Heartbleed": {
+      "binary_label": 1,
+      "category": "Exploitation of Vulnerability",
+      "attack_type": "OpenSSL Heartbleed"
+    }
+  },
+  "summary": {
+    "total_classes": 15,
+    "benign_classes": ["BENIGN"],
+    "attack_classes": [
+      "DoS Hulk",
+      "PortScan",
+      "DDoS",
+      "DoS GoldenEye",
+      "FTP-Patator",
+      "SSH-Patator",
+      "DoS slowloris",
+      "DoS Slowhttptest",
+      "Bot",
+      "Web Attack \ufffd Brute Force",
+      "Web Attack \ufffd XSS",
+      "Infiltration",
+      "Web Attack \ufffd Sql Injection",
+      "Heartbleed"
+    ]
+  }
+}

@@ -8,6 +8,7 @@ import {
 const roleMenus = {
   CISO: [
     { id: 'dashboard', label: 'Executive Risk Overview', icon: LayoutDashboard },
+    { id: 'threat_intel', label: 'Threat Intelligence', icon: Database },
     { id: 'ai_quantification', label: 'Financial Risk (FAIR EAL)', icon: DollarSign },
     { id: 'optimizer', label: 'Investment Optimization', icon: Zap },
     { id: 'approvals', label: 'Approval Center', icon: ShieldCheck },

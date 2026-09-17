@@ -1,0 +1,11 @@
+{
+  "fusion_version": "v2",
+  "p5_weight": 0.1,
+  "p6_weight": 0.9,
+  "selection_method": "Validation optimization on CIC-IDS2017 validation partition",
+  "validation_dataset": "CIC-IDS2017 (142,843 validation flows)",
+  "validation_split": "15% stratified split (random_state=42)",
+  "selected_metric": "Composite PR-AUC * MCC * (1 - Brier) * (1 - ECE)",
+  "validation_utility_score": 0.90366,
+  "created_at": "2026-09-16T23:26:25Z"
+}

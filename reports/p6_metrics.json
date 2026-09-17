@@ -1,0 +1,276 @@
+{
+  "model_name": "CyberOptRQ_P6_CIC2017_XGBoost_v1",
+  "evaluation_timestamp": "2026-09-16T23:25:33Z",
+  "dataset_split": {
+    "train_samples": 282111,
+    "val_samples": 60452,
+    "test_samples": 60454
+  },
+  "primary_model_metrics": {
+    "train": {
+      "accuracy": 0.98274,
+      "balanced_accuracy": 0.98113,
+      "precision": 0.97661,
+      "recall": 0.97538,
+      "f1": 0.97599,
+      "roc_auc": 0.99889,
+      "pr_auc": 0.9979,
+      "mcc": 0.96252,
+      "brier_score": 0.0126,
+      "confusion_matrix": {
+        "true_negatives": 178296,
+        "false_positives": 2370,
+        "false_negatives": 2498,
+        "true_positives": 98947
+      }
+    },
+    "val": {
+      "accuracy": 0.98174,
+      "balanced_accuracy": 0.97414,
+      "precision": 0.96655,
+      "recall": 0.95915,
+      "f1": 0.96284,
+      "roc_auc": 0.99776,
+      "pr_auc": 0.99421,
+      "mcc": 0.95074,
+      "brier_score": 0.01405,
+      "confusion_matrix": {
+        "true_negatives": 45047,
+        "false_positives": 495,
+        "false_negatives": 609,
+        "true_positives": 14301
+      }
+    },
+    "test": {
+      "accuracy": 0.97304,
+      "balanced_accuracy": 0.91909,
+      "precision": 0.89987,
+      "recall": 0.84989,
+      "f1": 0.87417,
+      "roc_auc": 0.98954,
+      "pr_auc": 0.9463,
+      "mcc": 0.85952,
+      "brier_score": 0.02105,
+      "confusion_matrix": {
+        "true_negatives": 53162,
+        "false_positives": 630,
+        "false_negatives": 1000,
+        "true_positives": 5662
+      }
+    }
+  },
+  "baseline_model_metrics": {
+    "test": {
+      "accuracy": 0.91271,
+      "balanced_accuracy": 0.80332,
+      "precision": 0.59297,
+      "recall": 0.66301,
+      "f1": 0.62604,
+      "roc_auc": 0.92419,
+      "pr_auc": 0.61117,
+      "mcc": 0.57795,
+      "brier_score": 0.06692,
+      "confusion_matrix": {
+        "true_negatives": 50760,
+        "false_positives": 3032,
+        "false_negatives": 2245,
+        "true_positives": 4417
+      }
+    }
+  },
+  "top_features_by_gain": [
+    {
+      "feature": "Flow Duration",
+      "gain": 47.8721,
+      "weight": 283,
+      "cover": 836.0208
+    },
+    {
+      "feature": "Total Fwd Packets",
+      "gain": 66.5152,
+      "weight": 112,
+      "cover": 1216.9988
+    },
+    {
+      "feature": "Total Backward Packets",
+      "gain": 96.5247,
+      "weight": 127,
+      "cover": 1422.8473
+    },
+    {
+      "feature": "Total Length of Fwd Packets",
+      "gain": 57.5103,
+      "weight": 202,
+      "cover": 987.5048
+    },
+    {
+      "feature": "Total Length of Bwd Packets",
+      "gain": 157.196,
+      "weight": 148,
+      "cover": 1592.4281
+    },
+    {
+      "feature": "Fwd Packet Length Max",
+      "gain": 733.7662,
+      "weight": 147,
+      "cover": 2764.1199
+    },
+    {
+      "feature": "Fwd Packet Length Min",
+      "gain": 123.8651,
+      "weight": 42,
+      "cover": 2856.5676
+    },
+    {
+      "feature": "Fwd Packet Length Mean",
+      "gain": 1986.543,
+      "weight": 149,
+      "cover": 3235.1533
+    },
+    {
+      "feature": "Fwd Packet Length Std",
+      "gain": 179.6465,
+      "weight": 149,
+      "cover": 1522.1848
+    },
+    {
+      "feature": "Bwd Packet Length Max",
+      "gain": 71.7975,
+      "weight": 116,
+      "cover": 1608.3022
+    },
+    {
+      "feature": "Bwd Packet Length Min",
+      "gain": 1818.3887,
+      "weight": 65,
+      "cover": 9642.5078
+    },
+    {
+      "feature": "Bwd Packet Length Mean",
+      "gain": 308.051,
+      "weight": 173,
+      "cover": 2573.1519
+    },
+    {
+      "feature": "Bwd Packet Length Std",
+      "gain": 2192.4246,
+      "weight": 197,
+      "cover": 6777.2759
+    },
+    {
+      "feature": "Flow Bytes/s",
+      "gain": 62.9045,
+      "weight": 290,
+      "cover": 579.6049
+    },
+    {
+      "feature": "Flow Packets/s",
+      "gain": 9.9175,
+      "weight": 220,
+      "cover": 428.2944
+    }
+  ],
+  "category_breakdown": [
+    {
+      "category": "BENIGN",
+      "type": "BENIGN",
+      "sample_count": 53792,
+      "correct_benign_count": 53162,
+      "benign_accuracy": 0.9883,
+      "mean_malicious_probability": 0.0281
+    },
+    {
+      "category": "Bot",
+      "type": "ATTACK",
+      "sample_count": 315,
+      "detected_count": 0,
+      "recall_rate": 0.0,
+      "mean_malicious_probability": 0.2053
+    },
+    {
+      "category": "DDoS",
+      "type": "ATTACK",
+      "sample_count": 368,
+      "detected_count": 360,
+      "recall_rate": 0.9783,
+      "mean_malicious_probability": 0.9773
+    },
+    {
+      "category": "DoS GoldenEye",
+      "type": "ATTACK",
+      "sample_count": 909,
+      "detected_count": 627,
+      "recall_rate": 0.6898,
+      "mean_malicious_probability": 0.6913
+    },
+    {
+      "category": "Heartbleed",
+      "type": "ATTACK",
+      "sample_count": 2,
+      "detected_count": 0,
+      "recall_rate": 0.0,
+      "mean_malicious_probability": 0.0051
+    },
+    {
+      "category": "PortScan",
+      "type": "ATTACK",
+      "sample_count": 3759,
+      "detected_count": 3752,
+      "recall_rate": 0.9981,
+      "mean_malicious_probability": 0.9892
+    },
+    {
+      "category": "SSH-Patator",
+      "type": "ATTACK",
+      "sample_count": 1309,
+      "detected_count": 923,
+      "recall_rate": 0.7051,
+      "mean_malicious_probability": 0.7061
+    }
+  ],
+  "calibration": {
+    "brier_score": 0.02105,
+    "reliability_bins": [
+      {
+        "predicted": 0.0039,
+        "fraction_positive": 0.0058
+      },
+      {
+        "predicted": 0.1405,
+        "fraction_positive": 0.1181
+      },
+      {
+        "predicted": 0.242,
+        "fraction_positive": 0.1481
+      },
+      {
+        "predicted": 0.3339,
+        "fraction_positive": 0.2166
+      },
+      {
+        "predicted": 0.4352,
+        "fraction_positive": 0.2193
+      },
+      {
+        "predicted": 0.5476,
+        "fraction_positive": 0.4894
+      },
+      {
+        "predicted": 0.6472,
+        "fraction_positive": 0.4407
+      },
+      {
+        "predicted": 0.7402,
+        "fraction_positive": 0.0932
+      },
+      {
+        "predicted": 0.8642,
+        "fraction_positive": 0.2857
+      },
+      {
+        "predicted": 0.9927,
+        "fraction_positive": 0.9939
+      }
+    ]
+  }
+}

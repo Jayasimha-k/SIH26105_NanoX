@@ -1,0 +1,175 @@
+{
+  "evaluation_timestamp": "2026-09-16T23:26:26Z",
+  "test_samples": 60454,
+  "configurations": {
+    "A_p5_only": {
+      "roc_auc": 0.71509,
+      "pr_auc": 0.52961,
+      "accuracy": 0.8898,
+      "balanced_accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "mcc": 0.0,
+      "brier_score": 0.10813,
+      "ece": 0.10728,
+      "confusion_matrix": {
+        "tn": 53792,
+        "fp": 0,
+        "fn": 6662,
+        "tp": 0
+      }
+    },
+    "B_p6_only": {
+      "roc_auc": 0.98954,
+      "pr_auc": 0.9463,
+      "accuracy": 0.97304,
+      "balanced_accuracy": 0.91909,
+      "precision": 0.89987,
+      "recall": 0.84989,
+      "f1": 0.87417,
+      "mcc": 0.85952,
+      "brier_score": 0.02105,
+      "ece": 0.01219,
+      "confusion_matrix": {
+        "tn": 53162,
+        "fp": 630,
+        "fn": 1000,
+        "tp": 5662
+      }
+    },
+    "C_current_fusion_v1": {
+      "roc_auc": 0.99196,
+      "pr_auc": 0.95493,
+      "accuracy": 0.8898,
+      "balanced_accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "mcc": 0.0,
+      "brier_score": 0.06805,
+      "ece": 0.07822,
+      "confusion_matrix": {
+        "tn": 53792,
+        "fp": 0,
+        "fn": 6662,
+        "tp": 0
+      },
+      "w_p6": 0.25,
+      "w_p5": 0.75
+    },
+    "D_optimal_fusion_v2": {
+      "roc_auc": 0.98969,
+      "pr_auc": 0.94703,
+      "accuracy": 0.97315,
+      "balanced_accuracy": 0.91396,
+      "precision": 0.91121,
+      "recall": 0.83804,
+      "f1": 0.87309,
+      "mcc": 0.85905,
+      "brier_score": 0.02097,
+      "ece": 0.0175,
+      "confusion_matrix": {
+        "tn": 53248,
+        "fp": 544,
+        "fn": 1079,
+        "tp": 5583
+      },
+      "w_p6": 0.9,
+      "w_p5": 0.1
+    }
+  },
+  "attack_category_breakdown": [
+    {
+      "category": "BENIGN",
+      "type": "BENIGN",
+      "sample_count": 53792,
+      "p5_accuracy_recall": 1.0,
+      "p6_accuracy_recall": 0.9883,
+      "v1_accuracy_recall": 1.0,
+      "v2_accuracy_recall": 0.9899,
+      "mean_p5_prob": 0.0021,
+      "mean_p6_prob": 0.0281,
+      "mean_v2_fused_prob": 0.0255,
+      "sample_size_note": "Statistically robust"
+    },
+    {
+      "category": "Bot",
+      "type": "ATTACK",
+      "sample_count": 315,
+      "p5_accuracy_recall": 0.0,
+      "p6_accuracy_recall": 0.0,
+      "v1_accuracy_recall": 0.0,
+      "v2_accuracy_recall": 0.0,
+      "mean_p5_prob": 0.0157,
+      "mean_p6_prob": 0.2053,
+      "mean_v2_fused_prob": 0.1863,
+      "sample_size_note": "Moderate confidence"
+    },
+    {
+      "category": "DDoS",
+      "type": "ATTACK",
+      "sample_count": 368,
+      "p5_accuracy_recall": 0.0,
+      "p6_accuracy_recall": 0.9783,
+      "v1_accuracy_recall": 0.0,
+      "v2_accuracy_recall": 0.9783,
+      "mean_p5_prob": 0.0195,
+      "mean_p6_prob": 0.9773,
+      "mean_v2_fused_prob": 0.8815,
+      "sample_size_note": "Moderate confidence"
+    },
+    {
+      "category": "DoS GoldenEye",
+      "type": "ATTACK",
+      "sample_count": 909,
+      "p5_accuracy_recall": 0.0,
+      "p6_accuracy_recall": 0.6898,
+      "v1_accuracy_recall": 0.0,
+      "v2_accuracy_recall": 0.6898,
+      "mean_p5_prob": 0.0195,
+      "mean_p6_prob": 0.6913,
+      "mean_v2_fused_prob": 0.6241,
+      "sample_size_note": "Statistically robust"
+    },
+    {
+      "category": "Heartbleed",
+      "type": "ATTACK",
+      "sample_count": 2,
+      "p5_accuracy_recall": 0.0,
+      "p6_accuracy_recall": 0.0,
+      "v1_accuracy_recall": 0.0,
+      "v2_accuracy_recall": 0.0,
+      "mean_p5_prob": 0.0236,
+      "mean_p6_prob": 0.0051,
+      "mean_v2_fused_prob": 0.0069,
+      "sample_size_note": "Small sample (<50) - directional only"
+    },
+    {
+      "category": "PortScan",
+      "type": "ATTACK",
+      "sample_count": 3759,
+      "p5_accuracy_recall": 0.0,
+      "p6_accuracy_recall": 0.9981,
+      "v1_accuracy_recall": 0.0,
+      "v2_accuracy_recall": 0.9981,
+      "mean_p5_prob": 0.0021,
+      "mean_p6_prob": 0.9892,
+      "mean_v2_fused_prob": 0.8905,
+      "sample_size_note": "Statistically robust"
+    },
+    {
+      "category": "SSH-Patator",
+      "type": "ATTACK",
+      "sample_count": 1309,
+      "p5_accuracy_recall": 0.0,
+      "p6_accuracy_recall": 0.7051,
+      "v1_accuracy_recall": 0.0,
+      "v2_accuracy_recall": 0.6448,
+      "mean_p5_prob": 0.0198,
+      "mean_p6_prob": 0.7061,
+      "mean_v2_fused_prob": 0.6374,
+      "sample_size_note": "Statistically robust"
+    }
+  ]
+}

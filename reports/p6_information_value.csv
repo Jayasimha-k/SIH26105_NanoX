@@ -1,0 +1,57 @@
+feature,information_value,predictive_power,number_of_bins,missing_rate,classification
+Min Packet Length,7.248,Very Strong (> 0.5),5,0.0,SAFE_BEHAVIORAL
+Bwd Packet Length Max,5.8573,Very Strong (> 0.5),7,0.0,SAFE_BEHAVIORAL
+Bwd Packet Length Min,5.827,Very Strong (> 0.5),4,0.0,SAFE_BEHAVIORAL
+Fwd Packet Length Min,5.0953,Very Strong (> 0.5),4,0.0,SAFE_BEHAVIORAL
+Fwd Packet Length Max,4.1697,Very Strong (> 0.5),9,0.0,SAFE_BEHAVIORAL
+Max Packet Length,3.8501,Very Strong (> 0.5),8,0.0,SAFE_BEHAVIORAL
+Bwd Packet Length Mean,3.4825,Very Strong (> 0.5),7,0.0,SAFE_BEHAVIORAL
+Packet Length Std,3.1223,Very Strong (> 0.5),8,0.0,SAFE_BEHAVIORAL
+Total Length of Bwd Packets,2.9414,Very Strong (> 0.5),8,0.0,SAFE_BEHAVIORAL
+Packet Length Mean,2.9115,Very Strong (> 0.5),9,0.0,SAFE_BEHAVIORAL
+Average Packet Size,2.7086,Very Strong (> 0.5),9,0.0,SAFE_BEHAVIORAL
+Bwd Packet Length Std,2.425,Very Strong (> 0.5),4,0.0,SAFE_BEHAVIORAL
+Total Length of Fwd Packets,2.3517,Very Strong (> 0.5),9,0.0,SAFE_BEHAVIORAL
+Fwd Packet Length Mean,1.9147,Very Strong (> 0.5),9,0.0,SAFE_BEHAVIORAL
+Total Backward Packets,1.3499,Very Strong (> 0.5),6,0.0,SAFE_BEHAVIORAL
+Flow IAT Max,1.3012,Very Strong (> 0.5),10,0.0,SAFE_BEHAVIORAL
+Fwd Packet Length Std,1.2648,Very Strong (> 0.5),5,0.0,SAFE_BEHAVIORAL
+Fwd IAT Max,1.184,Very Strong (> 0.5),8,0.0,SAFE_BEHAVIORAL
+Bwd Header Length,1.1622,Very Strong (> 0.5),9,0.0,SAFE_BEHAVIORAL
+Bwd Packets/s,1.0072,Very Strong (> 0.5),9,0.0,SAFE_BEHAVIORAL
+Flow Bytes/s,0.9727,Very Strong (> 0.5),10,0.0,SAFE_BEHAVIORAL
+Flow Packets/s,0.9249,Very Strong (> 0.5),10,0.0,SAFE_BEHAVIORAL
+Bwd IAT Max,0.9026,Very Strong (> 0.5),6,0.0,SAFE_BEHAVIORAL
+Bwd IAT Total,0.897,Very Strong (> 0.5),6,0.0,SAFE_BEHAVIORAL
+Bwd IAT Mean,0.8833,Very Strong (> 0.5),6,0.0,SAFE_BEHAVIORAL
+Fwd IAT Mean,0.8465,Very Strong (> 0.5),8,0.0,SAFE_BEHAVIORAL
+Fwd Header Length,0.8406,Very Strong (> 0.5),10,0.0,SAFE_BEHAVIORAL
+Flow IAT Mean,0.7761,Very Strong (> 0.5),10,0.0,SAFE_BEHAVIORAL
+Fwd Packets/s,0.7573,Very Strong (> 0.5),10,0.0,SAFE_BEHAVIORAL
+Flow Duration,0.7082,Very Strong (> 0.5),10,0.0,SAFE_BEHAVIORAL
+Flow IAT Std,0.6975,Very Strong (> 0.5),7,0.0,SAFE_BEHAVIORAL
+Flow IAT Min,0.677,Very Strong (> 0.5),9,0.0,SAFE_BEHAVIORAL
+Fwd IAT Total,0.6679,Very Strong (> 0.5),8,0.0,SAFE_BEHAVIORAL
+Total Fwd Packets,0.6582,Very Strong (> 0.5),6,0.0,SAFE_BEHAVIORAL
+Fwd IAT Std,0.6497,Very Strong (> 0.5),5,0.0,SAFE_BEHAVIORAL
+Idle Max,0.6358,Very Strong (> 0.5),3,0.0,SAFE_BEHAVIORAL
+act_data_pkt_fwd,0.3974,Strong (0.3 - 0.5),5,0.0,SAFE_BEHAVIORAL
+Idle Mean,0.3897,Strong (0.3 - 0.5),3,0.0,SAFE_BEHAVIORAL
+Idle Min,0.3735,Strong (0.3 - 0.5),3,0.0,SAFE_BEHAVIORAL
+Active Min,0.2945,Medium (0.1 - 0.3),3,0.0,SAFE_BEHAVIORAL
+Active Max,0.2795,Medium (0.1 - 0.3),3,0.0,SAFE_BEHAVIORAL
+Active Mean,0.2694,Medium (0.1 - 0.3),3,0.0,SAFE_BEHAVIORAL
+Bwd IAT Std,0.2423,Medium (0.1 - 0.3),4,0.0,SAFE_BEHAVIORAL
+Fwd IAT Min,0.23,Medium (0.1 - 0.3),9,0.0,SAFE_BEHAVIORAL
+Bwd IAT Min,0.1599,Medium (0.1 - 0.3),6,0.0,SAFE_BEHAVIORAL
+Down/Up Ratio,0.0119,Unpredictive (< 0.02),2,0.0,SAFE_BEHAVIORAL
+Fwd PSH Flags,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL
+FIN Flag Count,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL
+SYN Flag Count,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL
+ECE Flag Count,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL
+ACK Flag Count,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL
+URG Flag Count,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL
+RST Flag Count,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL
+PSH Flag Count,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL
+Active Std,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL
+Idle Std,0.0,Unpredictive (< 0.02),1,0.0,SAFE_BEHAVIORAL

@@ -102,6 +102,33 @@ def test_blockchain():
     print(f"  [PASS] Node 1 Post-Consensus Validation: Valid={ciso_repaired_valid}, Msg='{ciso_repaired_msg}'")
     assert ciso_repaired_valid, "Node 1 should be restored by consensus majority!"
 
+    # 8. Testing Risk Assessment Anchoring with Validated P6 Evidence Provenance
+    print("\n[8] Testing Risk Assessment Anchoring with P5/P6 Evidence Provenance...")
+    prov_success, prov_msg, prov_details = blockchain_network.broadcast_transaction(
+        action="RISK_ASSESSMENT_ANCHORED",
+        actor_role="soc",
+        actor_id="soc_analyst@enterprise.com",
+        payload={
+            "assessment_id": "ASSESS-2026-0917-P6",
+            "organization": "NanoX Enterprise",
+            "threat": "PortScan & Ingress Telemetry",
+            "p5_prior_risk": 0.0001,
+            "p6_network_evidence": 0.9994,
+            "fused_probability": 0.8995,
+            "fusion_version": "v2",
+            "p5_model_version": "CyberOptRQ_Meta_XGBoost_FINAL_4INPUT",
+            "p6_model_version": "CyberOptRQ_P6_CIC2017_XGBoost_v1",
+            "p6_weight": 0.90,
+            "eal_pre": 899500.0,
+            "eal_post": 125000.0,
+            "timestamp": "2026-09-17T04:45:00Z"
+        }
+    )
+    print(f"  [PASS] Provenance Broadcast: {prov_msg}")
+    mine_ok, mine_msg, mine_evt = blockchain_network.mine_and_consensus(miner_node_id="node_soc")
+    print(f"  [PASS] Provenance Block Mined: Height={len(nodes['node_soc'].chain)}, Hash={mine_evt['block_hash'][:24]}...")
+    assert mine_ok, "Provenance block mining should succeed!"
+
     print("\n==================================================")
     print("ALL BLOCKCHAIN SYSTEM TESTS PASSED SUCCESSFULLY! :)")
     print("==================================================")
