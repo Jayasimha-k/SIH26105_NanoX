@@ -79,5 +79,27 @@ export const api = {
   getThreatSources: () => fetchJSON('/threat-intelligence/sources'),
 
   // Executive Business Value & Standards Compliance
-  getFrameworkCompliance: () => fetchJSON('/business-value/compliance')
+  getFrameworkCompliance: () => fetchJSON('/business-value/compliance'),
+
+  // Step 8b: Continual Learning & Model Governance Engine
+  getLearningStatus: (orgId = 'Hospital A') =>
+    fetchJSON(`/learning/status?org_id=${encodeURIComponent(orgId)}`),
+  getLearningEvidence: (status, orgId = 'Hospital A') =>
+    fetchJSON(`/learning/evidence?org_id=${encodeURIComponent(orgId)}${status ? `&status=${encodeURIComponent(status)}` : ''}`),
+  recordLearningEvidence: (payload) =>
+    fetchJSON('/learning/evidence', { method: 'POST', body: JSON.stringify(payload) }),
+  confirmLearningOutcome: (evidenceId, outcome, notes = '') =>
+    fetchJSON('/learning/confirm-outcome', { method: 'POST', body: JSON.stringify({ evidence_id: evidenceId, outcome_status: outcome, outcome, notes }) }),
+  trainCandidateModel: (orgId = 'Hospital A') =>
+    fetchJSON('/learning/train-candidate', { method: 'POST', body: JSON.stringify({ organization_id: orgId }) }),
+  validateCandidateModel: (orgId = 'Hospital A') =>
+    fetchJSON('/learning/validate-candidate', { method: 'POST', body: JSON.stringify({ organization_id: orgId }) }),
+  promoteCandidateModel: (candidateVersion, orgId = 'Hospital A') =>
+    fetchJSON('/learning/promote', { method: 'POST', body: JSON.stringify({ organization_id: orgId, candidate_version: candidateVersion }) }),
+  getLearningModels: (orgId = 'Hospital A') =>
+    fetchJSON(`/learning/models?org_id=${encodeURIComponent(orgId)}`),
+  getLearningDrift: (orgId = 'Hospital A') =>
+    fetchJSON(`/learning/drift?org_id=${encodeURIComponent(orgId)}`),
+  seedDemoLearningEvidence: (orgId = 'Hospital A', count = 25) =>
+    fetchJSON('/learning/seed-demo', { method: 'POST', body: JSON.stringify({ organization_id: orgId, count }) })
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import {
   LayoutDashboard, Database, Server, DollarSign, Zap,
   ShieldCheck, Wrench, RefreshCcw, Lock, Award, Eye,
-  AlertOctagon, CheckSquare, Layers, FileText
+  AlertOctagon, CheckSquare, Layers, FileText, Brain
 } from 'lucide-react';
 
 const roleMenus = {
@@ -10,6 +10,7 @@ const roleMenus = {
     { id: 'dashboard', label: 'Executive Risk Overview', icon: LayoutDashboard },
     { id: 'threat_intel', label: 'Threat Intelligence', icon: Database },
     { id: 'ai_quantification', label: 'Financial Risk (FAIR EAL)', icon: DollarSign },
+    { id: 'continual_learning', label: 'Continual Learning (Governance)', icon: Brain },
     { id: 'optimizer', label: 'Investment Optimization', icon: Zap },
     { id: 'approvals', label: 'Approval Center', icon: ShieldCheck },
     { id: 'audit', label: 'Audit & Compliance', icon: Lock }
@@ -19,11 +20,13 @@ const roleMenus = {
     { id: 'vulnerabilities', label: 'Active Vulnerabilities', icon: AlertOctagon },
     { id: 'asset_inventory', label: 'Asset Exposure', icon: Server },
     { id: 'ai_risk', label: 'AI Risk Assessment', icon: Eye },
+    { id: 'continual_learning', label: 'Evidence & Learning', icon: Brain },
     { id: 'incidents', label: 'Incident & Loss Log', icon: FileText }
   ],
   Security: [
     { id: 'ai_quantification', label: 'Risk Assessment', icon: Eye },
     { id: 'asset_inventory', label: 'Asset Risk Portfolio', icon: Server },
+    { id: 'continual_learning', label: 'Continual Learning & Drift', icon: Brain },
     { id: 'optimizer', label: 'Control Optimization', icon: Zap },
     { id: 'recalculate', label: 'What-If Analysis', icon: RefreshCcw },
     { id: 'recommendations', label: 'Prioritized Recommendations', icon: Award },

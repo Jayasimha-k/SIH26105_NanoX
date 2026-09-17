@@ -14,6 +14,7 @@ import VerifyRecalculateView from './components/views/VerifyRecalculateView';
 import AuditView from './components/views/AuditView';
 import BusinessValueView from './components/views/BusinessValueView';
 import ThreatIntelView from './components/views/ThreatIntelView';
+import ContinualLearningView from './components/views/ContinualLearningView';
 
 import { api } from './services/api';
 import { WebSocketClient } from './services/websocket';
@@ -198,6 +199,8 @@ export default function App({ isClerkConfigured = true }) {
         );
       case 'threat_intel':
         return <ThreatIntelView />;
+      case 'continual_learning':
+        return <ContinualLearningView />;
       case 'vulnerabilities':
       case 'asset_inventory':
       case 'ai_risk':

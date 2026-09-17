@@ -153,3 +153,73 @@ class ThreatIntelligenceRecord(Base):
     processed_at = Column(DateTime, default=datetime.datetime.utcnow)
     model_assessment_status = Column(String, default="PENDING")  # PENDING, ASSESSED, INELIGIBLE
 
+class ContinualLearningEvidence(Base):
+    __tablename__ = "continual_learning_evidence"
+
+    id = Column(Integer, primary_key=True, index=True)
+    evidence_id = Column(String, unique=True, index=True, nullable=False)
+    organization_id = Column(String, index=True, nullable=False)
+    asset_id = Column(String, nullable=False)
+    threat_id = Column(String, nullable=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    # Recorded Model Signals (P1-P6 & Fusion)
+    p1_nvd = Column(Float, default=0.0)
+    p2_epss = Column(Float, default=0.0)
+    p3_org = Column(Float, default=0.0)
+    p4_mitre = Column(Float, default=0.0)
+    p5_meta = Column(Float, default=0.0)
+    p6_network = Column(Float, default=0.0)
+    fused_probability = Column(Float, default=0.0)
+    org_risk_score = Column(Float, default=0.0)
+    expected_annual_loss = Column(Float, default=0.0)
+    
+    # Organization & Operational Context
+    asset_criticality = Column(Float, default=5.0)
+    exposure_level = Column(String, default="INTERNAL")
+    control_effectiveness = Column(Float, default=0.5)
+    incident_history_count = Column(Integer, default=0)
+    recommended_control = Column(String, default="NIST-PR.AC-1: Access Control Hardening", nullable=True)
+    remediation_applied = Column(Integer, default=0)  # 0 = No, 1 = Yes / Remediation Performed
+    financial_impact_inr = Column(Float, default=1000000.0)
+    
+    # Ground Truth / Confirmed Outcome
+    confirmation_status = Column(String, default="PENDING_CONFIRMATION")  # PENDING_CONFIRMATION, CONFIRMED_INCIDENT, CONFIRMED_BENIGN, REJECTED
+    target_label = Column(Integer, nullable=True)  # 1 = Incident Occurred / Loss Event, 0 = Benign / No Event
+    observed_loss_inr = Column(Float, nullable=True)
+    confirmed_by = Column(String, nullable=True)
+    confirmed_at = Column(DateTime, nullable=True)
+    confirmation_notes = Column(Text, nullable=True)
+    
+    # Integrity & Provenance
+    evidence_hash = Column(String, unique=True, index=True, nullable=False)
+    source_provenance = Column(String, default="SYSTEM_TELEMETRY")
+    is_demo = Column(Integer, default=0)  # 0 = Real, 1 = Demo / Simulated
+
+class ModelGovernanceRecord(Base):
+    __tablename__ = "model_governance_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    model_id = Column(String, index=True, nullable=False)  # e.g., org_specific_risk_model
+    version = Column(String, unique=True, index=True, nullable=False)  # e.g., v1.0.0, v1.1.0
+    status = Column(String, default="CHAMPION")  # CHAMPION, CANDIDATE, REJECTED, SUPERSEDED
+    parent_version = Column(String, nullable=True)
+    
+    training_sample_count = Column(Integer, default=0)
+    dataset_hash = Column(String, nullable=False)
+    artifact_path = Column(String, nullable=False)
+    artifact_hash = Column(String, nullable=False)
+    feature_schema_version = Column(String, default="1.0.0")
+    
+    # Validation & Governance Metrics (JSON string)
+    metrics_json = Column(Text, nullable=False)  # roc_auc, pr_auc, f1, mcc, brier, ece
+    drift_json = Column(Text, nullable=True)     # feature_psi, prediction_psi, drift_status
+    governance_decision = Column(String, default="APPROVED")  # APPROVED, REJECTED, MONITOR
+    decision_reason = Column(Text, nullable=True)
+    
+    # Audit & Blockchain Anchoring
+    fabric_tx_id = Column(String, nullable=True)
+    fabric_status = Column(String, default="LOCAL_COMMITTED")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+

@@ -65,6 +65,8 @@ lerna-debug.log*
 *.sqlite3
 cyberopt_rq.db
 backend/cyberopt_rq.db
+models/organization-specific-risk/versions/*.joblib
+!models/organization-specific-risk/versions/.gitkeep
 
 # --- Environment Variables & Secrets ---
 .env
