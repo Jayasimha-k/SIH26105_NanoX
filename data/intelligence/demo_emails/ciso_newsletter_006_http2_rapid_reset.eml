@@ -1,0 +1,35 @@
+From: CISA Advisories <advisories@cisa.gov>
+To: CyberOptRQ Intel Mailbox <intel@cyberoptrq.example>
+Subject: CISA Alert AA26-260A: Active In-The-Wild Exploitation of HTTP/2 Rapid Reset CVE-2023-44487
+Date: Thu, 17 Sep 2026 08:30:00 +0000
+Message-ID: <cisa-alert-20260917-006@cisa.gov>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+CYBERSECURITY AND INFRASTRUCTURE SECURITY AGENCY
+NATIONAL CYBERSECURITY ADVISORY AA26-260A
+
+SUMMARY:
+Vulnerability: CVE-2023-44487
+Vendor: Apache Software Foundation / Cloud Infrastructure Providers
+Product: Apache HTTP Server & Reverse Proxies
+Affected Versions: All implementations supporting HTTP/2 prior to October 2023 patches
+Vulnerability Type: Distributed Denial of Service / Resource Exhaustion
+Attack Vector: NETWORK
+MITRE ATT&CK Technique: T1498 (Network Denial of Service)
+Exploitation Status: CONFIRMED_EXPLOITATION_IN_WILD
+Attack Outcome: EXPLOITED_SUCCESSFULLY
+Affected Sector: Cloud Services, Financial Platforms, E-Commerce
+Publication Date: 2026-09-17
+
+TECHNICAL ANALYSIS:
+Attackers exploit the HTTP/2 stream cancellation mechanism by sending a barrage of HEADERS frames followed immediately by RST_STREAM frames. This overwhelms public load balancers and web servers without saturating link bandwidth, causing widespread service disruption across cloud workloads.
+
+REQUIRED DIRECTIVES:
+- Enable rate limiting on stream resets and apply vendor patches on reverse proxy tiers.
+- CIS Control 4.1: Deploy Layer 7 Web Application Firewall (WAF) mitigations.
+
+FINANCIAL IMPACT:
+Downtime and incident response costs estimated at ₹2,900,000 for critical customer-facing portals.
+
+Confidence: 0.93

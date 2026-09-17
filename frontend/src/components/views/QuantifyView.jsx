@@ -2,23 +2,29 @@ import React from 'react';
 import { DollarSign } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
 
-export default function QuantifyView({ overview }) {
+export default function QuantifyView({ overview, attackState }) {
   const formatCurrency = (val) => `₹${((val || 0) / 100000).toFixed(1)}L`;
 
-  const preEal = overview?.total_pre_control_eal || 3500000;
+  const isAttackActive = attackState?.active || overview?.is_attack_active;
+  const pipeline = attackState?.pipeline;
+
+  const preEal = isAttackActive
+    ? (pipeline?.active_attack_eal || overview?.total_pre_control_eal || 8920000)
+    : (overview?.total_pre_control_eal || 3500000);
+
   const postEal = (overview && overview.total_post_control_eal < overview.total_pre_control_eal)
     ? overview.total_post_control_eal
-    : Math.round(preEal * 0.12);
+    : Math.round(preEal * 0.16);
   const riskReduction = preEal - postEal;
-  const reductionPct = (((preEal - postEal) / preEal) * 100).toFixed(1);
-  const rosi = overview?.enterprise_rosi || 900.0;
+  const reductionPct = preEal > 0 ? (((preEal - postEal) / preEal) * 100).toFixed(1) : '84.0';
+  const rosi = overview?.enterprise_rosi || 465.8;
 
   const chartData = overview?.asset_breakdown ? overview.asset_breakdown.map(a => ({
-    name: a.asset_name.split(' ')[0],
+    name: a.is_under_attack ? `⚡ ${a.asset_name.split(' ')[0]}` : a.asset_name.split(' ')[0],
     preEal: a.pre_eal / 100000,
-    postEal: (a.pre_eal * 0.15) / 100000
+    postEal: (a.post_eal != null ? a.post_eal : a.pre_eal * 0.16) / 100000
   })) : [
-    { name: 'Payment', preEal: 14.5, postEal: 2.1 },
+    { name: isAttackActive ? '⚡ ProdServer' : 'Payment', preEal: isAttackActive ? 89.2 : 14.5, postEal: 2.1 },
     { name: 'Core', preEal: 11.2, postEal: 1.8 },
     { name: 'Customer', preEal: 6.8, postEal: 0.9 },
     { name: 'Internal', preEal: 3.5, postEal: 0.4 },
@@ -26,6 +32,24 @@ export default function QuantifyView({ overview }) {
 
   return (
     <div className="space-y-6">
+      {/* Active Attack Telemetry Banner */}
+      {isAttackActive && (
+        <div className="p-4 bg-rose-950 border border-rose-800 rounded-2xl text-white flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">⚡</span>
+            <div>
+              <div className="text-xs font-black uppercase tracking-wider text-rose-300">Active Attack Telemetry Detected</div>
+              <div className="text-sm font-bold text-white">
+                Enterprise EAL has surged from baseline to {formatCurrency(preEal)} ({attackState?.correlation_id || 'ATTACK-ACTIVE'})
+              </div>
+            </div>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-rose-600 text-white font-extrabold text-xs uppercase tracking-wider animate-pulse">
+            EAL SURGE ACTIVE
+          </span>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <div>
           <span className="cyber-badge mb-1">Financial Loss Quantification</span>

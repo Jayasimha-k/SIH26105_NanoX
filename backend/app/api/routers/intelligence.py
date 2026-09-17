@@ -378,10 +378,12 @@ def list_intelligence_sources():
 
 @router.post("/offline-demo")
 def run_offline_intelligence_demo(payload: OfflineDemoRequest = OfflineDemoRequest(), db: Session = Depends(get_db)):
-    """Executes deterministic offline end-to-end demonstration for CISO and/or CFO."""
+    """Executes deterministic offline end-to-end demonstration for CISO, CFO, and Continual Learning."""
     results = {}
     if payload.workflow.upper() in ["CISO", "ALL"]:
         results["ciso_story"] = IntelligenceService.run_ciso_story_demo(db, payload.organization_id)
     if payload.workflow.upper() in ["CFO", "ALL"]:
         results["cfo_story"] = IntelligenceService.run_cfo_story_demo(db, payload.organization_id)
+    if payload.workflow.upper() in ["LEARNING", "CONTINUAL_LEARNING", "ALL"]:
+        results["learning_story"] = IntelligenceService.demonstrate_continual_learning_from_newsletters(db, payload.organization_id)
     return results

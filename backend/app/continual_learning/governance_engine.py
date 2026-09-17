@@ -2,7 +2,7 @@ import os
 import sys
 import json
 import uuid
-import joblib
+import pickle
 import hashlib
 import logging
 import datetime
@@ -66,9 +66,9 @@ class GovernanceEngine:
 
         v1_path = os.path.join(VERSIONS_DIR, "model_v1.0.0.joblib")
         # If binary doesn't exist, train or save a baseline adapter
-        from sklearn.linear_model import LogisticRegression
+        from app.continual_learning.candidate_trainer import PureLogisticRegression
         import numpy as np
-        baseline_model = LogisticRegression(class_weight="balanced")
+        baseline_model = PureLogisticRegression(C=0.75, max_iter=500, random_state=42)
         # Representative synthetic baseline samples to initialize weights
         np.random.seed(42)
         dummy_X = np.vstack([
@@ -77,7 +77,8 @@ class GovernanceEngine:
         ])
         dummy_y = np.array([0] * 10 + [1] * 10)
         baseline_model.fit(dummy_X, dummy_y)
-        joblib.dump(baseline_model, v1_path)
+        with open(v1_path, "wb") as f:
+            pickle.dump(baseline_model, f)
         art_hash = cls.compute_file_hash(v1_path)
 
         baseline_metrics = {
@@ -128,7 +129,8 @@ class GovernanceEngine:
         """Saves candidate model artifact locally and logs record."""
         cls.ensure_storage_dir()
         art_path = os.path.join(VERSIONS_DIR, f"model_{version}.joblib")
-        joblib.dump(model_artifact, art_path)
+        with open(art_path, "wb") as f:
+            pickle.dump(model_artifact, f)
         art_hash = cls.compute_file_hash(art_path)
 
         # Existing candidate if any gets superseded/marked REPLACED

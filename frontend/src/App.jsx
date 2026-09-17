@@ -313,7 +313,7 @@ export default function App({ isClerkConfigured = true }) {
         return (
           <div className="space-y-6">
             <PredictView assets={assets} vulnerabilities={vulnerabilities} />
-            <QuantifyView overview={overview} />
+            <QuantifyView overview={overview} attackState={attackState} />
           </div>
         );
       case 'model_evidence':

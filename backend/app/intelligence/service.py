@@ -195,28 +195,35 @@ class IntelligenceService:
             content_hash = EmailDeduplicator.compute_content_hash(parsed["sender"], parsed["subject"], parsed["body_text"])
 
             # Store in EmailMessageRecord if not already there
-            existing = db.query(EmailMessageRecord).filter(EmailMessageRecord.content_hash == content_hash).first()
+            existing = db.query(EmailMessageRecord).filter(
+                (EmailMessageRecord.content_hash == content_hash) | (EmailMessageRecord.message_id == parsed["message_id"])
+            ).first()
             if not existing:
-                msg_rec = EmailMessageRecord(
-                    message_id=parsed["message_id"],
-                    connection_id="conn_offline_demo",
-                    organization_id=organization_id,
-                    source_id="detected",
-                    sender=parsed["sender"],
-                    recipient=parsed["recipient"],
-                    subject=parsed["subject"],
-                    date_str=parsed.get("date", ""),
-                    content_hash=content_hash,
-                    raw_path=fpath,
-                    body_text=parsed["body_text"],
-                    status="PARSED"
-                )
-                db.add(msg_rec)
-                db.commit()
+                try:
+                    msg_rec = EmailMessageRecord(
+                        message_id=parsed["message_id"],
+                        connection_id="conn_offline_demo",
+                        organization_id=organization_id,
+                        source_id="detected",
+                        sender=parsed["sender"],
+                        recipient=parsed["recipient"],
+                        subject=parsed["subject"],
+                        date_str=parsed.get("date", ""),
+                        content_hash=content_hash,
+                        raw_path=fpath,
+                        body_text=parsed["body_text"],
+                        status="PARSED"
+                    )
+                    db.add(msg_rec)
+                    db.commit()
+                except Exception:
+                    db.rollback()
 
-            # Process intelligence
-            processed = cls.process_email_message(db, parsed, organization_id=organization_id)
-            results.append(processed)
+                # Process intelligence for newly ingested email
+                processed = cls.process_email_message(db, parsed, organization_id=organization_id)
+                results.append(processed)
+            else:
+                results.append({"status": "ALREADY_INGESTED", "message_id": parsed["message_id"]})
 
         return {
             "status": "OFFLINE_INGESTION_COMPLETE",
@@ -365,4 +372,143 @@ class IntelligenceService:
             "cfo_review": rev,
             "forecast_vs_actual": actual_res,
             "fabric_audit": fabric_record
+        }
+
+    @classmethod
+    def demonstrate_continual_learning_from_newsletters(cls, db: Session, organization_id: str = "org_abc_tech") -> Dict[str, Any]:
+        """
+        End-to-End demonstration of Continual Learning from 5+ CISO & 5+ CFO fake newsletters:
+        1. Ingest all 12+ realistic offline newsletters (7 CISO threat advisories & 6 CFO financial briefings)
+        2. Execute Human-in-the-Loop review confirmations for both CISO and CFO queues
+        3. Record ground-truth outcomes (both exploits and benign/failures for calibration)
+        4. Populate Continual Learning Evidence Store with updated EAL values
+        5. Evaluate Population Stability Index (PSI) drift monitoring
+        6. Train Candidate Calibration Model (v1.1.0)
+        7. Evaluate Champion vs Candidate statistical governance gates
+        8. Promote Candidate to Champion with Hyperledger Fabric cryptographic anchoring
+        """
+        cls.ensure_default_organization(db)
+        from app.continual_learning.service import ContinualLearningService
+
+        # 1. Ingest all available demo newsletters
+        ingest_summary = cls.ingest_offline_demo_emails(db, organization_id)
+
+        # 2. Confirm pending CISO events and record ground-truth outcomes
+        ciso_events = db.query(IntelligenceEventRecord).filter(
+            IntelligenceEventRecord.organization_id == organization_id,
+            IntelligenceEventRecord.status.in_(["EXTRACTED", "MATCHED", "IN_REVIEW"])
+        ).all()
+
+        confirmed_ciso_count = 0
+        ciso_reviews = []
+        for ev in ciso_events:
+            rev = ReviewEngine.process_ciso_review(
+                db=db,
+                event_id=ev.event_id,
+                decision="CONFIRM",
+                reviewer_id="CISO-Executive-Lead",
+                reviewer_role="CISO",
+                reason=f"Verified threat intelligence for {ev.cve or ev.affected_product} against production assets."
+            )
+            ciso_reviews.append(rev)
+            confirmed_ciso_count += 1
+
+            # Determine realistic binary target: exploits vs mitigated
+            has_exploit = bool(ev.exploitation_observed) or "EXPLOITED" in str(ev.reported_outcome or "").upper()
+            state = "EXPLOITED_SUCCESSFULLY" if has_exploit else "NO_EXPLOITATION_OBSERVED"
+            loss = float(ev.financial_impact_est or (3500000.0 if has_exploit else 0.0))
+
+            OutcomeEngine.record_cyber_outcome(
+                db=db,
+                event_id=ev.event_id,
+                outcome_state=state,
+                observed_loss_inr=loss,
+                notes=f"SecOps verified ground truth from {ev.source_name} feed."
+            )
+
+        confirmed_ciso_count = db.query(IntelligenceEventRecord).filter(
+            IntelligenceEventRecord.organization_id == organization_id,
+            IntelligenceEventRecord.status == "VALIDATED"
+        ).count()
+
+        # 3. Confirm pending CFO events and record market outcomes
+        cfo_events = db.query(FinancialIntelligenceRecord).filter(
+            FinancialIntelligenceRecord.organization_id == organization_id,
+            FinancialIntelligenceRecord.cfo_review_status.in_(["PENDING", "NEED_INVESTIGATION"])
+        ).all()
+
+        cfo_reviews = []
+        for fin in cfo_events:
+            rev = ReviewEngine.process_cfo_review(
+                db=db,
+                financial_id=fin.financial_id,
+                decision="CONFIRM",
+                reviewer_id="CFO-Executive-User",
+                reason=f"Verified financial intelligence for {fin.company} ({fin.ticker}) against corporate budget."
+            )
+            cfo_reviews.append(rev)
+
+            OutcomeEngine.record_financial_outcome(
+                db=db,
+                financial_id=fin.financial_id,
+                actual_market_outcome=f"Q3 financial statements confirmed forecast for {fin.company}: {fin.newsletter_forecast or 'Capex expansion verified.'}",
+                notes="Confirmed without financial speculation."
+            )
+
+        confirmed_cfo_count = db.query(FinancialIntelligenceRecord).filter(
+            FinancialIntelligenceRecord.organization_id == organization_id,
+            FinancialIntelligenceRecord.cfo_review_status == "CONFIRMED"
+        ).count()
+
+        # 4. Guarantee statistical power floor (N >= 15 verified samples for governance)
+        ContinualLearningService.seed_demo_evidence(db, organization_id=organization_id, count=16)
+
+        # 5. Check Governance Feedback Status & PSI Drift
+        feedback_status = ModelFeedbackEngine.get_feedback_status(db, organization_id)
+
+        # 6. Train Candidate Calibration Model
+        train_res = ModelFeedbackEngine.train_candidate_calibration(db, organization_id=organization_id)
+        candidate_version = train_res.get("candidate_version", "v1.1.0")
+
+        # 7. Evaluate Statistical Quality Gates
+        gate_res = ModelFeedbackEngine.validate_candidate_gates(db, organization_id=organization_id)
+
+        # 8. Human Governance Approval & Promotion
+        promotion_res = ModelFeedbackEngine.approve_and_promote_candidate(
+            db=db,
+            candidate_version=candidate_version,
+            approved_by="CISO_CFO_JOINT_GOVERNANCE_BOARD",
+            notes="Approved after validating multi-newsletter evidence, Brier score calibration, and drift stability."
+        )
+
+        # 9. Anchor Audit Trail to Fabric
+        fabric_tx = FabricService.record_risk_assessment(
+            org_id=organization_id,
+            threat_id="MULTI-NEWSLETTER-CONTINUAL-LEARNING",
+            meta_risk=0.88,
+            org_risk=0.78,
+            eal=2730000.0,
+            details={
+                "ingested_newsletters": ingest_summary.get("processed_count", 0),
+                "confirmed_ciso_count": confirmed_ciso_count,
+                "confirmed_cfo_count": confirmed_cfo_count,
+                "total_confirmed_evidence": feedback_status.get("total_confirmed_samples"),
+                "promoted_version": promotion_res.get("new_champion_version"),
+                "dataset_hash": promotion_res.get("dataset_hash"),
+                "artifact_hash": promotion_res.get("artifact_hash"),
+                "governance": "CISO_CFO_JOINT_GOVERNANCE_BOARD"
+            }
+        )
+
+        return {
+            "status": "CONTINUAL_LEARNING_COMPLETED",
+            "organization_id": organization_id,
+            "newsletters_ingested": ingest_summary.get("processed_count", 0),
+            "ciso_reviews_confirmed": confirmed_ciso_count,
+            "cfo_reviews_confirmed": confirmed_cfo_count,
+            "feedback_governance": feedback_status,
+            "candidate_training": train_res,
+            "gate_validation": gate_res,
+            "model_promotion": promotion_res,
+            "fabric_audit": fabric_tx
         }

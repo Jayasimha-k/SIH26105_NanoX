@@ -1,0 +1,36 @@
+From: SANS NewsBites <newsbites@sans.org>
+To: CyberOptRQ Intel Mailbox <intel@cyberoptrq.example>
+Subject: SANS NewsBites: Vol. 28, Num. 73 - Kubernetes Ingress-NGINX Arbitrary Code Injection CVE-2023-5043
+Date: Thu, 17 Sep 2026 09:00:00 +0000
+Message-ID: <sans-newsbites-20260917-007@sans.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+SANS NewsBites
+Volume 28, Number 73
+
+FEATURED VULNERABILITY:
+Vulnerability: CVE-2023-5043
+Vendor: Kubernetes / Cloud Native Computing Foundation
+Product: Ingress-NGINX Controller
+Affected Versions: ingress-nginx versions < 1.9.0
+Vulnerability Type: Remote Code Execution / Annotation Injection
+Attack Vector: NETWORK
+MITRE ATT&CK Technique: T1068 (Exploitation for Privilege Escalation)
+Exploitation Status: ACTIVE_IN_THE_WILD
+Attack Outcome: EXPLOITATION_REPORTED
+Affected Sector: Cloud Infrastructure, Software Services, Healthcare
+Publication Date: 2026-09-17
+
+SUMMARY:
+A flaw in ingress-nginx enables code injection through the 'configuration-snippet' annotation on Ingress objects. Users with ingress creation permissions can inject arbitrary commands that execute within the ingress controller pod context, providing a stepping stone for full cluster credential compromise.
+
+REMEDIATION:
+- Upgrade ingress-nginx to version 1.9.0 or higher.
+- Disable annotation snippets via '--enable-annotation-validation=true'.
+- NIST-PR.AC-1: Implement strict Kubernetes RBAC policies.
+
+FINANCIAL IMPACT:
+Potential loss estimated at ₹3,500,000 for multi-tenant container clusters.
+
+Confidence: 0.92

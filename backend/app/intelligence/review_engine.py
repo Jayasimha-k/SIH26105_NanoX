@@ -46,6 +46,19 @@ class ReviewEngine:
             except Exception:
                 pass
 
+            prev_eal = float(match.previous_eal if match and match.previous_eal else 2730000.0)
+            prev_risk = float(match.previous_predicted_risk if match and match.previous_predicted_risk else 78.0)
+            is_attack = bool(ev.exploitation_observed) or "EXPLOITED" in str(ev.reported_outcome or "").upper()
+
+            if is_attack:
+                attack_risk = round(min(98.4, max(prev_risk * 1.25, 92.5)), 1)
+                attack_eal = round(prev_eal * 1.54, 2)
+                spike = round(attack_eal - prev_eal, 2)
+            else:
+                attack_risk = prev_risk
+                attack_eal = prev_eal
+                spike = 0.0
+
             queue.append({
                 "event_id": ev.event_id,
                 "correlation_id": ev.correlation_id,
@@ -60,8 +73,12 @@ class ReviewEngine:
                 "matched_asset": match.matched_asset_name if match else "Production Server",
                 "matched_asset_id": match.matched_asset_id if match else "ASSET-001",
                 "previous_prediction_id": match.previous_prediction_id if match else 1,
-                "previous_risk_score": match.previous_predicted_risk if match else 78.0,
-                "previous_eal": match.previous_eal if match else 2730000.0,
+                "previous_risk_score": prev_risk,
+                "previous_eal": prev_eal,
+                "attack_risk_score": attack_risk,
+                "attack_updated_eal": attack_eal,
+                "eal_spike_inr": spike,
+                "has_attack_surge": is_attack,
                 "relevance_level": match.relevance_level if match else "HIGH",
                 "relevance_reasons": json.loads(match.relevance_reasons_json) if match and match.relevance_reasons_json else [],
                 "status": ev.status,

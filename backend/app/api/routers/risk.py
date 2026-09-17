@@ -42,15 +42,16 @@ def assess_risk_profile(payload: RiskAssessRequest, db: Session = Depends(get_db
         rosi=eval_data["rosi"]
     )
 
+from app.api.routers.demo import _attack_state
+
 @router.get("/overview")
 def get_enterprise_risk_overview(db: Session = Depends(get_db)):
-    """Computes enterprise aggregate EAL, active threats, ROSI stats"""
+    """Computes enterprise aggregate EAL, active threats, ROSI stats, reflecting active attack telemetry."""
     assets = db.query(Asset).all()
     vulns = db.query(Vulnerability).all()
     controls = db.query(SecurityControl).all()
 
     total_pre_eal = 0.0
-    total_post_eal = 0.0
 
     for a in assets:
         for v in vulns:
@@ -60,9 +61,22 @@ def get_enterprise_risk_overview(db: Session = Depends(get_db)):
             pre = RiskEngine.calculate_eal_pre(prob, impact)
             total_pre_eal += pre
 
+    # Attack telemetry state
+    is_attack = bool(_attack_state.get("active")) or _attack_state.get("status") == "ATTACK_STARTED"
+    is_completed = _attack_state.get("status") == "ATTACK_COMPLETED"
+    pipeline_info = _attack_state.get("pipeline") or {}
+    attack_surge = float(pipeline_info.get("eal_spike_inr") or 21787680.0)
+
+    if is_attack:
+        total_pre_eal += attack_surge
+
     # Active implemented controls
     active_controls = [c for c in controls if c.status in ["APPROVED", "EXECUTED", "VERIFIED"]]
-    total_post_eal = RiskEngine.calculate_eal_post(total_pre_eal, active_controls)
+    if is_completed:
+        total_post_eal = round(total_pre_eal * 0.16, 2)
+    else:
+        total_post_eal = RiskEngine.calculate_eal_post(total_pre_eal, active_controls)
+
     total_risk_reduction = RiskEngine.calculate_risk_reduction(total_pre_eal, total_post_eal)
     total_cost = RiskEngine.calculate_total_cost(active_controls)
     rosi = RiskEngine.calculate_rosi(total_risk_reduction, total_cost)
@@ -75,6 +89,8 @@ def get_enterprise_risk_overview(db: Session = Depends(get_db)):
         "total_risk_reduction": round(total_risk_reduction, 2),
         "active_controls_cost": round(total_cost, 2),
         "enterprise_rosi": rosi,
+        "is_attack_active": is_attack,
+        "is_attack_completed": is_completed,
         "currency": "INR",
         "last_updated": "Just now"
     }

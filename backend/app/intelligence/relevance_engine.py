@@ -121,6 +121,23 @@ class RelevanceEngine:
         prev_risk_pct = round(previous_prediction.org_adapted_prob * 100, 1) if previous_prediction else 78.0
         prev_eal = previous_prediction.eal_pre if previous_prediction else (org.financial_exposure * 0.78 if org else 2730000.0)
 
+        # Dynamic Attack EAL calculation: when active exploitation is observed, risk surges towards 92-98%
+        is_attack_observed = bool(extracted_info.get("exploitation_observed")) or "EXPLOITED" in str(extracted_info.get("outcome", "")).upper()
+        asset_val = matched_asset.financial_value if matched_asset and matched_asset.financial_value else (org.financial_exposure if org else 3500000.0)
+        asset_crit = matched_asset.criticality_score if matched_asset and matched_asset.criticality_score else 9.0
+        impact = asset_val * (asset_crit / 5.0)
+
+        if is_attack_observed:
+            attack_risk_pct = round(min(98.4, max(prev_risk_pct * 1.25, 92.5)), 1)
+            attack_updated_eal = round(impact * (attack_risk_pct / 100.0), 2)
+            if attack_updated_eal < prev_eal:
+                attack_updated_eal = round(prev_eal * 1.45, 2)
+            eal_spike_inr = round(attack_updated_eal - prev_eal, 2)
+        else:
+            attack_risk_pct = prev_risk_pct
+            attack_updated_eal = prev_eal
+            eal_spike_inr = 0.0
+
         return {
             "organization_id": org.id if org else organization_id,
             "relevance_level": relevance_level,
@@ -132,6 +149,10 @@ class RelevanceEngine:
             "previous_prediction_id": previous_prediction.id if previous_prediction else 1,
             "previous_predicted_risk": prev_risk_pct,
             "previous_eal": prev_eal,
+            "attack_updated_eal": attack_updated_eal,
+            "attack_risk_pct": attack_risk_pct,
+            "eal_spike_inr": eal_spike_inr,
+            "has_attack_surge": is_attack_observed,
             "financial_exposure": org.financial_exposure if org else 3500000.0
         }
 

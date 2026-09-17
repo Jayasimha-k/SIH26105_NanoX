@@ -132,11 +132,26 @@ async def start_attack_demo(payload: AttackStartRequest, db: Session = Depends(g
     if org_adapted_prob < fused_prob:
         org_adapted_prob = round(max(fused_prob, 0.892), 4)
 
-    # Calculate pre-attack enterprise EAL vs active-attack surge EAL
-    pre_attack_eal = 4450000.0  # ₹44.5L enterprise baseline
+    # Calculate pre-attack enterprise EAL vs active-attack surge EAL dynamically
     impact = asset_val * (asset_crit / 5.0)
-    asset_surge = org_adapted_prob * impact
-    active_attack_eal = round(pre_attack_eal + (asset_surge * 0.85), 2)  # Typically ~₹89.2L during attack
+    asset_surge = round(org_adapted_prob * impact, 2)
+    
+    # Baseline enterprise EAL from database
+    try:
+        from app.services.risk_engine import RiskEngine
+        vulns_all = db.query(Vulnerability).all()
+        assets_all = db.query(Asset).all()
+        base_sum = 0.0
+        for a in assets_all:
+            for v in vulns_all:
+                prob_v = 0.35
+                imp_v = v.financial_impact_base * (a.criticality_score / 5.0)
+                base_sum += RiskEngine.calculate_eal_pre(prob_v, imp_v)
+        pre_attack_eal = round(base_sum, 2) if base_sum > 0 else 49067527.8
+    except Exception:
+        pre_attack_eal = 49067527.8
+
+    active_attack_eal = round(pre_attack_eal + asset_surge, 2)
 
     # 4. Record Audit Block on Hyperledger Fabric
     fabric_tx_id = f"FABRIC-LOCAL-{corr_id}"
@@ -160,6 +175,34 @@ async def start_attack_demo(payload: AttackStartRequest, db: Session = Depends(g
             fabric_tx_id = fabric_tx["event_id"]
     except Exception as e:
         logger.warning(f"Fabric ledger record note: {e}")
+
+    # Synchronize database RiskAssessment with active attack EAL surge
+    try:
+        ra = db.query(RiskAssessment).filter(RiskAssessment.asset_id == asset_id).order_by(RiskAssessment.id.desc()).first()
+        if ra:
+            ra.eal_pre = active_attack_eal
+            ra.org_adapted_prob = org_adapted_prob
+            ra.meta_prob = p5_meta
+            db.commit()
+        else:
+            new_ra = RiskAssessment(
+                asset_id=asset_id,
+                vulnerability_id="CVE-2024-21626",
+                p1_nvd=float(ai_out.get("p1_nvd", 0.98)),
+                p2_epss=float(ai_out.get("p2_epss", 0.94)),
+                p3_kev=1.0,
+                p4_mitre=0.90,
+                meta_prob=p5_meta,
+                org_adapted_prob=org_adapted_prob,
+                eal_pre=active_attack_eal,
+                eal_post=active_attack_eal,
+                risk_reduction=0.0
+            )
+            db.add(new_ra)
+            db.commit()
+    except Exception as e:
+        logger.warning(f"Could not persist active attack RiskAssessment: {e}")
+        db.rollback()
 
     # 5. Assemble Pipeline Telemetry Package
     pipeline_data = {
@@ -231,9 +274,10 @@ async def complete_attack_demo(payload: AttackCompleteRequest, db: Session = Dep
     now = datetime.now(timezone.utc)
     corr_id = payload.correlation_id
 
-    # Recalculate post-control residual EAL (₹7.2L)
-    post_remediation_eal = 720000.0
-    pre_attack_eal = 4450000.0
+    # Recalculate post-control residual EAL (84% reduction upon mitigation)
+    pipeline_data = _attack_state.get("pipeline") or {}
+    pre_attack_eal = float(pipeline_data.get("pre_attack_eal") or 49067527.8)
+    post_remediation_eal = round(pre_attack_eal * 0.16, 2)
     risk_reduction_inr = round(pre_attack_eal - post_remediation_eal, 2)
     rosi = 465.8
 
@@ -267,6 +311,18 @@ async def complete_attack_demo(payload: AttackCompleteRequest, db: Session = Dep
             fabric_tx_id = tx["event_id"]
     except Exception as e:
         logger.warning(f"Fabric completion note: {e}")
+
+    # Synchronize post-mitigation residual EAL into RiskAssessment
+    try:
+        asset_id = _attack_state.get("asset_id", "ASSET-001")
+        ra = db.query(RiskAssessment).filter(RiskAssessment.asset_id == asset_id).order_by(RiskAssessment.id.desc()).first()
+        if ra:
+            ra.eal_post = post_remediation_eal
+            ra.risk_reduction = risk_reduction_inr
+            db.commit()
+    except Exception as e:
+        logger.warning(f"Could not update post-remediation RiskAssessment: {e}")
+        db.rollback()
 
     _attack_state.update({
         "active": False,
@@ -308,6 +364,14 @@ async def reset_attack_demo(db: Session = Depends(get_db)):
     # Clean up simulated incident records from DB
     try:
         db.query(IncidentHistory).filter(IncidentHistory.incident_type == "SIMULATED_ACTIVE_EXPLOIT").delete()
+        # Restore baseline pre-attack EAL
+        asset_id = _attack_state.get("asset_id", "ASSET-001")
+        ra = db.query(RiskAssessment).filter(RiskAssessment.asset_id == asset_id).order_by(RiskAssessment.id.desc()).first()
+        if ra:
+            ra.eal_pre = 2730000.0
+            ra.eal_post = 2730000.0
+            ra.org_adapted_prob = 0.78
+            ra.risk_reduction = 0.0
         db.commit()
     except Exception:
         db.rollback()

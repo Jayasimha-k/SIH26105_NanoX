@@ -198,6 +198,15 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
           </button>
 
           <button
+            onClick={() => handleRunOfflineDemo('LEARNING')}
+            disabled={demoExecuting}
+            className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
+          >
+            <Brain className="w-3.5 h-3.5" />
+            <span>{demoExecuting ? 'Learning...' : 'Run Learning Demo'}</span>
+          </button>
+
+          <button
             onClick={() => handleRunOfflineDemo('ALL')}
             disabled={demoExecuting}
             className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
@@ -375,9 +384,30 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
                       <span className="font-bold text-blue-700">{item.matched_asset}</span>
                     </div>
                     <div className="flex justify-between border-t border-slate-200 pt-2 font-bold">
-                      <span className="text-slate-600">Previous CyberOptRQ Prediction:</span>
-                      <span className="text-slate-900">{item.previous_risk_score}% Risk</span>
+                      <span className="text-slate-600">Baseline CyberOptRQ Prediction:</span>
+                      <span className="text-slate-900">{item.previous_risk_score}% Risk (₹{((item.previous_eal || 2730000) / 100000).toFixed(1)}L EAL)</span>
                     </div>
+
+                    {item.has_attack_surge && (
+                      <div className="flex justify-between items-center bg-rose-50 p-2.5 rounded-xl border border-rose-200 text-rose-900">
+                        <div>
+                          <div className="text-[11px] font-bold text-rose-700 flex items-center gap-1">
+                            <span>⚡</span> ACTIVE ATTACK IMPACT
+                          </div>
+                          <div className="text-[10px] text-rose-600 font-semibold mt-0.5">
+                            Surge EAL Spike: +₹{((item.eal_spike_inr || (item.previous_eal * 0.54)) / 100000).toFixed(1)} Lakhs
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-black text-rose-700">
+                            ₹{((item.attack_updated_eal || (item.previous_eal * 1.54)) / 100000).toFixed(1)}L
+                          </div>
+                          <span className="px-1.5 py-0.5 rounded bg-rose-200 text-rose-800 text-[9px] font-extrabold uppercase">
+                            {item.attack_risk_score || 94.2}% Risk Surge
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
@@ -889,11 +919,18 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
                 CFO Story Demo
               </button>
               <button
+                onClick={() => handleRunOfflineDemo('LEARNING')}
+                disabled={demoExecuting}
+                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm"
+              >
+                Continual Learning Demo (5+ Newsletters)
+              </button>
+              <button
                 onClick={() => handleRunOfflineDemo('ALL')}
                 disabled={demoExecuting}
                 className="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-sm"
               >
-                Execute Both Flows
+                Execute All Flows
               </button>
             </div>
           </div>

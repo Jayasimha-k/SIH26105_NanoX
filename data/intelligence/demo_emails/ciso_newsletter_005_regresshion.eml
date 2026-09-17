@@ -1,0 +1,36 @@
+From: SANS @RISK Team <at-risk@sans.org>
+To: CyberOptRQ Intel Mailbox <intel@cyberoptrq.example>
+Subject: SANS @RISK: Vol. 24, Issue 39 - Critical Remote Code Execution CVE-2024-6387 regreSSHion in OpenSSH
+Date: Thu, 17 Sep 2026 07:00:00 +0000
+Message-ID: <sans-risk-20260917-005@sans.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+SANS @RISK: Threat Intelligence Briefing
+Volume 24, Issue 39
+
+THREAT IDENTIFIER:
+Vulnerability: CVE-2024-6387
+Vendor: OpenBSD / OpenSSH Project
+Product: OpenSSH Server (sshd)
+Affected Versions: 8.5p1 up to 9.8p1 (glibc-based Linux systems)
+Vulnerability Type: Remote Code Execution / Signal Handler Race Condition
+Attack Vector: NETWORK
+MITRE ATT&CK Technique: T1190 (Exploit Public-Facing Application)
+Exploitation Status: ACTIVE_IN_THE_WILD
+Attack Outcome: EXPLOITED_SUCCESSFULLY
+Affected Sector: Enterprise Cloud Providers, Telecommunications, Healthcare
+Publication Date: 2026-09-17
+
+ANALYSIS:
+A critical signal handler race condition regression in OpenSSH server (sshd) allows unauthenticated remote attackers on the network to achieve arbitrary code execution with root privileges on 32-bit and 64-bit Linux server distributions. Threat intelligence sources confirm active automated scanning and exploitation frameworks targeting exposed SSH port 22.
+
+RECOMMENDED ACTION:
+- Upgrade OpenSSH to version 9.8p1 or newer immediately.
+- If immediate patching is not possible, set 'LoginGraceTime 0' in sshd_config as temporary mitigation.
+- NIST-PR.AC-1: Block internet-facing SSH access via perimeter firewall rules.
+
+BUSINESS IMPACT:
+High risk of infrastructure takeover. Expected enterprise breach exposure: ₹3,800,000.
+
+Confidence: 0.94

@@ -179,9 +179,13 @@ class ContinualLearningService:
         pred_psi = 0.0450
         if df_X is not None and os.path.exists(cand.artifact_path):
             try:
-                import joblib
-                cand_model = joblib.load(cand.artifact_path)
-                champ_model = joblib.load(champ.artifact_path) if os.path.exists(champ.artifact_path) else None
+                import pickle
+                with open(cand.artifact_path, "rb") as f:
+                    cand_model = pickle.load(f)
+                champ_model = None
+                if os.path.exists(champ.artifact_path):
+                    with open(champ.artifact_path, "rb") as f:
+                        champ_model = pickle.load(f)
                 if champ_model:
                     p_champ = champ_model.predict_proba(df_X)[:, 1] if hasattr(champ_model, "predict_proba") else np.full(len(df_X), 0.5)
                     p_cand = cand_model.predict_proba(df_X)[:, 1]
