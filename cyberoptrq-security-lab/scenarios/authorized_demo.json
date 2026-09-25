@@ -1,0 +1,44 @@
+{
+  "scenarios": [
+    {
+      "id": "cve_2024_21626_rce",
+      "name": "runc Container Escape RCE",
+      "asset_id": "ASSET-001",
+      "asset_name": "Core Oracle Production Database",
+      "cve": "CVE-2024-21626",
+      "severity": "CRITICAL",
+      "cvss": 9.8,
+      "epss": 0.942,
+      "authorized_scope": "localhost:8000,10.0.1.50,ASSET-001",
+      "attack_vector": "LOCAL_CONTAINER_ESCAPE",
+      "simulated_telemetry": {
+        "flow_duration_ms": 1420,
+        "src_bytes": 1048576,
+        "dst_bytes": 45892,
+        "packet_rate": 842.5,
+        "protocol": "TCP",
+        "strix_finding_id": "STRIX-2026-001"
+      }
+    },
+    {
+      "id": "cve_2024_3094_xz",
+      "name": "XZ Utils Backdoor Supply-Chain Attack",
+      "asset_id": "ASSET-002",
+      "asset_name": "Production K8s Microservices Cluster",
+      "cve": "CVE-2024-3094",
+      "severity": "CRITICAL",
+      "cvss": 10.0,
+      "epss": 0.978,
+      "authorized_scope": "localhost:8000,10.0.1.51,ASSET-002",
+      "attack_vector": "SSH_PREAUTH_INJECTION",
+      "simulated_telemetry": {
+        "flow_duration_ms": 2850,
+        "src_bytes": 2097152,
+        "dst_bytes": 12840,
+        "packet_rate": 1204.0,
+        "protocol": "TCP",
+        "strix_finding_id": "STRIX-2026-002"
+      }
+    }
+  ]
+}
