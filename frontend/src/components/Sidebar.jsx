@@ -2,42 +2,52 @@ import React from 'react';
 import {
   LayoutDashboard, Database, Server, DollarSign, Zap,
   ShieldCheck, Wrench, RefreshCcw, Lock, Award, Eye,
-  AlertOctagon, CheckSquare, Layers, FileText, Brain, Mail
+  AlertOctagon, CheckSquare, Layers, FileText, Brain, Mail,
+  Building2, Cpu, Crosshair
 } from 'lucide-react';
 
 const roleMenus = {
   CISO: [
     { id: 'dashboard', label: 'Executive Risk Overview', icon: LayoutDashboard },
+    { id: 'my_org', label: 'My Organization', icon: Building2 },
+    { id: 'network_intel', label: 'Network Intelligence', icon: Cpu },
     { id: 'intelligence', label: 'Continuous Intel & HITL', icon: Mail },
     { id: 'threat_intel', label: 'Threat Intelligence', icon: Database },
+    { id: 'security_testing', label: 'Security Testing (Strix)', icon: Crosshair },
     { id: 'ai_quantification', label: 'Financial Risk (FAIR EAL)', icon: DollarSign },
     { id: 'continual_learning', label: 'Continual Learning (Governance)', icon: Brain },
+    { id: 'datasets', label: 'Data & Model Layers', icon: Layers },
     { id: 'optimizer', label: 'Investment Optimization', icon: Zap },
     { id: 'approvals', label: 'Approval Center', icon: ShieldCheck },
     { id: 'blockchain', label: 'Consortium Blockchain', icon: Lock }
   ],
   CFO: [
     { id: 'dashboard', label: 'Executive Financial View', icon: LayoutDashboard },
-    { id: 'intelligence', label: 'Financial Intelligence & HITL', icon: DollarSign },
-    { id: 'ai_quantification', label: 'Financial Loss (EAL)', icon: Layers },
+    { id: 'financial_cfo', label: 'CFO Financial Risk & EAL', icon: DollarSign },
+    { id: 'intelligence', label: 'Financial Intelligence & HITL', icon: Mail },
     { id: 'optimizer', label: 'Budget Optimization', icon: Zap },
     { id: 'approvals', label: 'Capital Allocations', icon: ShieldCheck },
     { id: 'blockchain', label: 'Consortium Blockchain & Audit', icon: Lock }
   ],
   SOC: [
+    { id: 'network_intel', label: 'Network Intelligence (Model 6)', icon: Cpu },
     { id: 'intelligence', label: 'Continuous Intelligence', icon: Mail },
     { id: 'threat_intel', label: 'Threat Intelligence', icon: Database },
     { id: 'vulnerabilities', label: 'Active Vulnerabilities', icon: AlertOctagon },
     { id: 'asset_inventory', label: 'Asset Exposure', icon: Server },
+    { id: 'security_testing', label: 'Security Testing (Strix)', icon: Crosshair },
     { id: 'ai_risk', label: 'AI Risk Assessment', icon: Eye },
     { id: 'continual_learning', label: 'Evidence & Learning', icon: Brain },
     { id: 'blockchain', label: 'Blockchain Audit Trail', icon: Lock },
     { id: 'incidents', label: 'Incident & Loss Log', icon: FileText }
   ],
   Security: [
+    { id: 'network_intel', label: 'Network Intelligence', icon: Cpu },
+    { id: 'security_testing', label: 'Security Testing (Strix)', icon: Crosshair },
     { id: 'intelligence', label: 'Continuous Threat Feed', icon: Mail },
     { id: 'ai_quantification', label: 'Risk Assessment', icon: Eye },
     { id: 'asset_inventory', label: 'Asset Risk Portfolio', icon: Server },
+    { id: 'datasets', label: 'Data & Intelligence', icon: Layers },
     { id: 'continual_learning', label: 'Continual Learning & Drift', icon: Brain },
     { id: 'optimizer', label: 'Control Optimization', icon: Zap },
     { id: 'recalculate', label: 'What-If Analysis', icon: RefreshCcw },

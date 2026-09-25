@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Shield, UserCheck, LogOut, MessageSquare, Building2 } from 'lucide-react';
+import { Shield, UserCheck, LogOut, MessageSquare, Building2, Globe } from 'lucide-react';
 import { UserButton, useUser, useClerk } from './ClerkAuth';
 import { OrganizationDataPanel } from './OrgAndModelPanels';
 
-export default function Header({ currentRole, wsStatus, onSignOut, isClerkConfigured, onToggleMessenger, unreadMessageCount = 0 }) {
+export default function Header({ currentRole, wsStatus, onSignOut, isClerkConfigured, onToggleMessenger, unreadMessageCount = 0, onNavigateMarketing }) {
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
 
@@ -33,6 +33,18 @@ export default function Header({ currentRole, wsStatus, onSignOut, isClerkConfig
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Public Marketing Site Button */}
+          {onNavigateMarketing && (
+            <button
+              onClick={onNavigateMarketing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-all cursor-pointer"
+              title="View Public Marketing & Product Site"
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden sm:inline">Public Site</span>
+            </button>
+          )}
+
           {/* [ ORGANIZATION DATA ] button */}
           <button
             id="org-data-btn"

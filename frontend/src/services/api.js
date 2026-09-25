@@ -146,4 +146,27 @@ export const api = {
   resetAttackDemo: () =>
     fetchJSON('/demo/attack/reset', { method: 'POST' }),
   getDemoAttackState: () => fetchJSON('/demo/attack/state'),
+
+  // Multi-Tenant SaaS, Onboarding, Datasets & Strix Security Testing
+  getMyOrganization: () => fetchJSON('/tenants/organizations/me'),
+  updateMyOrganization: (payload) => fetchJSON('/tenants/organizations/me', { method: 'PUT', body: JSON.stringify(payload) }),
+  onboardOrganization: (payload) => fetchJSON('/tenants/onboard', { method: 'POST', body: JSON.stringify(payload) }),
+  getCurrentSubscription: () => fetchJSON('/tenants/subscriptions/current'),
+  listDatasets: () => fetchJSON('/data/datasets'),
+  uploadDataset: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetch(`${API_BASE}/data/datasets/upload`, {
+      method: 'POST',
+      body: formData
+    }).then(res => {
+      if (!res.ok) return res.json().then(err => { throw new Error(err.detail || 'Upload failed'); });
+      return res.json();
+    });
+  },
+  getModelLayersGovernance: () => fetchJSON('/data/model-layers'),
+  evaluateCandidateModel: (payload) => fetchJSON('/data/model-layers/candidate/evaluate', { method: 'POST', body: JSON.stringify(payload) }),
+  approveCandidateModel: (payload) => fetchJSON('/data/model-layers/candidate/approve', { method: 'POST', body: JSON.stringify(payload) }),
+  launchSecurityTest: (payload) => fetchJSON('/security-testing/runs/launch', { method: 'POST', body: JSON.stringify(payload) }),
+  getSecurityTestHistory: () => fetchJSON('/security-testing/runs/history'),
 };

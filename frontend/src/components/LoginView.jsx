@@ -66,8 +66,17 @@ export default function LoginView({ onSelectRole, onBypassDemo, isClerkConfigure
           />
         </div>
 
-        <div className="text-center">
-          <span className="text-[11px] text-slate-400 font-medium">Enterprise Cryptographic RBAC</span>
+        <div className="text-center space-y-2">
+          <span className="text-[11px] text-slate-400 font-medium block">Enterprise Cryptographic RBAC &bull; Supabase Multi-Tenant</span>
+          {onBackToMarketing && (
+            <button
+              type="button"
+              onClick={onBackToMarketing}
+              className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-semibold"
+            >
+              &larr; Back to Public Overview & Pricing
+            </button>
+          )}
         </div>
       </div>
     </div>

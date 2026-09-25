@@ -16,6 +16,13 @@ import BusinessValueView from './components/views/BusinessValueView';
 import ThreatIntelView from './components/views/ThreatIntelView';
 import ContinualLearningView from './components/views/ContinualLearningView';
 import IntelligenceCenterView from './components/views/IntelligenceCenterView';
+import MyOrganizationView from './components/views/MyOrganizationView';
+import NetworkIntelligenceView from './components/views/NetworkIntelligenceView';
+import DataIntelligenceView from './components/views/DataIntelligenceView';
+import SecurityTestingView from './components/views/SecurityTestingView';
+import CFOFinancialView from './components/views/CFOFinancialView';
+import PublicMarketingSite from './components/public/PublicMarketingSite';
+import OnboardingStepper from './components/onboarding/OnboardingStepper';
 
 import { api } from './services/api';
 import { WebSocketClient } from './services/websocket';
@@ -23,6 +30,7 @@ import { useUser, useClerk } from './components/ClerkAuth';
 import { ShieldCheck, Eye, Database, Wrench, DollarSign } from 'lucide-react';
 
 export default function App({ isClerkConfigured = true }) {
+  const [viewMode, setViewMode] = useState('marketing'); // 'marketing' | 'onboarding' | 'login' | 'app'
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentRole, setCurrentRole] = useState('CISO');
   const [wsStatus, setWsStatus] = useState('DISCONNECTED');
@@ -230,16 +238,73 @@ export default function App({ isClerkConfigured = true }) {
   const handleSignOut = () => {
     if (signOut) signOut();
     setDemoAuthenticated(false);
+    setViewMode('marketing');
   };
 
   const isAuthenticated = isSignedIn || demoAuthenticated;
 
+  if (viewMode === 'marketing' && isAuthenticated) {
+    return (
+      <div className="relative">
+        <div className="bg-blue-600 text-white text-xs font-semibold px-4 py-2 flex items-center justify-between sticky top-0 z-[60] shadow-md">
+          <span>Viewing CyberOptRQ Public Product & Marketing Site &bull; Active Workspace: <strong>{currentRole}</strong></span>
+          <button
+            onClick={() => setViewMode('app')}
+            className="px-3 py-1 bg-white text-blue-700 rounded-lg font-bold hover:bg-blue-50 transition-colors cursor-pointer text-xs"
+          >
+            &rarr; Return to Customer Platform
+          </button>
+        </div>
+        <PublicMarketingSite
+          onGetStarted={() => setViewMode('onboarding')}
+          onLogin={() => setViewMode('app')}
+          onBookDemo={() => setViewMode('app')}
+        />
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
+    if (viewMode === 'marketing') {
+      return (
+        <PublicMarketingSite
+          onGetStarted={() => setViewMode('onboarding')}
+          onLogin={() => setViewMode('login')}
+          onBookDemo={() => {
+            handleRoleSelect('CISO');
+            setDemoAuthenticated(true);
+            setViewMode('app');
+          }}
+        />
+      );
+    }
+
+    if (viewMode === 'onboarding') {
+      return (
+        <OnboardingStepper
+          onComplete={() => {
+            handleRoleSelect('CISO');
+            setDemoAuthenticated(true);
+            setViewMode('app');
+            reloadData();
+          }}
+          onCancel={() => setViewMode('marketing')}
+        />
+      );
+    }
+
     return (
       <LoginView
-        onSelectRole={handleRoleSelect}
-        onBypassDemo={() => setDemoAuthenticated(true)}
+        onSelectRole={(r) => {
+          handleRoleSelect(r);
+          setViewMode('app');
+        }}
+        onBypassDemo={() => {
+          setDemoAuthenticated(true);
+          setViewMode('app');
+        }}
         isClerkConfigured={isClerkConfigured}
+        onBackToMarketing={() => setViewMode('marketing')}
       />
     );
   }
@@ -366,6 +431,16 @@ export default function App({ isClerkConfigured = true }) {
         return <BusinessValueView />;
       case 'intelligence':
         return <IntelligenceCenterView currentRole={currentRole} onRefresh={reloadData} />;
+      case 'my_org':
+        return <MyOrganizationView onRefresh={reloadData} />;
+      case 'network_intel':
+        return <NetworkIntelligenceView onNavigate={setActiveTab} />;
+      case 'datasets':
+        return <DataIntelligenceView onRefresh={reloadData} />;
+      case 'security_testing':
+        return <SecurityTestingView assets={assets} onRefresh={reloadData} onNavigate={setActiveTab} />;
+      case 'financial_cfo':
+        return <CFOFinancialView overview={overview} onNavigate={setActiveTab} />;
       default:
         return (
           <DashboardView
@@ -393,6 +468,7 @@ export default function App({ isClerkConfigured = true }) {
         isClerkConfigured={isClerkConfigured}
         onToggleMessenger={() => setIsMessengerOpen(!isMessengerOpen)}
         unreadMessageCount={interTeamMessages.length}
+        onNavigateMarketing={() => setViewMode('marketing')}
       />
       <div className="flex flex-1">
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
