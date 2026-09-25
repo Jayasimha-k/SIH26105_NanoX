@@ -346,6 +346,7 @@ async def complete_attack_demo(payload: AttackCompleteRequest, db: Session = Dep
         "post_remediation_eal": post_remediation_eal,
         "risk_reduction_inr": risk_reduction_inr,
         "rosi": rosi,
+        "pipeline": _attack_state.get("pipeline"),
         "fabric_tx_id": fabric_tx_id,
         "message": "Emergency mitigation verified. Attack neutralized. Bad Apple visualizer stopped."
     }

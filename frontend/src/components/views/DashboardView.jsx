@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Shield, AlertTriangle, TrendingUp, DollarSign, CheckCircle2,
   XCircle, ArrowRight, HelpCircle, X, Zap, Radio, RefreshCw, Layers, Terminal, ExternalLink
@@ -71,6 +71,29 @@ export default function DashboardView({
   const isAttackActive = attackState?.active || attackState?.status === 'ATTACK_STARTED';
   const isAttackCompleted = attackState?.status === 'ATTACK_COMPLETED';
   const pipeline = attackState?.pipeline;
+
+  useEffect(() => {
+    if (isAttackActive) {
+      console.log(`[DASHBOARD] ATTACK_STARTED received: correlation_id=${attackState?.correlation_id || 'ATTACK-DEMO-2026-001'}`);
+      console.log('[DASHBOARD] attack mode enabled');
+      console.log('[BAD-APPLE] visualizer mounted');
+      const timer = setTimeout(() => {
+        const videoEl = document.getElementById('bad-apple-video');
+        if (videoEl) {
+          videoEl.play().then(() => {
+            console.log('[BAD-APPLE] playback started');
+          }).catch((err) => {
+            console.warn('[BAD-APPLE] autoplay retry:', err);
+            videoEl.muted = true;
+            videoEl.play().then(() => console.log('[BAD-APPLE] playback started')).catch(() => {});
+          });
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      console.log('[DASHBOARD] normal mode active');
+    }
+  }, [isAttackActive, attackState?.correlation_id]);
 
   // Real-time pre vs post calculations dynamically updated upon attack
   const baselinePreEal = overview?.total_pre_control_eal || 4450000;

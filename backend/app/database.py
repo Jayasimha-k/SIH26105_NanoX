@@ -32,6 +32,23 @@ def init_db():
                 if org_cols and "critical_services" not in org_cols:
                     conn.execute(text("ALTER TABLE organizations ADD COLUMN critical_services JSON DEFAULT '[]'"))
                     conn.commit()
+
+                res_assets = conn.execute(text("PRAGMA table_info(assets)")).fetchall()
+                asset_cols = [r[1] for r in res_assets]
+                if asset_cols and "organization_id" not in asset_cols:
+                    conn.execute(text("ALTER TABLE assets ADD COLUMN organization_id VARCHAR DEFAULT 'org_abc_tech'"))
+                    conn.commit()
+
+                res_inc = conn.execute(text("PRAGMA table_info(incident_history)")).fetchall()
+                inc_cols = [r[1] for r in res_inc]
+                if inc_cols:
+                    if "severity" not in inc_cols:
+                        conn.execute(text("ALTER TABLE incident_history ADD COLUMN severity VARCHAR DEFAULT 'HIGH'"))
+                    if "description" not in inc_cols:
+                        conn.execute(text("ALTER TABLE incident_history ADD COLUMN description VARCHAR"))
+                    if "loss_inr" not in inc_cols:
+                        conn.execute(text("ALTER TABLE incident_history ADD COLUMN loss_inr FLOAT DEFAULT 0.0"))
+                    conn.commit()
             except Exception:
                 pass
 

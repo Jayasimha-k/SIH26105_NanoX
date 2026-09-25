@@ -208,33 +208,33 @@ export default function NetworkIntelligenceView({ attackState }) {
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 font-mono text-center">
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                 <span className="text-[10px] text-slate-500 uppercase block font-bold">ROC-AUC</span>
-                <div className="text-xl font-extrabold text-blue-700 mt-0.5">0.985</div>
-                <span className="text-[9px] text-slate-400">Discrimination</span>
+                <div className="text-xl font-extrabold text-blue-700 mt-0.5">0.9895</div>
+                <span className="text-[9px] text-slate-400">CIC-IDS2017 Test</span>
               </div>
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                 <span className="text-[10px] text-slate-500 uppercase block font-bold">PR-AUC</span>
-                <div className="text-xl font-extrabold text-emerald-700 mt-0.5">0.941</div>
-                <span className="text-[9px] text-slate-400">Class imbalance</span>
+                <div className="text-xl font-extrabold text-emerald-700 mt-0.5">0.9463</div>
+                <span className="text-[9px] text-slate-400">Class Imbalance</span>
               </div>
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                 <span className="text-[10px] text-slate-500 uppercase block font-bold">Accuracy</span>
-                <div className="text-xl font-extrabold text-slate-800 mt-0.5">97.4%</div>
-                <span className="text-[9px] text-slate-400">Test split</span>
+                <div className="text-xl font-extrabold text-slate-800 mt-0.5">97.30%</div>
+                <span className="text-[9px] text-slate-400">Test Split</span>
               </div>
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                 <span className="text-[10px] text-slate-500 uppercase block font-bold">MCC</span>
-                <div className="text-xl font-extrabold text-indigo-700 mt-0.5">0.861</div>
+                <div className="text-xl font-extrabold text-indigo-700 mt-0.5">0.8595</div>
                 <span className="text-[9px] text-slate-400">Matthews Corr</span>
               </div>
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                 <span className="text-[10px] text-slate-500 uppercase block font-bold">Brier Score</span>
-                <div className="text-xl font-extrabold text-purple-700 mt-0.5">0.021</div>
-                <span className="text-[9px] text-slate-400">Calibration</span>
+                <div className="text-xl font-extrabold text-purple-700 mt-0.5">0.0211</div>
+                <span className="text-[9px] text-slate-400">Calibration Loss</span>
               </div>
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                 <span className="text-[10px] text-slate-500 uppercase block font-bold">Fusion v2 Weight</span>
                 <div className="text-xl font-extrabold text-amber-700 mt-0.5">w=0.90</div>
-                <span className="text-[9px] text-slate-400">Anomaly surge</span>
+                <span className="text-[9px] text-slate-400">P6 / P5=0.10</span>
               </div>
             </div>
 

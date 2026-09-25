@@ -18,6 +18,7 @@ class Asset(Base):
 
     id = Column(String, primary_key=True, index=True)  # e.g., ASSET-001
     name = Column(String, nullable=False)
+    organization_id = Column(String, default="org_abc_tech", nullable=True)
     asset_type = Column(String, nullable=False)  # IT Asset, OT Asset, Cloud Infrastructure
     criticality_score = Column(Float, nullable=False)  # 1.0 to 10.0
     financial_value = Column(Float, nullable=False)  # Value in INR/USD
@@ -49,10 +50,13 @@ class IncidentHistory(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     asset_id = Column(String, ForeignKey("assets.id"), nullable=False)
-    incident_name = Column(String, nullable=False)
+    incident_name = Column(String, nullable=False, default="Security Telemetry Event")
     incident_type = Column(String, nullable=False)  # Ransomware, Data Breach, DDoS, Privilege Escalation
-    loss_incurred = Column(Float, nullable=False)
-    date_occurred = Column(String, nullable=False)
+    severity = Column(String, default="HIGH")
+    description = Column(String, nullable=True)
+    loss_incurred = Column(Float, nullable=False, default=0.0)
+    loss_inr = Column(Float, nullable=True, default=0.0)
+    date_occurred = Column(String, nullable=False, default="2026-09-25")
 
 class SecurityControl(Base):
     __tablename__ = "security_controls"
