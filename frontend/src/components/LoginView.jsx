@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, KeyRound, Lock, UserCheck, CheckCircle2 } from 'lucide-react';
-import { SignIn } from './ClerkAuth';
+import { SignIn } from './AuthContext';
 
 export default function LoginView({ onSelectRole, onBypassDemo, isClerkConfigured }) {
   const [step, setStep] = useState(1);

@@ -22,6 +22,9 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5174"
     ]
 
+    # Application Mode: "production" (strictly Supabase/Postgres) vs "offline_demo" (Local SQLite/RBAC for SIH)
+    APP_MODE: str = os.getenv("APP_MODE", "offline_demo")
+
     # DB config: SQLite fallback for offline demo / PostgreSQL or Supabase direct connection
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./cyberopt_rq.db")
 

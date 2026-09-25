@@ -26,7 +26,7 @@ import OnboardingStepper from './components/onboarding/OnboardingStepper';
 
 import { api } from './services/api';
 import { WebSocketClient } from './services/websocket';
-import { useUser, useClerk } from './components/ClerkAuth';
+import { useUser, useClerk, useAuth } from './components/AuthContext';
 import { ShieldCheck, Eye, Database, Wrench, DollarSign } from 'lucide-react';
 
 export default function App({ isClerkConfigured = true }) {

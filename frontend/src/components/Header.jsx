@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Shield, UserCheck, LogOut, MessageSquare, Building2, Globe } from 'lucide-react';
-import { UserButton, useUser, useClerk } from './ClerkAuth';
+import { Shield, UserCheck, LogOut, MessageSquare, Building2, Globe, Cloud, Laptop } from 'lucide-react';
+import { UserButton, useUser, useClerk, useAuth } from './AuthContext';
 import { OrganizationDataPanel } from './OrgAndModelPanels';
 
 export default function Header({ currentRole, wsStatus, onSignOut, isClerkConfigured, onToggleMessenger, unreadMessageCount = 0, onNavigateMarketing }) {
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
+  const { authMode } = useAuth();
 
   const [showOrgPanel, setShowOrgPanel] = useState(false);
 
@@ -79,6 +80,16 @@ export default function Header({ currentRole, wsStatus, onSignOut, isClerkConfig
               </span>
             )}
           </button>
+
+          {/* Active Mode Indicator Badge */}
+          <div className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold ${
+            authMode === 'SUPABASE_AUTH'
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-amber-50 text-amber-700 border-amber-200'
+          }`}>
+            {authMode === 'SUPABASE_AUTH' ? <Cloud className="w-3.5 h-3.5" /> : <Laptop className="w-3.5 h-3.5" />}
+            <span className="text-[11px]">{authMode === 'SUPABASE_AUTH' ? 'Supabase Auth' : 'Offline RBAC'}</span>
+          </div>
 
           {/* Active Role Indicator Badge */}
           <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 shadow-inner">

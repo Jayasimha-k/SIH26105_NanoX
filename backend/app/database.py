@@ -1,6 +1,24 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
+import logging
 from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+# Production Mode Invariant: Refuse silent fallback to SQLite in production mode
+if settings.APP_MODE == "production":
+    if settings.DATABASE_URL.startswith("sqlite") and not settings.USE_SUPABASE:
+        err_msg = (
+            "SUPABASE_CONNECTION_ERROR: APP_MODE is 'production' but no live Supabase/PostgreSQL "
+            "database is connected. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or a valid PostgreSQL "
+            "DATABASE_URL in .env to run in production mode. Refusing silent fallback to SQLite."
+        )
+        logger.error(err_msg)
+        raise RuntimeError(err_msg)
+    else:
+        logger.info("[APP_MODE: PRODUCTION] Live Supabase/PostgreSQL connection active.")
+else:
+    logger.info(f"[APP_MODE: OFFLINE_DEMO] Operating in local SIH demo mode using: {settings.DATABASE_URL}")
 
 # SQLite specific connect args
 connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
