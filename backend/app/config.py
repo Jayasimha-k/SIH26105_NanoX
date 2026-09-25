@@ -22,8 +22,21 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5174"
     ]
 
-    # DB config: SQLite default for seamless zero-setup execution, PostgreSQL compatible
+    # DB config: SQLite fallback for offline demo / PostgreSQL or Supabase direct connection
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./cyberopt_rq.db")
+
+    # Supabase Multi-Tenant SaaS Configuration
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
+    SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    USE_SUPABASE: bool = bool(os.getenv("SUPABASE_URL") and (os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY")))
+
+    # Strix Autonomous Security Testing Integration
+    STRIX_API_URL: str = os.getenv("STRIX_API_URL", "http://localhost:8088")
+    STRIX_API_KEY: str = os.getenv("STRIX_API_KEY", "")
+
+    # Environment
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
     # ML Models directory
     MODELS_DIR: str = os.getenv("MODELS_DIR", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models_artifacts")))

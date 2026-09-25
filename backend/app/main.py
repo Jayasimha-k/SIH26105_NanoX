@@ -5,7 +5,8 @@ from app.config import settings
 from app.database import engine, Base
 from app.api.routers import (
     auth, detect, predict, quantify, optimize,
-    approvals, execution, recalculate, audit, blockchain, business_value, ws, threat_intelligence, learning, intelligence, demo
+    approvals, execution, recalculate, audit, blockchain, business_value, ws, threat_intelligence, learning, intelligence, demo,
+    tenants, datasets, security_testing
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -33,7 +34,8 @@ _all_routers = [
     auth.router, detect.router, predict.router, quantify.router, optimize.router,
     approvals.router, execution.router, recalculate.router, audit.router,
     blockchain.router, business_value.router, threat_intelligence.router,
-    learning.router, intelligence.router, demo.router
+    learning.router, intelligence.router, demo.router,
+    tenants.router, datasets.router, security_testing.router
 ]
 for r in _all_routers:
     app.include_router(r, prefix=settings.API_V1_STR)

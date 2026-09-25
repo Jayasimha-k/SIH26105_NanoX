@@ -238,6 +238,7 @@ class Organization(Base):
     technology_stack = Column(JSON, default=list)  # ["AWS", "Linux", "Apache", "Microsoft", "runc"]
     cloud_providers = Column(JSON, default=list)   # ["AWS", "Azure", "GCP"]
     critical_assets = Column(JSON, default=list)   # [{"id": "ASSET-001", "name": "Production Server", "criticality": 9.0}]
+    critical_services = Column(JSON, default=list) # ["Payment Gateway", "User Database"]
     business_assets = Column(JSON, default=list)
     security_controls = Column(JSON, default=list)
     existing_vulnerabilities = Column(JSON, default=list)  # ["CVE-2024-21626", "CVE-2023-46604"]

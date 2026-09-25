@@ -26,6 +26,14 @@ def init_db():
                     conn.commit()
             except Exception:
                 pass
+            try:
+                res_org = conn.execute(text("PRAGMA table_info(organizations)")).fetchall()
+                org_cols = [r[1] for r in res_org]
+                if org_cols and "critical_services" not in org_cols:
+                    conn.execute(text("ALTER TABLE organizations ADD COLUMN critical_services JSON DEFAULT '[]'"))
+                    conn.commit()
+            except Exception:
+                pass
 
 init_db()
 
