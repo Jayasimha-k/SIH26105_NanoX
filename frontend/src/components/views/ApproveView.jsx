@@ -20,6 +20,8 @@ export default function ApproveView({ recommendations, currentRole, onRefresh })
 
   const pendingRecs = recommendations.filter(r => r.status === 'PENDING');
 
+  const canApprove = currentRole === 'CISO' || currentRole === 'CFO' || currentRole === 'Security';
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -28,9 +30,14 @@ export default function ApproveView({ recommendations, currentRole, onRefresh })
             <ShieldCheck className="w-6 h-6 text-blue-600" />
             Executive Approval Center
           </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            {currentRole === 'CFO' 
+              ? 'CFO Capital Allocation & Budget Authorization | Anchored to Blockchain Audit Ledger'
+              : 'CISO Technical Security Sign-off & Mitigation Alignment | Anchored to Blockchain Audit Ledger'}
+          </p>
         </div>
         <span className="cyber-badge">
-          Role: {currentRole}
+          Role: {currentRole} • {currentRole === 'CFO' ? 'Capital Sign-off' : 'Security Sign-off'}
         </span>
       </div>
 
@@ -70,7 +77,7 @@ export default function ApproveView({ recommendations, currentRole, onRefresh })
               <div className="flex flex-col md:flex-row gap-3 pt-3 border-t border-slate-100">
                 <input
                   type="text"
-                  placeholder="Enter executive approval notes or justification..."
+                  placeholder={currentRole === 'CFO' ? "Enter CFO capital allocation notes or budget justification..." : "Enter CISO executive approval notes or justification..."}
                   value={comments[rec.id] || ''}
                   onChange={(e) => setComments({ ...comments, [rec.id]: e.target.value })}
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white"
@@ -79,15 +86,17 @@ export default function ApproveView({ recommendations, currentRole, onRefresh })
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleAction(rec.id, 'APPROVED')}
-                    disabled={processingId === rec.id || (currentRole !== 'CISO' && currentRole !== 'Security')}
+                    disabled={processingId === rec.id || !canApprove}
                     className="cyber-button text-xs"
+                    title={!canApprove ? "Executive approval requires CISO or CFO role" : undefined}
                   >
-                    <CheckCircle2 className="w-4 h-4" /> Approve
+                    <CheckCircle2 className="w-4 h-4" /> {currentRole === 'CFO' ? 'Approve Capital' : 'Approve'}
                   </button>
                   <button
                     onClick={() => handleAction(rec.id, 'REJECTED')}
-                    disabled={processingId === rec.id || (currentRole !== 'CISO' && currentRole !== 'Security')}
+                    disabled={processingId === rec.id || !canApprove}
                     className="cyber-button-secondary text-xs text-red-600 hover:text-red-700"
+                    title={!canApprove ? "Executive rejection requires CISO or CFO role" : undefined}
                   >
                     <XCircle className="w-4 h-4" /> Reject
                   </button>

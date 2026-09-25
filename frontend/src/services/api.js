@@ -31,6 +31,8 @@ export const api = {
   predictRisk: (asset_id, vulnerability_id) =>
     fetchJSON('/predict/run', { method: 'POST', body: JSON.stringify({ asset_id, vulnerability_id }) }),
   getMLModelDiagnostics: () => fetchJSON('/predict/diagnostics'),
+  getModelValidationReport: () => fetchJSON('/predict/validation-report'),
+  runModelValidation: () => fetchJSON('/predict/validate', { method: 'POST' }),
 
   // Step 3: Quantify Financial Risk (EAL)
   getQuantificationOverview: () => fetchJSON('/quantify/overview'),

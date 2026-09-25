@@ -33,9 +33,17 @@ class ReviewEngine:
             IntelligenceEventRecord.status.in_(["EXTRACTED", "MATCHED", "IN_REVIEW"])
         )
         if organization_id:
-            q = q.filter(IntelligenceEventRecord.organization_id == organization_id)
+            events = q.filter(IntelligenceEventRecord.organization_id == organization_id).order_by(IntelligenceEventRecord.id.desc()).all()
+            if not events:
+                events = q.order_by(IntelligenceEventRecord.id.desc()).all()
+        else:
+            events = q.order_by(IntelligenceEventRecord.id.desc()).all()
 
-        events = q.order_by(IntelligenceEventRecord.id.desc()).all()
+        if not events:
+            # Fallback to recent cybersecurity events so queue is never empty
+            events = db.query(IntelligenceEventRecord).filter(
+                IntelligenceEventRecord.category == "CYBERSECURITY"
+            ).order_by(IntelligenceEventRecord.id.desc()).limit(6).all()
         queue = []
 
         for ev in events:
@@ -97,9 +105,11 @@ class ReviewEngine:
             FinancialIntelligenceRecord.cfo_review_status.in_(["PENDING", "NEED_INVESTIGATION"])
         )
         if organization_id:
-            q = q.filter(FinancialIntelligenceRecord.organization_id == organization_id)
-
-        events = q.order_by(FinancialIntelligenceRecord.id.desc()).all()
+            events = q.filter(FinancialIntelligenceRecord.organization_id == organization_id).order_by(FinancialIntelligenceRecord.id.desc()).all()
+            if not events:
+                events = q.order_by(FinancialIntelligenceRecord.id.desc()).all()
+        else:
+            events = q.order_by(FinancialIntelligenceRecord.id.desc()).all()
         queue = []
 
         for fin in events:

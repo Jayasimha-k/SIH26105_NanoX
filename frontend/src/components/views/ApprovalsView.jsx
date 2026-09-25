@@ -31,8 +31,8 @@ export default function ApprovalsView({ recommendations, currentRole, onRefresh 
           </h2>
           <p className="text-slate-400 text-xs mt-1">Review investment recommendations & align security strategy | Anchored to Blockchain Audit Ledger</p>
         </div>
-        <span className={`cyber-badge ${currentRole === 'CISO' ? 'bg-cyan-950 text-cyan-400 border border-cyan-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}`}>
-          Role: {currentRole} {currentRole !== 'CISO' && '(Read-Only Mode)'}
+        <span className={`cyber-badge ${(currentRole === 'CISO' || currentRole === 'CFO') ? 'bg-cyan-950 text-cyan-400 border border-cyan-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}`}>
+          Role: {currentRole} {!(currentRole === 'CISO' || currentRole === 'CFO') && '(Read-Only Mode)'}
         </span>
       </div>
 
@@ -67,7 +67,7 @@ export default function ApprovalsView({ recommendations, currentRole, onRefresh 
             <div className="flex flex-col md:flex-row gap-3 pt-3 border-t border-slate-800">
               <input
                 type="text"
-                placeholder="Enter approval note or executive justification..."
+                placeholder={currentRole === 'CFO' ? "Enter CFO capital allocation notes or budget justification..." : "Enter approval note or executive justification..."}
                 value={comments[rec.id] || ''}
                 onChange={(e) => setComments({ ...comments, [rec.id]: e.target.value })}
                 className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
@@ -76,14 +76,14 @@ export default function ApprovalsView({ recommendations, currentRole, onRefresh 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleAction(rec.id, 'APPROVED')}
-                  disabled={processingId === rec.id || currentRole !== 'CISO'}
+                  disabled={processingId === rec.id || !(currentRole === 'CISO' || currentRole === 'CFO')}
                   className="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs flex items-center gap-1.5 transition-all disabled:opacity-40"
                 >
-                  <CheckCircle2 className="w-4 h-4" /> Approve
+                  <CheckCircle2 className="w-4 h-4" /> {currentRole === 'CFO' ? 'Approve Capital' : 'Approve'}
                 </button>
                 <button
                   onClick={() => handleAction(rec.id, 'REJECTED')}
-                  disabled={processingId === rec.id || currentRole !== 'CISO'}
+                  disabled={processingId === rec.id || !(currentRole === 'CISO' || currentRole === 'CFO')}
                   className="bg-red-950 hover:bg-red-900 text-red-400 border border-red-800 font-semibold px-4 py-2 rounded-lg text-xs flex items-center gap-1.5 transition-all disabled:opacity-40"
                 >
                   <XCircle className="w-4 h-4" /> Reject

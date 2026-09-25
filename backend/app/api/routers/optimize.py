@@ -10,25 +10,32 @@ from app.ml.risk_models import FullAIRiskPipeline
 
 router = APIRouter(prefix="/optimize", tags=["Steps 4 & 5: Optimization & Recommendations"])
 
+_cached_pre_eal = None
+
 @router.post("/run", response_model=OptimizationResponse)
 def run_budget_optimization(payload: OptimizationRequest, db: Session = Depends(get_db)):
+    global _cached_pre_eal
     controls = db.query(SecurityControl).all()
-    assets = db.query(Asset).all()
-    vulns = db.query(Vulnerability).all()
 
-    total_pre_eal = 0.0
-    for a in assets:
-        inc_count = db.query(IncidentHistory).filter(IncidentHistory.asset_id == a.id).count()
-        for v in vulns:
-            ai_out = FullAIRiskPipeline.run_pipeline(
-                cvss_score=v.cvss_score, cwe_id=v.cwe_id, epss_score=v.epss_score,
-                is_cisa_kev=v.cisa_kev, mitre_technique=v.mitre_attack_technique,
-                asset_criticality=a.criticality_score, exposure_level=a.exposure_level,
-                incident_count=inc_count
-            )
-            prob = ai_out["calibrated_probability"]
-            impact = v.financial_impact_base * (a.criticality_score / 5.0)
-            total_pre_eal += RiskEngine.calculate_eal_pre(prob, impact)
+    if _cached_pre_eal is not None:
+        total_pre_eal = _cached_pre_eal
+    else:
+        assets = db.query(Asset).all()
+        vulns = db.query(Vulnerability).all()
+        total_pre_eal = 0.0
+        for a in assets:
+            inc_count = db.query(IncidentHistory).filter(IncidentHistory.asset_id == a.id).count()
+            for v in vulns:
+                ai_out = FullAIRiskPipeline.run_pipeline(
+                    cvss_score=v.cvss_score, cwe_id=v.cwe_id, epss_score=v.epss_score,
+                    is_cisa_kev=v.cisa_kev, mitre_technique=v.mitre_attack_technique,
+                    asset_criticality=a.criticality_score, exposure_level=a.exposure_level,
+                    incident_count=inc_count
+                )
+                prob = ai_out["calibrated_probability"]
+                impact = v.financial_impact_base * (a.criticality_score / 5.0)
+                total_pre_eal += RiskEngine.calculate_eal_pre(prob, impact)
+        _cached_pre_eal = total_pre_eal
 
     result = OptimizationEngine.optimize_security_budget(
         available_budget=payload.budget,

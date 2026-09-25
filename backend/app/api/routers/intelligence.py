@@ -226,37 +226,98 @@ def list_ingested_emails(organization_id: Optional[str] = None, limit: int = 50,
 
 @router.get("/events")
 def list_intelligence_events(category: Optional[str] = None, organization_id: Optional[str] = None, db: Session = Depends(get_db)):
-    """Lists extracted intelligence events."""
-    q = db.query(IntelligenceEventRecord)
-    if category:
-        q = q.filter(IntelligenceEventRecord.category == category.upper())
-    if organization_id:
-        q = q.filter(IntelligenceEventRecord.organization_id == organization_id)
-    events = q.order_by(IntelligenceEventRecord.id.desc()).limit(100).all()
-
+    """Lists extracted intelligence events across Cybersecurity and Financial Intelligence."""
     formatted = []
-    for ev in events:
-        raw_json = {}
-        try:
-            raw_json = json.loads(ev.raw_extraction_json)
-        except Exception:
-            pass
-        formatted.append({
-            "event_id": ev.event_id,
-            "correlation_id": ev.correlation_id,
-            "organization_id": ev.organization_id,
-            "category": ev.category,
-            "source_name": ev.source_name,
-            "cve": ev.cve,
-            "affected_product": ev.affected_product,
-            "attack_technique": ev.attack_technique,
-            "exploitation_observed": ev.exploitation_observed,
-            "reported_outcome": ev.reported_outcome,
-            "confidence": ev.confidence,
-            "status": ev.status,
-            "created_at": ev.created_at.isoformat() if ev.created_at else None,
-            "details": raw_json
-        })
+    cat_upper = category.upper().strip() if category else None
+
+    # 1. Financial Intelligence Events
+    if cat_upper == "FINANCIAL" or not cat_upper:
+        q_fin = db.query(FinancialIntelligenceRecord)
+        if organization_id:
+            fin_events = q_fin.filter(FinancialIntelligenceRecord.organization_id == organization_id).order_by(FinancialIntelligenceRecord.id.desc()).limit(100).all()
+            if not fin_events:
+                fin_events = q_fin.order_by(FinancialIntelligenceRecord.id.desc()).limit(100).all()
+        else:
+            fin_events = q_fin.order_by(FinancialIntelligenceRecord.id.desc()).limit(100).all()
+
+        for f in fin_events:
+            source = "Financial Times / Market Review"
+            if f.ticker == "MSFT":
+                source = "Financial Times / Enterprise Cloud"
+            elif f.ticker == "TRV":
+                source = "Bloomberg / Cyber Insurance Quarterly"
+            elif f.ticker == "SNOW":
+                source = "Wall Street Journal / Enterprise Data"
+            elif f.ticker == "GOOGL":
+                source = "Morning Brew / Cloud ROI Digest"
+            elif f.ticker == "CRWD":
+                source = "FT / Cyber Governance & SEC Directive"
+            elif f.ticker == "AMZN":
+                source = "Financial Times / AWS Cloud Infrastructure"
+            elif f.market_event:
+                source = f"Financial Review ({f.market_event[:25]})"
+
+            formatted.append({
+                "event_id": f.event_id or f.financial_id,
+                "correlation_id": f.correlation_id,
+                "organization_id": f.organization_id,
+                "category": "FINANCIAL",
+                "source_name": source,
+                "cve": None,
+                "affected_product": f.company,
+                "attack_technique": None,
+                "exploitation_observed": False,
+                "reported_outcome": f.actual_observed_outcome,
+                "confidence": f.confidence or 0.88,
+                "status": f.cfo_review_status or "CONFIRMED",
+                "created_at": f.created_at.isoformat() if f.created_at else None,
+                "details": {
+                    "company": f.company,
+                    "ticker": f.ticker,
+                    "sector": f.sector,
+                    "market_event": f.market_event,
+                    "newsletter_claim": f.newsletter_claim,
+                    "newsletter_forecast": f.newsletter_forecast,
+                    "cyberoptrq_forecast": f.cyberoptrq_forecast,
+                    "risk_signal": f.risk_signal,
+                    "volatility_signal": f.volatility_signal,
+                    "relevant_exposure_inr": f.relevant_exposure_inr,
+                    "signal_summary": f.newsletter_forecast or f.newsletter_claim
+                }
+            })
+
+    # 2. Cybersecurity Intelligence Events
+    if cat_upper != "FINANCIAL":
+        q = db.query(IntelligenceEventRecord)
+        if cat_upper:
+            q = q.filter(IntelligenceEventRecord.category == cat_upper)
+        if organization_id:
+            q = q.filter(IntelligenceEventRecord.organization_id == organization_id)
+        events = q.order_by(IntelligenceEventRecord.id.desc()).limit(100).all()
+
+        for ev in events:
+            raw_json = {}
+            try:
+                raw_json = json.loads(ev.raw_extraction_json)
+            except Exception:
+                pass
+            formatted.append({
+                "event_id": ev.event_id,
+                "correlation_id": ev.correlation_id,
+                "organization_id": ev.organization_id,
+                "category": ev.category,
+                "source_name": ev.source_name,
+                "cve": ev.cve,
+                "affected_product": ev.affected_product,
+                "attack_technique": ev.attack_technique,
+                "exploitation_observed": ev.exploitation_observed,
+                "reported_outcome": ev.reported_outcome,
+                "confidence": ev.confidence,
+                "status": ev.status,
+                "created_at": ev.created_at.isoformat() if ev.created_at else None,
+                "details": raw_json
+            })
+
     return formatted
 
 

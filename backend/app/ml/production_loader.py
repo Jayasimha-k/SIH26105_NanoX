@@ -1,6 +1,7 @@
 import os
 import pickle
 import logging
+import threading
 import pandas as pd
 import numpy as np
 from typing import Dict, Any, Optional, List
@@ -53,7 +54,10 @@ class ProductionMLInferenceEngine:
             os.path.join(self.models_dir, folder_name),
             os.path.join(self.models_dir, fallback_folder),
             os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "CyberOptRQ_Production_Models", folder_name)),
-            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "models_artifacts", fallback_folder))
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "CyberOptRQ_Production_Models", folder_name)),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "CyberOptRQ_Production_Models-20260916T120030Z-1-001", "CyberOptRQ_Production_Models", folder_name)),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "models_artifacts", fallback_folder)),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "models_artifacts", fallback_folder)),
         ]
 
         for p in paths_to_check:
@@ -61,13 +65,30 @@ class ProductionMLInferenceEngine:
                 pkls = [f for f in os.listdir(p) if f.endswith(".pkl") or f.endswith(".joblib")]
                 if pkls:
                     target_file = os.path.join(p, pkls[0])
-                    try:
-                        with open(target_file, "rb") as f:
-                            m = pickle.load(f)
-                        logger.info(f"Loaded ML model from {target_file}")
-                        return m
-                    except Exception as e:
-                        logger.error(f"Error loading {target_file}: {e}")
+                    result = [None]
+                    exc = [None]
+
+                    def _load(tf=target_file, r=result, e=exc):
+                        try:
+                            with open(tf, "rb") as f:
+                                r[0] = pickle.load(f)
+                        except Exception as ex:
+                            e[0] = ex
+
+                    t = threading.Thread(target=_load, daemon=True)
+                    t.start()
+                    t.join(timeout=10)  # 10-second timeout per model
+                    if t.is_alive():
+                        logger.error(
+                            f"Model load TIMED OUT for {target_file}. "
+                            "The server will continue without this model."
+                        )
+                        return None
+                    if exc[0] is not None:
+                        logger.error(f"Error loading {target_file}: {exc[0]}")
+                        continue
+                    logger.info(f"Loaded ML model from {target_file}")
+                    return result[0]
         logger.warning(f"Could not load model for {folder_name} / {fallback_folder}")
         return None
 
@@ -407,46 +428,86 @@ class ProductionMLInferenceEngine:
         }
 
     def get_model_diagnostics(self) -> Dict[str, Any]:
-        """Returns deep structural inspection data for all 5 models (classes, features, metrics)."""
+        """Returns deep structural inspection data for all 5 models (classes, features, metrics).
+        Fully defensive — works whether models loaded successfully or not."""
+
+        def _classes(model):
+            if model is None:
+                return [0, 1]
+            raw = getattr(model, "classes_", [0, 1])
+            if hasattr(raw, "tolist"):
+                return raw.tolist()
+            return list(raw)
+
+        def _feature_count(model):
+            if model is None:
+                return 0
+            fin = getattr(model, "feature_names_in_", None)
+            if fin is not None:
+                return len(fin)
+            n = getattr(model, "n_features_in_", None)
+            return int(n) if n is not None else 0
+
+        def _feature_importances(model):
+            if model is None:
+                return {}
+            names = getattr(model, "feature_names_in_", None)
+            imps = getattr(model, "feature_importances_", None)
+            if names is None or imps is None:
+                return {}
+            try:
+                return {str(k): round(float(v), 4) for k, v in zip(list(names), imps)}
+            except Exception:
+                return {}
+
+        def _loaded(model):
+            return model is not None
+
         return {
             "model_1": {
                 "name": "NVD/CVE Base Exploitation Model",
                 "version": "1.0.0-FINAL",
-                "classes": getattr(self.model_1, "classes_", [0, 1]).tolist(),
-                "feature_count": len(self.model_1.feature_names_in_) if self.model_1 else 0,
+                "loaded": _loaded(self.model_1),
+                "classes": _classes(self.model_1),
+                "feature_count": _feature_count(self.model_1),
                 "algorithm": "XGBoost Classifier"
             },
             "model_2": {
                 "name": "EPSS-Style Exploitation Risk Model",
                 "version": "1.0.0-FINAL",
-                "classes": getattr(self.model_2, "classes_", [0, 1]).tolist(),
-                "feature_count": len(self.model_2.feature_names_in_) if self.model_2 else 0,
+                "loaded": _loaded(self.model_2),
+                "classes": _classes(self.model_2),
+                "feature_count": _feature_count(self.model_2),
                 "algorithm": "XGBoost Classifier"
             },
             "model_3": {
                 "name": "Organization-Aware Cyber-Risk Model",
                 "version": "1.0.0-FINAL",
-                "classes": getattr(self.model_3, "classes_", [0, 1]).tolist(),
-                "feature_count": len(self.model_3.feature_names_in_) if self.model_3 else 0,
+                "loaded": _loaded(self.model_3),
+                "classes": _classes(self.model_3),
+                "feature_count": _feature_count(self.model_3),
                 "algorithm": "XGBoost Classifier"
             },
             "model_4": {
                 "name": "MITRE ATT&CK Prototype Model",
                 "version": "1.0.0-FINAL",
-                "classes": getattr(self.model_4, "classes_", [0, 1]).tolist(),
-                "feature_count": len(self.model_4.feature_names_in_) if self.model_4 else 0,
+                "loaded": _loaded(self.model_4),
+                "classes": _classes(self.model_4),
+                "feature_count": _feature_count(self.model_4),
                 "algorithm": "XGBoost Classifier"
             },
             "meta_model": {
                 "name": "Meta-Ensemble 4-Input Stacking Model",
                 "version": "1.0.0-FINAL",
-                "classes": getattr(self.meta_model, "classes_", [0, 1]).tolist(),
+                "loaded": _loaded(self.meta_model),
+                "classes": _classes(self.meta_model),
                 "input_features": ["P1", "P2", "P3", "P4"],
                 "positive_class": 1,
-                "feature_importances": dict(zip(self.meta_model.feature_names_in_, [round(float(v), 4) for v in self.meta_model.feature_importances_])) if self.meta_model else {},
+                "feature_importances": _feature_importances(self.meta_model),
                 "algorithm": "XGBoost Classifier"
             }
         }
+
 
 # Global singleton instance
 production_ml_engine = ProductionMLInferenceEngine()

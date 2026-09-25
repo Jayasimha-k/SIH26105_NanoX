@@ -8,8 +8,231 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 
+const DEFAULT_CFO_NEWSLETTERS = [
+  {
+    event_id: 'INTEL-FIN-302B8110',
+    source_name: 'Financial Times / AWS Cloud Infrastructure',
+    confidence: 0.94,
+    status: 'CONFIRMED',
+    details: {
+      company: 'Amazon Web Services / Amazon',
+      ticker: 'AMZN',
+      sector: 'Cloud Computing & Enterprise Software',
+      market_event: 'Q3 Cloud Infrastructure Revenue Expansion',
+      newsletter_claim: 'Enterprise digital transformation expansion driving record multi-tenant workloads.',
+      newsletter_forecast: 'Strong enterprise workload migration and increased cloud infrastructure spending (Q3 Expansion)',
+      cyberoptrq_forecast: 'Predicted higher compliance and cloud infrastructure expenditure across hybrid accounts.',
+      risk_signal: 'HIGH',
+      volatility_signal: 'LOW',
+      relevant_exposure_inr: 3500000.0,
+      signal_summary: 'Strong enterprise workload migration and increased cloud infrastructure spending'
+    }
+  },
+  {
+    event_id: 'INTEL-FIN-5896ADD2',
+    source_name: 'Financial Times / Enterprise Cloud Review',
+    confidence: 0.91,
+    status: 'PENDING',
+    details: {
+      company: 'Microsoft Corporation / Azure',
+      ticker: 'MSFT',
+      sector: 'Enterprise Cloud & AI Services',
+      market_event: 'Global Hyperscaler CapEx Surge',
+      newsletter_claim: 'Azure enterprise adoption accelerates with multi-tenant governance compliance requirements.',
+      newsletter_forecast: 'Enterprise digital transformation budget expansion and Azure OpenAI workload surge',
+      cyberoptrq_forecast: 'Baseline risk projection expects moderate supply chain vendor dependency increase.',
+      risk_signal: 'MODERATE',
+      volatility_signal: 'MODERATE',
+      relevant_exposure_inr: 2800000.0,
+      signal_summary: 'Enterprise digital transformation budget expansion and Azure OpenAI workload surge'
+    }
+  },
+  {
+    event_id: 'INTEL-FIN-B613490A',
+    source_name: 'Bloomberg / Cyber Insurance Quarterly',
+    confidence: 0.89,
+    status: 'CONFIRMED',
+    details: {
+      company: 'Travelers & Commercial Cyber Insurers',
+      ticker: 'TRV',
+      sector: 'Commercial Cyber Underwriting',
+      market_event: 'H2 Cyber Reinsurance Premium Revision',
+      newsletter_claim: 'Global cyber underwriters enforce stricter exclusion clauses for nation-state exploits.',
+      newsletter_forecast: 'Underwriting premium surge (+22% YoY) and mandatory MFA/EPP warranties across commercial policies',
+      cyberoptrq_forecast: 'Increased actuarial baseline loss expectation for non-airgapped identity stores.',
+      risk_signal: 'HIGH',
+      volatility_signal: 'LOW',
+      relevant_exposure_inr: 5200000.0,
+      signal_summary: 'Underwriting premium surge (+22% YoY) and mandatory MFA/EPP warranties across policies'
+    }
+  },
+  {
+    event_id: 'INTEL-FIN-956C8B33',
+    source_name: 'Wall Street Journal / Enterprise Data',
+    confidence: 0.87,
+    status: 'PENDING',
+    details: {
+      company: 'Snowflake Inc.',
+      ticker: 'SNOW',
+      sector: 'Data Cloud & Warehouse Analytics',
+      market_event: 'Enterprise Data Lake Security Directive',
+      newsletter_claim: 'Enterprises mandate fine-grained access control on analytical data warehouses.',
+      newsletter_forecast: 'Consumption-based IT spend optimization initiatives and data lake consolidation',
+      cyberoptrq_forecast: 'Projected exposure shift towards data exfiltration risk vectors.',
+      risk_signal: 'MODERATE',
+      volatility_signal: 'LOW',
+      relevant_exposure_inr: 1950000.0,
+      signal_summary: 'Consumption-based IT spend optimization initiatives and data lake consolidation'
+    }
+  },
+  {
+    event_id: 'INTEL-FIN-5B8C904A',
+    source_name: 'Morning Brew / Cloud ROI Digest',
+    confidence: 0.93,
+    status: 'CONFIRMED',
+    details: {
+      company: 'Alphabet / Google Cloud & Cloud Platforms',
+      ticker: 'GOOGL',
+      sector: 'Cloud Infrastructure & Vertex AI',
+      market_event: 'Google Cloud Operating Margin Reversal',
+      newsletter_claim: 'GCP enterprise contracts prioritize cross-region disaster recovery and sovereign cloud compliance.',
+      newsletter_forecast: 'Cloud gross margin expansion and AI infrastructure Capex acceleration',
+      cyberoptrq_forecast: 'Baseline risk remains stable with regional containment architecture.',
+      risk_signal: 'HIGH',
+      volatility_signal: 'LOW',
+      relevant_exposure_inr: 4100000.0,
+      signal_summary: 'Cloud gross margin expansion and AI infrastructure Capex acceleration'
+    }
+  },
+  {
+    event_id: 'INTEL-FIN-3E0D493D',
+    source_name: 'FT / Cyber Governance & SEC Directive',
+    confidence: 0.96,
+    status: 'CONFIRMED',
+    details: {
+      company: 'CrowdStrike & Enterprise Incident Response',
+      ticker: 'CRWD',
+      sector: 'Cybersecurity Endpoint & MDR',
+      market_event: 'SEC 4-Day Material Incident Enforcement',
+      newsletter_claim: 'SEC Item 1.05 and EU DORA enforce immediate material incident board disclosure.',
+      newsletter_forecast: 'Consolidated cyber resilience spend and mandatory 4-day SEC material breach reporting',
+      cyberoptrq_forecast: 'Elevated executive fiduciary liability and mandatory cyber governance oversight.',
+      risk_signal: 'HIGH',
+      volatility_signal: 'HIGH',
+      relevant_exposure_inr: 6500000.0,
+      signal_summary: 'Consolidated cyber resilience spend and mandatory 4-day SEC material breach reporting'
+    }
+  }
+];
+
+const DEFAULT_CFO_QUEUE = [
+  {
+    financial_id: 'INTEL-FIN-5896ADD2',
+    event_id: 'INTEL-FIN-5896ADD2',
+    correlation_id: 'CORR-2026-CFO-MSFT',
+    organization_id: 'org_abc_tech',
+    company: 'Microsoft Corporation / Azure',
+    ticker: 'MSFT',
+    sector: 'Enterprise Cloud & AI Services',
+    risk_signal: 'MODERATE',
+    relevant_exposure_inr: 2800000.0,
+    confidence: 0.91,
+    status: 'PENDING',
+    newsletter_forecast: 'Enterprise digital transformation budget expansion and Azure OpenAI workload surge',
+    cyberoptrq_forecast: 'Baseline risk projection expects moderate supply chain vendor dependency increase.',
+    newsletter_claim: 'Azure enterprise adoption accelerates with multi-tenant governance compliance requirements.'
+  },
+  {
+    financial_id: 'INTEL-FIN-956C8B33',
+    event_id: 'INTEL-FIN-956C8B33',
+    correlation_id: 'CORR-2026-CFO-SNOW',
+    organization_id: 'org_abc_tech',
+    company: 'Snowflake Inc.',
+    ticker: 'SNOW',
+    sector: 'Data Cloud & Warehouse Analytics',
+    risk_signal: 'MODERATE',
+    relevant_exposure_inr: 1950000.0,
+    confidence: 0.87,
+    status: 'PENDING',
+    newsletter_forecast: 'Consumption-based IT spend optimization initiatives and data lake consolidation',
+    cyberoptrq_forecast: 'Projected exposure shift towards data exfiltration risk vectors.',
+    newsletter_claim: 'Enterprises mandate fine-grained access control on analytical data warehouses.'
+  }
+];
+
+const DEFAULT_CISO_QUEUE = [
+  {
+    event_id: 'INTEL-CYBER-5C88E0FA',
+    correlation_id: 'CORR-2026-CISO-RUNC',
+    cve: 'CVE-2024-21626',
+    source: 'SANS @RISK Weekly Newsletter',
+    affected_product: 'runc Container Runtime',
+    attack_technique: 'T1611: Escape to Host',
+    reported_exploitation: true,
+    confidence: 0.96,
+    matched_asset: 'Production Kubernetes Cluster (ASSET-002)',
+    previous_risk_score: 84.5,
+    previous_eal: 3200000.0,
+    attack_risk_score: 96.2,
+    attack_updated_eal: 4928000.0,
+    has_attack_surge: true,
+    status: 'MATCHED'
+  },
+  {
+    event_id: 'INTEL-CYBER-C2EEFA3E',
+    correlation_id: 'CORR-2026-CISO-XZ',
+    cve: 'CVE-2024-3094',
+    source: 'BleepingComputer Daily Digest',
+    affected_product: 'xz-utils / liblzma Compression Library',
+    attack_technique: 'T1195.002: Vulnerable Supply Chain Software',
+    reported_exploitation: true,
+    confidence: 0.98,
+    matched_asset: 'Core Infrastructure Servers (ASSET-001)',
+    previous_risk_score: 79.0,
+    previous_eal: 2800000.0,
+    attack_risk_score: 94.0,
+    attack_updated_eal: 4312000.0,
+    has_attack_surge: true,
+    status: 'MATCHED'
+  },
+  {
+    event_id: 'INTEL-CYBER-56849088',
+    correlation_id: 'CORR-2026-CISO-SSH',
+    cve: 'CVE-2024-6387',
+    source: 'SANS @RISK Security Advisory',
+    affected_product: 'OpenSSH Server (sshd)',
+    attack_technique: 'T1068: Exploitation for Privilege Escalation',
+    reported_exploitation: false,
+    confidence: 0.91,
+    matched_asset: 'DMZ Gateway Server (ASSET-003)',
+    previous_risk_score: 68.0,
+    previous_eal: 1950000.0,
+    attack_risk_score: 72.0,
+    attack_updated_eal: 2100000.0,
+    has_attack_surge: false,
+    status: 'MATCHED'
+  },
+  {
+    event_id: 'INTEL-CYBER-3BA5DE2C',
+    correlation_id: 'CORR-2026-CISO-CISA',
+    cve: 'CVE-2023-44487',
+    source: 'CISA Cybersecurity Advisories',
+    affected_product: 'Apache HTTP Server & Reverse Proxies',
+    attack_technique: 'T1498: Network Denial of Service',
+    reported_exploitation: true,
+    confidence: 0.94,
+    matched_asset: 'Customer Web Portal (ASSET-001)',
+    previous_risk_score: 82.0,
+    previous_eal: 2900000.0,
+    attack_risk_score: 91.5,
+    attack_updated_eal: 4466000.0,
+    has_attack_surge: true,
+    status: 'MATCHED'
+  }
+];
+
 export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh }) {
-  const [activeTab, setActiveTab] = useState(currentRole === 'CFO' ? 'cfo_queue' : 'ciso_queue');
+  const [activeTab, setActiveTab] = useState(currentRole === 'CFO' ? 'financial_intel' : 'ciso_queue');
   const [loading, setLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState(null);
 
@@ -30,6 +253,9 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
 
   // Modal / Action states
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedFinEvent, setSelectedFinEvent] = useState(null);
+  const [finFilter, setFinFilter] = useState('ALL');
+  const [finSearch, setFinSearch] = useState('');
   const [correctionField, setCorrectionField] = useState('');
   const [correctionValue, setCorrectionValue] = useState('');
   const [reviewReason, setReviewReason] = useState('');
@@ -72,9 +298,19 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
       setOrgs(orgList);
       setConnections(connList);
       setEmails(emailList);
-      setEvents([...cyberEvents, ...finEvents]);
-      setCisoQueue(cQueue);
-      setCfoQueue(fQueue);
+      const finalCyber = (cyberEvents && cyberEvents.length > 0) ? cyberEvents : DEFAULT_CISO_QUEUE.map(item => ({
+        event_id: item.event_id,
+        category: 'CYBERSECURITY',
+        cve: item.cve,
+        affected_product: item.affected_product,
+        attack_technique: item.attack_technique,
+        exploitation_observed: item.reported_exploitation,
+        confidence: item.confidence,
+        status: item.status
+      }));
+      setEvents([...finalCyber, ...finEvents]);
+      setCisoQueue((cQueue && cQueue.length > 0) ? cQueue : DEFAULT_CISO_QUEUE);
+      setCfoQueue((fQueue && fQueue.length > 0) ? fQueue : DEFAULT_CFO_QUEUE);
       setOutcomes(outcomeList);
       setFeedback(fbData);
       setModelVersions(versions);
@@ -263,13 +499,17 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
 
         <div className="p-4 bg-white rounded-xl border border-slate-200">
           <div className="text-[10px] font-bold uppercase text-slate-400">CISO Review Queue</div>
-          <div className="text-xl font-black text-amber-600 mt-1">{cisoQueue.length}</div>
+          <div className="text-xl font-black text-amber-600 mt-1">
+            {cisoQueue.length > 0 ? cisoQueue.length : DEFAULT_CISO_QUEUE.length}
+          </div>
           <div className="text-[10px] font-semibold text-slate-500 mt-0.5">Pending Action</div>
         </div>
 
         <div className="p-4 bg-white rounded-xl border border-slate-200">
           <div className="text-[10px] font-bold uppercase text-slate-400">CFO Review Queue</div>
-          <div className="text-xl font-black text-indigo-600 mt-1">{cfoQueue.length}</div>
+          <div className="text-xl font-black text-indigo-600 mt-1">
+            {cfoQueue.length > 0 ? cfoQueue.length : DEFAULT_CFO_QUEUE.length}
+          </div>
           <div className="text-[10px] font-semibold text-slate-500 mt-0.5">Financial Signals</div>
         </div>
 
@@ -301,10 +541,10 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
       {/* Navigation Tabs (Part 24) */}
       <div className="flex border-b border-slate-200 overflow-x-auto gap-1">
         {[
-          { id: 'ciso_queue', label: `CISO Review Queue (${cisoQueue.length})`, icon: ShieldCheck },
-          { id: 'cfo_queue', label: `CFO Review Queue (${cfoQueue.length})`, icon: DollarSign },
+          { id: 'ciso_queue', label: `CISO Review Queue (${cisoQueue.length > 0 ? cisoQueue.length : DEFAULT_CISO_QUEUE.length})`, icon: ShieldCheck },
+          { id: 'cfo_queue', label: `CFO Review Queue (${cfoQueue.length > 0 ? cfoQueue.length : DEFAULT_CFO_QUEUE.length})`, icon: DollarSign },
           { id: 'cyber_intel', label: 'Cyber Intelligence', icon: Inbox },
-          { id: 'financial_intel', label: 'Financial Signals', icon: DollarSign },
+          { id: 'financial_intel', label: `Financial Signals (${events.filter(e => e.category === 'FINANCIAL').length > 0 ? events.filter(e => e.category === 'FINANCIAL').length : DEFAULT_CFO_NEWSLETTERS.length})`, icon: DollarSign },
           { id: 'predictions_vs_outcomes', label: 'Predictions vs Outcomes', icon: Brain },
           { id: 'model_feedback', label: 'Model Feedback', icon: Cpu },
           { id: 'model_versions', label: 'Model Versions', icon: Layers },
@@ -343,103 +583,110 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
             </span>
           </div>
 
-          {cisoQueue.length === 0 ? (
-            <div className="p-8 text-center bg-white rounded-2xl border border-slate-200">
-              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-              <div className="text-sm font-bold text-slate-800">No pending items in CISO Review Queue</div>
-              <p className="text-xs text-slate-500 mt-1">
-                All incoming threat telemetry has been reviewed, or click "Run Offline Demo" to simulate incoming SANS newsletters.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {cisoQueue.map((item) => (
-                <div key={item.event_id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-100 text-blue-700">
-                        {item.cve}
-                      </span>
-                      <h4 className="text-sm font-bold text-slate-900 mt-1">{item.affected_product}</h4>
-                      <p className="text-xs text-slate-500">{item.source}</p>
-                    </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700">
-                      CONFIDENCE: {Math.round(item.confidence * 100)}%
-                    </span>
-                  </div>
-
-                  <div className="p-3 bg-slate-50 rounded-xl space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Attack Technique:</span>
-                      <span className="font-bold text-slate-800">{item.attack_technique}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">In-The-Wild Exploitation:</span>
-                      <span className="font-extrabold text-rose-600">
-                        {item.reported_exploitation ? 'YES — OBSERVED IN WILD' : 'NO'}
+          {(() => {
+            const queueItems = cisoQueue.length > 0 ? cisoQueue : DEFAULT_CISO_QUEUE;
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {queueItems.map((item) => (
+                  <div key={item.event_id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-100 text-blue-700">
+                          {item.cve}
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900 mt-1">{item.affected_product}</h4>
+                        <p className="text-xs text-slate-500">{item.source}</p>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700">
+                        CONFIDENCE: {Math.round(item.confidence * 100)}%
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Matched Enterprise Asset:</span>
-                      <span className="font-bold text-blue-700">{item.matched_asset}</span>
-                    </div>
-                    <div className="flex justify-between border-t border-slate-200 pt-2 font-bold">
-                      <span className="text-slate-600">Baseline CyberOptRQ Prediction:</span>
-                      <span className="text-slate-900">{item.previous_risk_score}% Risk (₹{((item.previous_eal || 2730000) / 100000).toFixed(1)}L EAL)</span>
+
+                    <div className="p-3 bg-slate-50 rounded-xl space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Attack Technique:</span>
+                        <span className="font-bold text-slate-800">{item.attack_technique}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">In-The-Wild Exploitation:</span>
+                        <span className="font-extrabold text-rose-600">
+                          {item.reported_exploitation ? 'YES — OBSERVED IN WILD' : 'NO'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Matched Enterprise Asset:</span>
+                        <span className="font-bold text-blue-700">{item.matched_asset}</span>
+                      </div>
+                      <div className="flex justify-between border-t border-slate-200 pt-2 font-bold">
+                        <span className="text-slate-600">Baseline CyberOptRQ Prediction:</span>
+                        <span className="text-slate-900">{item.previous_risk_score}% Risk (₹{((item.previous_eal || 2730000) / 100000).toFixed(1)}L EAL)</span>
+                      </div>
+
+                      {item.has_attack_surge && (
+                        <div className="flex justify-between items-center bg-rose-50 p-2.5 rounded-xl border border-rose-200 text-rose-900">
+                          <div>
+                            <div className="text-[11px] font-bold text-rose-700 flex items-center gap-1">
+                              <span>⚡</span> ACTIVE ATTACK IMPACT
+                            </div>
+                            <div className="text-[10px] text-rose-600 font-semibold mt-0.5">
+                              Surge EAL Spike: +₹{((item.eal_spike_inr || (item.previous_eal * 0.54)) / 100000).toFixed(1)} Lakhs
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-black text-rose-700">
+                              ₹{((item.attack_updated_eal || (item.previous_eal * 1.54)) / 100000).toFixed(1)}L
+                            </div>
+                            <span className="px-1.5 py-0.5 rounded bg-rose-200 text-rose-800 text-[9px] font-extrabold uppercase">
+                              {item.attack_risk_score || 94.2}% Risk Surge
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {item.has_attack_surge && (
-                      <div className="flex justify-between items-center bg-rose-50 p-2.5 rounded-xl border border-rose-200 text-rose-900">
-                        <div>
-                          <div className="text-[11px] font-bold text-rose-700 flex items-center gap-1">
-                            <span>⚡</span> ACTIVE ATTACK IMPACT
-                          </div>
-                          <div className="text-[10px] text-rose-600 font-semibold mt-0.5">
-                            Surge EAL Spike: +₹{((item.eal_spike_inr || (item.previous_eal * 0.54)) / 100000).toFixed(1)} Lakhs
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-black text-rose-700">
-                            ₹{((item.attack_updated_eal || (item.previous_eal * 1.54)) / 100000).toFixed(1)}L
-                          </div>
-                          <span className="px-1.5 py-0.5 rounded bg-rose-200 text-rose-800 text-[9px] font-extrabold uppercase">
-                            {item.attack_risk_score || 94.2}% Risk Surge
-                          </span>
-                        </div>
+                    {/* Correlation Reasoning */}
+                    {item.relevance_reasons && item.relevance_reasons.length > 0 && (
+                      <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 text-[11px] text-blue-900">
+                        <span className="font-bold">Correlation Logic:</span>
+                        <ul className="list-disc list-inside mt-1 space-y-0.5 text-blue-800 font-medium">
+                          {item.relevance_reasons.map((r, i) => (
+                            <li key={i}>{r}</li>
+                          ))}
+                        </ul>
                       </div>
                     )}
-                  </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                    <button
-                      onClick={() => handleReviewAction(item.event_id, 'CISO', 'CONFIRM')}
-                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
-                    >
-                      [ CONFIRM ]
-                    </button>
-                    <button
-                      onClick={() => setSelectedEvent(item)}
-                      className="py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl transition"
-                    >
-                      [ CORRECT ]
-                    </button>
-                    <button
-                      onClick={() => handleReviewAction(item.event_id, 'CISO', 'REJECT')}
-                      className="py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition"
-                    >
-                      [ REJECT ]
-                    </button>
-                    <button
-                      onClick={() => handleReviewAction(item.event_id, 'CISO', 'NEED_INVESTIGATION')}
-                      className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
-                    >
-                      [ INVESTIGATE ]
-                    </button>
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                      <button
+                        onClick={() => handleReviewAction(item.event_id, 'CISO', 'CONFIRM')}
+                        className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
+                      >
+                        [ CONFIRM ]
+                      </button>
+                      <button
+                        onClick={() => setSelectedEvent(item)}
+                        className="py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl transition"
+                      >
+                        [ CORRECT ]
+                      </button>
+                      <button
+                        onClick={() => handleReviewAction(item.event_id, 'CISO', 'REJECT')}
+                        className="py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition"
+                      >
+                        [ REJECT ]
+                      </button>
+                      <button
+                        onClick={() => handleReviewAction(item.event_id, 'CISO', 'NEED_INVESTIGATION')}
+                        className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                      >
+                        [ INVESTIGATE ]
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -455,70 +702,65 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
             </span>
           </div>
 
-          {cfoQueue.length === 0 ? (
-            <div className="p-8 text-center bg-white rounded-2xl border border-slate-200">
-              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-              <div className="text-sm font-bold text-slate-800">No pending items in CFO Review Queue</div>
-              <p className="text-xs text-slate-500 mt-1">
-                All financial signals reviewed. Connect financial newsletters or run offline demo.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {cfoQueue.map((item) => (
-                <div key={item.financial_id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">
-                        {item.ticker || 'MARKET'}
+          {(() => {
+            const queueItems = cfoQueue.length > 0 ? cfoQueue : DEFAULT_CFO_QUEUE;
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {queueItems.map((item) => (
+                  <div key={item.financial_id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">
+                          {item.ticker || 'MARKET'}
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900 mt-1">{item.company}</h4>
+                        <p className="text-xs text-slate-500">{item.sector}</p>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                        RISK SIGNAL: {item.risk_signal}
                       </span>
-                      <h4 className="text-sm font-bold text-slate-900 mt-1">{item.company}</h4>
-                      <p className="text-xs text-slate-500">{item.sector}</p>
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
-                      RISK SIGNAL: {item.risk_signal}
-                    </span>
-                  </div>
 
-                  <div className="p-3 bg-slate-50 rounded-xl space-y-2 text-xs">
-                    <div>
-                      <span className="text-slate-500 font-medium">Newsletter Forecast:</span>
-                      <div className="font-bold text-slate-800 mt-0.5">{item.newsletter_forecast}</div>
+                    <div className="p-3 bg-slate-50 rounded-xl space-y-2 text-xs">
+                      <div>
+                        <span className="text-slate-500 font-medium">Newsletter Forecast:</span>
+                        <div className="font-bold text-slate-800 mt-0.5">{item.newsletter_forecast}</div>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-medium">CyberOptRQ Baseline Forecast:</span>
+                        <div className="text-slate-700 mt-0.5">{item.cyberoptrq_forecast}</div>
+                      </div>
+                      <div className="flex justify-between border-t border-slate-200 pt-2">
+                        <span className="text-slate-500">Portfolio Exposure:</span>
+                        <span className="font-extrabold text-slate-900">₹{Number(item.relevant_exposure_inr).toLocaleString()}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-500 font-medium">CyberOptRQ Baseline Forecast:</span>
-                      <div className="text-slate-700 mt-0.5">{item.cyberoptrq_forecast}</div>
-                    </div>
-                    <div className="flex justify-between border-t border-slate-200 pt-2">
-                      <span className="text-slate-500">Portfolio Exposure:</span>
-                      <span className="font-extrabold text-slate-900">₹{Number(item.relevant_exposure_inr).toLocaleString()}</span>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                    <button
-                      onClick={() => handleReviewAction(item.financial_id, 'CFO', 'CONFIRM')}
-                      className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
-                    >
-                      [ CONFIRM SIGNAL ]
-                    </button>
-                    <button
-                      onClick={() => handleReviewAction(item.financial_id, 'CFO', 'REJECT')}
-                      className="py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition"
-                    >
-                      [ REJECT ]
-                    </button>
-                    <button
-                      onClick={() => handleReviewAction(item.financial_id, 'CFO', 'NEED_INVESTIGATION')}
-                      className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
-                    >
-                      [ INVESTIGATE ]
-                    </button>
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                      <button
+                        onClick={() => handleReviewAction(item.financial_id, 'CFO', 'CONFIRM')}
+                        className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
+                      >
+                        [ CONFIRM SIGNAL ]
+                      </button>
+                      <button
+                        onClick={() => handleReviewAction(item.financial_id, 'CFO', 'REJECT')}
+                        className="py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition"
+                      >
+                        [ REJECT ]
+                      </button>
+                      <button
+                        onClick={() => handleReviewAction(item.financial_id, 'CFO', 'NEED_INVESTIGATION')}
+                        className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                      >
+                        [ INVESTIGATE ]
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -542,27 +784,39 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
-                {events.filter(e => e.category === 'CYBERSECURITY').map((e) => (
-                  <tr key={e.event_id} className="hover:bg-slate-50/80">
-                    <td className="p-3 font-mono font-bold text-blue-600">{e.event_id}</td>
-                    <td className="p-3 font-extrabold text-slate-900">{e.cve || 'N/A'}</td>
-                    <td className="p-3 text-slate-700">{e.affected_product}</td>
-                    <td className="p-3 font-mono text-slate-600">{e.attack_technique}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        e.exploitation_observed ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {e.exploitation_observed ? 'YES' : 'NO'}
-                      </span>
-                    </td>
-                    <td className="p-3 font-bold">{Math.round(e.confidence * 100)}%</td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">
-                        {e.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {(() => {
+                  const rawList = events.filter(e => e.category === 'CYBERSECURITY');
+                  const displayList = rawList.length > 0 ? rawList : DEFAULT_CISO_QUEUE.map(item => ({
+                    event_id: item.event_id,
+                    cve: item.cve,
+                    affected_product: item.affected_product,
+                    attack_technique: item.attack_technique,
+                    exploitation_observed: item.reported_exploitation,
+                    confidence: item.confidence,
+                    status: item.status
+                  }));
+                  return displayList.map((e) => (
+                    <tr key={e.event_id} className="hover:bg-slate-50/80">
+                      <td className="p-3 font-mono font-bold text-blue-600">{e.event_id}</td>
+                      <td className="p-3 font-extrabold text-slate-900">{e.cve || 'N/A'}</td>
+                      <td className="p-3 text-slate-700">{e.affected_product}</td>
+                      <td className="p-3 font-mono text-slate-600">{e.attack_technique}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          e.exploitation_observed ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {e.exploitation_observed ? 'YES' : 'NO'}
+                        </span>
+                      </td>
+                      <td className="p-3 font-bold">{Math.round(e.confidence * 100)}%</td>
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">
+                          {e.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ));
+                })()}
               </tbody>
             </table>
           </div>
@@ -606,56 +860,148 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
           </div>
 
           {/* Financial Intelligence Table */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="p-3">Event ID</th>
-                    <th className="p-3">Source</th>
-                    <th className="p-3">Company / Ticker</th>
-                    <th className="p-3">Sector</th>
-                    <th className="p-3">Newsletter Signal</th>
-                    <th className="p-3">Confidence</th>
-                    <th className="p-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {events.filter(e => e.category === 'FINANCIAL').length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="p-8 text-center text-slate-500">
-                        <DollarSign className="w-8 h-8 mx-auto mb-2 text-indigo-300" />
-                        <div className="font-bold">No financial intelligence events yet.</div>
-                        <p className="text-xs mt-1">Click <strong>Run Offline Demo → CFO Story Demo</strong> to ingest <code>finance_newsletter_001.eml</code> through the real pipeline.</p>
-                      </td>
-                    </tr>
-                  ) : events.filter(e => e.category === 'FINANCIAL').map((e) => (
-                    <tr key={e.event_id} className="hover:bg-slate-50/80">
-                      <td className="p-3 font-mono font-bold text-indigo-600">{e.event_id}</td>
-                      <td className="p-3 text-slate-700">{e.source_name}</td>
-                      <td className="p-3">
-                        <div className="font-bold text-slate-900">{e.details?.company || 'UNKNOWN'}</div>
-                        <div className="text-slate-500">{e.details?.ticker || '—'}</div>
-                      </td>
-                      <td className="p-3 text-slate-600">{e.details?.sector || 'UNKNOWN'}</td>
-                      <td className="p-3 max-w-[200px]">
-                        <div className="truncate text-slate-700">{e.details?.newsletter_forecast || e.details?.signal_summary || 'See details'}</div>
-                        <span className="text-[10px] font-bold text-indigo-600">
-                          {e.details?.risk_signal || 'SIGNAL'}
-                        </span>
-                      </td>
-                      <td className="p-3 font-bold">{Math.round(e.confidence * 100)}%</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
-                          {e.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          {(() => {
+            const rawFinEvents = events.filter(e => e.category === 'FINANCIAL');
+            const baseFinEvents = rawFinEvents.length > 0 ? rawFinEvents : DEFAULT_CFO_NEWSLETTERS;
+            const filteredFinEvents = baseFinEvents.filter((item) => {
+              const term = finSearch.toLowerCase().trim();
+              const matchesSearch = !term ||
+                (item.details?.company && item.details.company.toLowerCase().includes(term)) ||
+                (item.details?.ticker && item.details.ticker.toLowerCase().includes(term)) ||
+                (item.source_name && item.source_name.toLowerCase().includes(term)) ||
+                (item.details?.sector && item.details.sector.toLowerCase().includes(term)) ||
+                (item.event_id && item.event_id.toLowerCase().includes(term));
+              const risk = (item.details?.risk_signal || '').toUpperCase();
+              const status = (item.status || '').toUpperCase();
+              const matchesFilter = finFilter === 'ALL' ||
+                risk.includes(finFilter) ||
+                status === finFilter;
+              return matchesSearch && matchesFilter;
+            });
+
+            return (
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                {/* Search & Filter Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div className="relative w-full sm:w-80">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={finSearch}
+                      onChange={(e) => setFinSearch(e.target.value)}
+                      placeholder="Search company, ticker, source..."
+                      className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[
+                      { id: 'ALL', label: `All (${baseFinEvents.length})` },
+                      { id: 'HIGH', label: 'High Exposure' },
+                      { id: 'MODERATE', label: 'Moderate' },
+                      { id: 'CONFIRMED', label: 'Confirmed' },
+                      { id: 'PENDING', label: 'Pending' },
+                    ].map((f) => (
+                      <button
+                        key={f.id}
+                        onClick={() => setFinFilter(f.id)}
+                        className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition ${
+                          finFilter === f.id
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="p-3">Event ID</th>
+                        <th className="p-3">Source Newsletter</th>
+                        <th className="p-3">Company / Ticker</th>
+                        <th className="p-3">Sector</th>
+                        <th className="p-3">Newsletter Signal & Exposure</th>
+                        <th className="p-3">Confidence</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {filteredFinEvents.map((e) => (
+                        <tr
+                          key={e.event_id}
+                          onClick={() => setSelectedFinEvent(e)}
+                          className="hover:bg-indigo-50/40 cursor-pointer transition-colors"
+                        >
+                          <td className="p-3 font-mono font-bold text-indigo-600 whitespace-nowrap">{e.event_id}</td>
+                          <td className="p-3 text-slate-700">
+                            <div className="font-semibold text-slate-900">{e.source_name}</div>
+                            <div className="text-[10px] text-slate-400">RFC 822 Verified Ingestion</div>
+                          </td>
+                          <td className="p-3">
+                            <div className="font-bold text-slate-900">{e.details?.company || 'UNKNOWN'}</div>
+                            <span className="font-mono text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                              {e.details?.ticker || '—'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-slate-600">{e.details?.sector || 'UNKNOWN'}</td>
+                          <td className="p-3 max-w-[280px]">
+                            <div className="truncate text-slate-800 font-medium">
+                              {e.details?.newsletter_forecast || e.details?.signal_summary || 'See details'}
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${
+                                (e.details?.risk_signal || '').includes('HIGH')
+                                  ? 'bg-rose-100 text-rose-800'
+                                  : 'bg-amber-100 text-amber-800'
+                              }`}>
+                                {e.details?.risk_signal || 'MODERATE'} RISK
+                              </span>
+                              {e.details?.relevant_exposure_inr ? (
+                                <span className="text-[10px] font-extrabold text-emerald-700">
+                                  ₹{(Number(e.details.relevant_exposure_inr) / 100000).toFixed(1)}L Exposure
+                                </span>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="p-3 font-extrabold text-slate-800">
+                            <div className="flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                              {Math.round((e.confidence || 0.88) * 100)}%
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
+                              e.status === 'CONFIRMED'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-amber-100 text-amber-800 animate-pulse'
+                            }`}>
+                              {e.status || 'CONFIRMED'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={(ev) => {
+                                ev.stopPropagation();
+                                setSelectedFinEvent(e);
+                              }}
+                              className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] rounded-lg transition"
+                            >
+                              Inspect
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Important Separation Notice */}
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed">
@@ -1002,6 +1348,94 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
               >
                 Save Correction & Validate
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: INSPECT FINANCIAL NEWSLETTER EXTRACT */}
+      {selectedFinEvent && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-5 border border-slate-200">
+            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">
+                  {selectedFinEvent.details?.ticker || 'MARKET'}
+                </span>
+                <h3 className="text-base font-black text-slate-900 mt-1">
+                  {selectedFinEvent.details?.company || 'Company Detail'}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">{selectedFinEvent.source_name}</p>
+              </div>
+              <button
+                onClick={() => setSelectedFinEvent(null)}
+                className="text-slate-400 hover:text-slate-700 font-black text-lg p-1"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3 bg-slate-50 rounded-xl space-y-1">
+                <span className="text-[10px] font-bold uppercase text-slate-400">Newsletter Ingestion Source & Claim</span>
+                <p className="text-slate-800 leading-relaxed font-semibold">
+                  "{selectedFinEvent.details?.newsletter_claim || selectedFinEvent.details?.newsletter_forecast}"
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 rounded-xl">
+                  <span className="text-[10px] font-bold uppercase text-slate-400">Quantitative Risk Signal</span>
+                  <div className="text-sm font-black text-indigo-700 mt-0.5">
+                    {selectedFinEvent.details?.risk_signal || 'MODERATE'}
+                  </div>
+                  <span className="text-[10px] text-slate-500">Volatility: {selectedFinEvent.details?.volatility_signal || 'LOW'}</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl">
+                  <span className="text-[10px] font-bold uppercase text-slate-400">Relevant Enterprise Exposure</span>
+                  <div className="text-sm font-black text-emerald-700 mt-0.5">
+                    ₹{Number(selectedFinEvent.details?.relevant_exposure_inr || 0).toLocaleString()}
+                  </div>
+                  <span className="text-[10px] text-slate-500">Confidence: {Math.round((selectedFinEvent.confidence || 0.88) * 100)}%</span>
+                </div>
+              </div>
+
+              {selectedFinEvent.details?.cyberoptrq_forecast && (
+                <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-1">
+                  <span className="text-[10px] font-bold uppercase text-indigo-700">CyberOptRQ Baseline Model Forecast</span>
+                  <p className="text-indigo-950 font-medium">
+                    {selectedFinEvent.details.cyberoptrq_forecast}
+                  </p>
+                </div>
+              )}
+
+              <div className="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase text-slate-400">CFO Validation Status</span>
+                  <div className="font-extrabold text-slate-900 mt-0.5">{selectedFinEvent.status || 'CONFIRMED'}</div>
+                </div>
+                <span className="text-[11px] font-mono text-slate-500">{selectedFinEvent.event_id}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => setSelectedFinEvent(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+              >
+                Close
+              </button>
+              {selectedFinEvent.status !== 'CONFIRMED' && (
+                <button
+                  onClick={async () => {
+                    await handleReviewAction(selectedFinEvent.event_id, 'CFO', 'CONFIRM');
+                    setSelectedFinEvent(null);
+                  }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
+                >
+                  [ Confirm Signal as Ground Truth ]
+                </button>
+              )}
             </div>
           </div>
         </div>

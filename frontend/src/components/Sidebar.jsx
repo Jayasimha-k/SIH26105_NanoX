@@ -14,7 +14,7 @@ const roleMenus = {
     { id: 'continual_learning', label: 'Continual Learning (Governance)', icon: Brain },
     { id: 'optimizer', label: 'Investment Optimization', icon: Zap },
     { id: 'approvals', label: 'Approval Center', icon: ShieldCheck },
-    { id: 'audit', label: 'Audit & Compliance', icon: Lock }
+    { id: 'blockchain', label: 'Consortium Blockchain', icon: Lock }
   ],
   CFO: [
     { id: 'dashboard', label: 'Executive Financial View', icon: LayoutDashboard },
@@ -22,7 +22,7 @@ const roleMenus = {
     { id: 'ai_quantification', label: 'Financial Loss (EAL)', icon: Layers },
     { id: 'optimizer', label: 'Budget Optimization', icon: Zap },
     { id: 'approvals', label: 'Capital Allocations', icon: ShieldCheck },
-    { id: 'audit', label: 'Audit & Compliance', icon: Lock }
+    { id: 'blockchain', label: 'Consortium Blockchain & Audit', icon: Lock }
   ],
   SOC: [
     { id: 'intelligence', label: 'Continuous Intelligence', icon: Mail },
@@ -31,6 +31,7 @@ const roleMenus = {
     { id: 'asset_inventory', label: 'Asset Exposure', icon: Server },
     { id: 'ai_risk', label: 'AI Risk Assessment', icon: Eye },
     { id: 'continual_learning', label: 'Evidence & Learning', icon: Brain },
+    { id: 'blockchain', label: 'Blockchain Audit Trail', icon: Lock },
     { id: 'incidents', label: 'Incident & Loss Log', icon: FileText }
   ],
   Security: [
@@ -41,13 +42,15 @@ const roleMenus = {
     { id: 'optimizer', label: 'Control Optimization', icon: Zap },
     { id: 'recalculate', label: 'What-If Analysis', icon: RefreshCcw },
     { id: 'recommendations', label: 'Prioritized Recommendations', icon: Award },
-    { id: 'model_evidence', label: 'Model Evidence (5 Models)', icon: Layers }
+    { id: 'model_evidence', label: 'Model Evidence (5 Models)', icon: Layers },
+    { id: 'blockchain', label: 'Consortium Blockchain', icon: Lock }
   ],
   IT: [
     { id: 'execution', label: 'My Remediation Queue', icon: Wrench },
     { id: 'approved_controls', label: 'Approved Controls', icon: CheckSquare },
     { id: 'tracking', label: 'Implementation Tracking', icon: RefreshCcw },
-    { id: 'recalculate', label: 'Verification & Recalculation', icon: ShieldCheck }
+    { id: 'recalculate', label: 'Verification & Recalculation', icon: ShieldCheck },
+    { id: 'blockchain', label: 'Blockchain Audit Ledger', icon: Lock }
   ]
 };
 

@@ -312,19 +312,20 @@ export default function App({ isClerkConfigured = true }) {
       case 'ai_quantification':
         return (
           <div className="space-y-6">
-            <PredictView assets={assets} vulnerabilities={vulnerabilities} />
+            <PredictView assets={assets} vulnerabilities={vulnerabilities} onNavigate={setActiveTab} />
             <QuantifyView overview={overview} attackState={attackState} />
           </div>
         );
       case 'model_evidence':
         return (
-          <PredictView assets={assets} vulnerabilities={vulnerabilities} />
+          <PredictView assets={assets} vulnerabilities={vulnerabilities} onNavigate={setActiveTab} />
         );
       case 'optimizer':
       case 'recommendations':
         return (
           <OptimizeRecommendView
             recommendations={recommendations}
+            currentRole={currentRole}
             onNavigate={setActiveTab}
           />
         );
@@ -353,6 +354,7 @@ export default function App({ isClerkConfigured = true }) {
             onRefresh={reloadData}
           />
         );
+      case 'blockchain':
       case 'audit':
         return (
           <AuditView
