@@ -56,7 +56,7 @@ export default function SecurityTestingView({ assets }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div id="spotlight-security-testing" className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -78,8 +78,8 @@ export default function SecurityTestingView({ assets }) {
         </span>
       </div>
 
-      {/* STRICT SCOPE POLICY CALLOUT */}
-      <div className="p-4 bg-purple-50/70 border border-purple-200 rounded-2xl flex items-start gap-3">
+      {/* STRICT SCOPE POLICY CALLOUT — Strix spotlight target */}
+      <div id="spotlight-strix" className="p-4 bg-purple-50/70 border border-purple-200 rounded-2xl flex items-start gap-3">
         <Lock className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
         <div className="text-xs text-slate-700 leading-relaxed">
           <strong className="text-purple-900">Strict Scope Restriction:</strong> Strix Autonomous Security Testing operates strictly on explicitly enrolled customer VPC assets and local sandbox targets.

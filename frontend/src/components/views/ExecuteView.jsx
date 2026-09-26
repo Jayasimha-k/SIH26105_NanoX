@@ -162,7 +162,7 @@ export default function ExecuteView({ recommendations = [], currentRole, onRefre
   const awaitingVerify = tasks.filter(t => t.status === 'AWAITING_VERIFICATION').length;
 
   return (
-    <div className="space-y-6">
+    <div id="spotlight-remediation" className="space-y-6">
       {actionNotice && (
         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800 animate-in fade-in">
           <div className="flex items-center gap-2">
@@ -175,8 +175,8 @@ export default function ExecuteView({ recommendations = [], currentRole, onRefre
         </div>
       )}
 
-      {/* TOP TASK METRICS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* TOP TASK METRICS — reassessment spotlight target */}
+      <div id="spotlight-reassessment" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="cyber-card border-l-4 border-l-blue-600">
           <p className="text-slate-600 text-xs font-semibold">Total Remediation Tasks</p>
           <div className="flex justify-between items-baseline mt-1">

@@ -62,7 +62,7 @@ export default function NetworkIntelligenceView({ attackState }) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div id="spotlight-network-intel" className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -89,8 +89,8 @@ export default function NetworkIntelligenceView({ attackState }) {
         </div>
       </div>
 
-      {/* CLARIFICATION CALLOUT */}
-      <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start gap-3">
+      {/* CLARIFICATION CALLOUT — also used as Model 6 spotlight target */}
+      <div id="spotlight-model-6-details" className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start gap-3">
         <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
         <div>
           <strong className="text-slate-800">Model Role Clarification:</strong> Network Behavioral Intelligence classifies individual network flow records for anomalous intrusion patterns.

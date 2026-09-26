@@ -132,7 +132,7 @@ export default function AuditView({ auditBlocks, onRefresh }) {
   const hasAnomaly = networkInfo && !networkInfo.all_nodes_in_consensus;
 
   return (
-    <div className="space-y-6">
+    <div id="spotlight-fabric-audit" className="space-y-6">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
         <div>

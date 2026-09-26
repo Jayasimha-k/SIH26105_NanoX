@@ -393,7 +393,7 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
   };
 
   return (
-    <div className="space-y-6">
+    <div id="spotlight-intelligence" className="space-y-6">
       {/* Top Banner & Control Bar */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -463,8 +463,8 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
         </div>
       )}
 
-      {/* Visual Email Processing Lifecycle Bar (Part 26) */}
-      <div className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 shadow-sm overflow-x-auto">
+      {/* Visual Email Processing Lifecycle Bar — newsletter spotlight target */}
+      <div id="spotlight-newsletter" className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 shadow-sm overflow-x-auto">
         <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
           Continuous Intelligence Ingestion Lifecycle
         </div>
@@ -573,7 +573,7 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
 
       {/* TAB 1: CISO REVIEW QUEUE */}
       {activeTab === 'ciso_queue' && (
-        <div className="space-y-4">
+        <div id="spotlight-ciso-review" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
               CISO Cybersecurity Intelligence Review Queue
@@ -692,7 +692,7 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
 
       {/* TAB 2: CFO REVIEW QUEUE */}
       {activeTab === 'cfo_queue' && (
-        <div className="space-y-4">
+        <div id="spotlight-cfo-finance" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
               CFO Financial Intelligence Review Queue
