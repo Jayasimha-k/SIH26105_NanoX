@@ -17,7 +17,13 @@ import {
   Activity, Layers, Sparkles, Info, CheckCircle2, Terminal,
   Database, Lock, Cpu, Flame, Film, Target, BookOpen
 } from 'lucide-react';
-import { api } from '../services/api';
+import {
+  CANONICAL_DEMO_STATE,
+  getActiveDemoState,
+  formatLakhs,
+  formatShortLakhs,
+  formatFullInr
+} from '../services/demoState';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TOPIC CATALOGUE — 15 verified topics, each with a real tab + real DOM id
@@ -86,7 +92,7 @@ export const SPOTLIGHT_TOPICS = [
     category: 'Machine Learning',
     icon: Cpu,
     accent: '#A78BFA',
-    roles: ['SOC', 'Security', 'ALL'],
+    roles: ['SOC', 'Security', 'CISO', 'ALL'],
     what: "CyberOptRQ_P6_CIC2017_XGBoost_v1: an XGBoost classifier trained on 2.83M CIC-IDS2017 network flows, detecting 14 attack classes.",
     why: "Provides verifiable, publication-grade inference (97.30% holdout accuracy, 0.9895 ROC-AUC, 0.0210 Brier calibration score) with strict data-leakage auditing.",
     how: "Runs 100% offline at >260,000 flows/sec, feeding real-time network anomaly probabilities into the Bayesian Fusion layer. Model 6 is the network evidence provider — not the final EAL model.",
@@ -193,7 +199,7 @@ export const SPOTLIGHT_TOPICS = [
     icon: CheckCircle2,
     accent: '#34D399',
     roles: ['CISO', 'CFO', 'Security'],
-    what: "Automated recalculation showing verified risk delta (e.g., 87% -> 14%) and financial loss reduction (e.g., Rs8.92M -> Rs720K).",
+    what: "Automated recalculation showing verified risk delta (78% -> 96% -> 14%) and financial loss reduction (₹613.7L -> ₹63.3L / -84.0% loss reduction).",
     why: "Demonstrates tangible ROI on deployed security investments and verifies whether applied controls effectively neutralized the threat.",
     how: "Updates asset exposure multipliers and control efficacy scores, generating audit-ready compliance evidence for SEC/SEBI/CERT-In.",
   },
@@ -205,7 +211,7 @@ export const SPOTLIGHT_TOPICS = [
     category: 'Integrity',
     icon: Layers,
     accent: '#60A5FA',
-    roles: ['ALL'],
+    roles: ['CISO', 'Security', 'ALL'],
     what: "Permissioned enterprise blockchain anchoring every risk assessment, CISO approval, and remediation lifecycle event.",
     why: "Provides tamper-proof legal and regulatory compliance evidence for SEC/SEBI/CERT-In audits that cannot be altered retroactively.",
     how: "Submits SHA-256 hashes to etcdraft consensus peer nodes; reliably buffers to local offline audit queue when peer containers are stopped.",
@@ -214,32 +220,17 @@ export const SPOTLIGHT_TOPICS = [
     id: 'attack_mode',
     tab: 'dashboard',
     target: '#spotlight-attack-mode',
-    title: 'Synchronized Attack Mode',
+    title: 'Synchronized Attack Mode & Bad Apple',
     category: 'Live Demo',
     icon: Flame,
     accent: '#F87171',
-    roles: ['CISO', 'SOC', 'Security'],
+    roles: ['CISO', 'SOC', 'Security', 'ALL'],
     // NOTE: this element is CONDITIONALLY rendered only when attackState.active=true
     // When attack is NOT active, we fall back gracefully to spotlight the org-risk card
     fallbackTarget: '#spotlight-org-risk',
-    what: "Real-time demonstration mode triggered when the controlled Security Lab launches an active exploit against an authorized asset.",
+    what: "Real-time demonstration mode triggered when the controlled Security Lab launches an active exploit. CyberOptRQ reacts with active telemetry, risk & EAL surges, and embedded Bad Apple visualizer playback.",
     why: "Shows how CyberOptRQ dynamically responds in seconds: risk surges, EAL spikes, and the affected asset is pinpointed.",
-    how: "Listens for WebSocket ATTACK_STARTED events, updating Pre-EAL to Rs8.92M and highlighting the live threat pipeline.",
-  },
-  {
-    id: 'bad_apple',
-    tab: 'dashboard',
-    target: '#bad-apple-video',
-    // NOTE: element is CONDITIONALLY rendered only when attackState.active=true
-    fallbackTarget: '#spotlight-org-risk',
-    title: 'Bad Apple Visualizer',
-    category: 'Visualizer',
-    icon: Film,
-    accent: '#F87171',
-    roles: ['SOC', 'Security', 'CISO'],
-    what: "Embedded high-contrast visualizer automatically playing inside the dashboard upon receiving authorized attack telemetry.",
-    why: "Provides an unmistakable, high-impact visual indicator during live presentations that an active attack flow is executing.",
-    how: "The dashboard automatically reveals and starts the embedded visualizer without manual tab switching. It is an artifact of the attack, not the detector.",
+    how: "Listens for WebSocket ATTACK_STARTED events, updating Pre-EAL to ₹613.7 Lakhs (₹61,371,720) and highlighting the live threat pipeline.",
   },
 ];
 
@@ -356,15 +347,16 @@ export default function SpotlightHelp({
   // Keep role filter in sync
   useEffect(() => { setRoleFilter(currentRole); }, [currentRole]);
 
-  const isAttackActive = attackState?.active || attackState?.status === 'ATTACK_STARTED';
-  const isAttackCompleted = attackState?.status === 'ATTACK_COMPLETED';
-  const activeRisk = isAttackActive ? '87%' : (isAttackCompleted ? '14%' : '78%');
-  const activeEal = isAttackActive ? '₹89.2 Lakhs' : (isAttackCompleted ? '₹7.2 Lakhs' : '₹44.5 Lakhs');
-  const activeAsset = attackState?.asset_id || pipeline?.asset_id || 'ASSET-001 (Core Oracle DB)';
+  const activeDemo = getActiveDemoState(attackState);
+  const isAttackActive = activeDemo.isAttackActive;
+  const isAttackCompleted = activeDemo.isAttackCompleted;
+  const activeRisk = activeDemo.riskScorePct;
+  const activeEal = activeDemo.ealFormatted;
+  const activeAsset = activeDemo.targetAsset;
   const activeCorrelation = attackState?.correlation_id || 'ATTACK-DEMO-2026';
 
   const topics = SPOTLIGHT_TOPICS.filter(t =>
-    roleFilter === 'ALL' ? true : t.roles.includes(roleFilter)
+    roleFilter === 'ALL' || t.roles.includes(roleFilter) || t.roles.includes('ALL')
   );
   const clampedIdx = Math.min(idx, topics.length - 1);
   const rawTopic = topics[clampedIdx];
@@ -374,28 +366,47 @@ export default function SpotlightHelp({
     const t = { ...raw };
     if (raw.id === 'cyber_risk') {
       if (isAttackActive) {
-        t.title = 'Current Cyber Risk (Attack Surge: 87%)';
-        t.what = `ATTACK SURGE DETECTED: Enterprise risk jumped to 87% (+9 pts) due to validated exploitation on ${activeAsset}. Fusion v2 combined Model 6 flow anomaly (0.960) with CVSS 9.8 and EPSS 0.94.`;
+        t.title = `Current Cyber Risk (Attack Surge: ${activeDemo.riskScorePct})`;
+        t.what = `ATTACK SURGE DETECTED: Enterprise risk jumped to ${activeDemo.riskScorePct} (+18 pts from baseline 78%) due to validated exploitation on ${activeDemo.targetAsset}. Fusion v2 combined Model 6 flow anomaly (${activeDemo.p6FlowAnomaly?.toFixed(3) || '0.960'}) with CVSS 9.8 and EPSS 0.94.`;
         t.why = 'Real-time threat validation elevates exposure from theoretical likelihood to active business crisis.';
         t.how = 'Bayesian Fusion layer v2 fused Model 6 network flow evidence with P1-P5 meta-ensemble risk score.';
       } else if (isAttackCompleted) {
         t.title = 'Current Cyber Risk (Post-Remediation: 14%)';
-        t.what = 'NEUTRALIZED: Residual risk dropped to 14% (-73 pts) after Zero-Trust microsegmentation deployment. Capital preserved: ₹37.4 Lakhs.';
+        t.what = 'NEUTRALIZED: Residual risk dropped to 14% (-82 pts from peak 96%) after Zero-Trust microsegmentation deployment. Capital preserved: ₹550.4 Lakhs (₹55,044,840).';
         t.why = 'Proves to the CISO, CFO, and Board that deployed controls prevented catastrophic breach exposure.';
         t.how = `Fabric audit block ${pipeline?.fabric_tx_id || 'FABRIC-MINED'} anchors the verifiable reassessment.`;
       }
     } else if (raw.id === 'eal') {
       if (isAttackActive) {
-        t.title = 'Expected Annual Loss (Surge: ₹89.2L)';
-        t.what = 'EAL SURGED TO ₹89.2 LAKHS: Baseline was ₹44.5L (surge delta +₹44.7L / +100.4%). FAIR model recalculated Single Loss Expectancy across impacted assets.';
+        t.title = `Expected Annual Loss (Surge: ${activeDemo.ealShortFormatted})`;
+        t.what = `EAL SURGED TO ${activeDemo.ealFormatted.toUpperCase()} (${activeDemo.ealFullFormatted}): Baseline was ₹395.4 Lakhs (surge delta +₹218.3L / +55.2%). FAIR model recalculated Single Loss Expectancy across impacted assets.`;
       } else if (isAttackCompleted) {
-        t.title = 'Expected Annual Loss (Residual: ₹7.2L)';
-        t.what = 'RESIDUAL EAL: ₹7.2 Lakhs post-control. 84% reduction in annualized financial risk verified.';
+        t.title = `Expected Annual Loss (Residual: ${activeDemo.ealShortFormatted})`;
+        t.what = `RESIDUAL EAL: ${activeDemo.ealFormatted} (${activeDemo.ealFullFormatted}) post-control. 84.0% reduction in annualized financial risk verified.`;
+      } else {
+        t.title = 'Expected Annual Loss (EAL)';
+        t.what = `Financial quantification metric: Baseline enterprise EAL is ${activeDemo.ealFormatted} (${activeDemo.ealFullFormatted}). FAIR model: EAL = ARO x SLE x Calibrated Exploit Probability.`;
       }
     } else if (raw.id === 'model_6') {
       if (isAttackActive) {
-        t.title = 'Model 6 Network Flow (Anomaly: 0.960)';
-        t.what = `ANOMALY BURST: Model 6 empirical flow score spiked to 0.960 malicious probability on ${activeAsset}. 100% offline local XGBoost classification on CIC-IDS2017.`;
+        t.title = `Model 6 Network Flow (Anomaly: ${activeDemo.p6FlowAnomaly?.toFixed(3) || '0.960'})`;
+        t.what = `ANOMALY BURST: Model 6 empirical flow score spiked to ${activeDemo.p6FlowAnomaly?.toFixed(3) || '0.960'} malicious probability on ${activeDemo.targetAsset}. 100% offline local XGBoost classification on CIC-IDS2017.`;
+      } else {
+        t.title = 'Model 6 — Network Classifier';
+        t.what = 'CyberOptRQ_P6_CIC2017_XGBoost_v1: XGBoost classifier trained on 2.83M CIC-IDS2017 network flows. Baseline flow anomaly is 0.040 (benign normal).';
+      }
+    } else if (raw.id === 'optimizer') {
+      if (isAttackActive) {
+        t.title = 'Emergency Investment Optimization';
+        t.what = `CRITICAL CONTROL PRESCRIBED: PuLP solver prioritized ${activeDemo.controlRecommendation || 'Zero-Trust Microsegmentation'} with 465.8% ROSI to avert ₹550.4 Lakhs in active loss exposure.`;
+      }
+    } else if (raw.id === 'remediation') {
+      if (isAttackActive) {
+        t.title = 'Prescribed Control Deployment';
+        t.what = `EMERGENCY MITIGATION: Execute ${activeDemo.controlRecommendation || 'Zero-Trust Microsegmentation & Network Isolation'} via Security Lab or Remediation controls to neutralize attack surge.`;
+      } else if (isAttackCompleted) {
+        t.title = 'Control Execution & Remediation (Verified)';
+        t.what = 'VERIFIED DEPLOYED: Zero-Trust Microsegmentation & Network Isolation deployed and cryptographically anchored to Hyperledger Fabric.';
       }
     } else if (raw.id === 'attack_mode') {
       if (isAttackActive) {
@@ -452,14 +463,20 @@ export default function SpotlightHelp({
 
     if (needsIntelSubTab) {
       setTimeout(() => {
-        const allBtns = document.querySelectorAll('button');
-        for (const btn of allBtns) {
-          const txt = btn.textContent || '';
-          const wantCiso = topic.intelSubTab === 'ciso_queue' && (txt.includes('CISO Review') || txt.includes('ciso_queue'));
-          const wantCfo  = topic.intelSubTab === 'cfo_queue'  && (txt.includes('CFO Review') || txt.includes('cfo_queue'));
-          if (wantCiso || wantCfo) {
-            btn.click();
-            break;
+        const subTabId = topic.intelSubTab;
+        const targetBtn = document.getElementById(`tab-btn-${subTabId}`);
+        if (targetBtn) {
+          targetBtn.click();
+        } else {
+          const allBtns = document.querySelectorAll('button');
+          for (const btn of allBtns) {
+            const txt = btn.textContent || '';
+            const wantCiso = topic.intelSubTab === 'ciso_queue' && (txt.includes('CISO Review') || txt.includes('ciso_queue'));
+            const wantCfo  = topic.intelSubTab === 'cfo_queue'  && (txt.includes('CFO Review') || txt.includes('cfo_queue'));
+            if (wantCiso || wantCfo) {
+              btn.click();
+              break;
+            }
           }
         }
         setTimeout(doResolve, 250);
@@ -574,7 +591,7 @@ export default function SpotlightHelp({
       />
 
       {/* ── Side panel ─────────────────────────────────────────────────── */}
-      <div style={panelStyle} onClick={e => e.stopPropagation()}>
+      <div id="spotlight-help-panel" data-testid="spotlight-help-panel" style={panelStyle} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div style={{
@@ -610,7 +627,7 @@ export default function SpotlightHelp({
                     gap: 4
                   }}>
                     <span style={{ width: 4, height: 4, borderRadius: '50%', background: isAttackActive ? '#EF4444' : (isAttackCompleted ? '#10B981' : '#3B82F6'), display: 'inline-block' }} />
-                    {isAttackActive ? 'ATTACK ACTIVE (87%)' : (isAttackCompleted ? 'POST-REMEDIATION (14%)' : 'BASELINE NORMAL (78%)')}
+                    {activeDemo.statusLabel}
                   </span>
                 </div>
               </div>
@@ -726,76 +743,6 @@ export default function SpotlightHelp({
             </div>
           ))}
 
-          {/* Safe demo attack assist button */}
-          {(topic.id === 'attack_mode' || topic.id === 'cyber_risk') && !isAttackActive && (
-            <div style={{ marginTop: 10 }}>
-              <button
-                onClick={async () => {
-                  try {
-                    await api.startAttackDemo();
-                    if (onRefresh) onRefresh();
-                  } catch (e) { console.error(e); }
-                }}
-                style={{
-                  width: '100%',
-                  padding: '9px 14px',
-                  background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-                  color: '#FFFFFF',
-                  border: '1px solid #F87171',
-                  borderRadius: 10,
-                  fontSize: 11,
-                  fontFamily: 'monospace',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  boxShadow: '0 4px 14px rgba(239, 68, 68, 0.35)',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <Flame size={14} />
-                <span>[ DEMO: Trigger Authorized Attack ]</span>
-              </button>
-            </div>
-          )}
-
-          {/* Safe demo remediation assist button */}
-          {(topic.id === 'attack_mode' || topic.id === 'cyber_risk' || topic.id === 'remediation') && isAttackActive && (
-            <div style={{ marginTop: 10 }}>
-              <button
-                onClick={async () => {
-                  try {
-                    await api.approveRecommendation('REC-001', 'APPROVED', 'Emergency Attack Mitigation');
-                    await api.completeAttackDemo(activeCorrelation);
-                    if (onRefresh) onRefresh();
-                  } catch (e) { console.error(e); }
-                }}
-                style={{
-                  width: '100%',
-                  padding: '9px 14px',
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                  color: '#FFFFFF',
-                  border: '1px solid #34D399',
-                  borderRadius: 10,
-                  fontSize: 11,
-                  fontFamily: 'monospace',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <Lock size={14} />
-                <span>[ DEMO: Deploy Emergency Remediation ]</span>
-              </button>
-            </div>
-          )}
 
           {/* Progress dots */}
           <div style={{ display:'flex', justifyContent:'center', gap:5, marginTop:16, flexWrap:'wrap', marginBottom:10 }}>

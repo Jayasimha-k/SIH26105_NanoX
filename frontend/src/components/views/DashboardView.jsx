@@ -5,15 +5,16 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { api } from '../../services/api';
+import {
+  CANONICAL_DEMO_STATE,
+  getActiveDemoState,
+  formatLakhs,
+  formatShortLakhs,
+  formatFullInr
+} from '../../services/demoState';
 
-const mockTrendData = [
-  { month: 'Jan', preEal: 28.5, postEal: 14.2 },
-  { month: 'Feb', preEal: 31.0, postEal: 12.8 },
-  { month: 'Mar', preEal: 35.4, postEal: 11.5 },
-  { month: 'Apr', preEal: 42.1, postEal: 9.8 },
-  { month: 'May', preEal: 39.8, postEal: 8.4 },
-  { month: 'Jun', preEal: 44.5, postEal: 7.2 },
-];
+const mockTrendData = CANONICAL_DEMO_STATE.baseline.monthlyTrend;
+
 
 const topFinancialRisks = [
   {
@@ -64,18 +65,17 @@ export default function DashboardView({
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
-  const [isRemediating, setIsRemediating] = useState(false);
-  const [animStep, setAnimStep] = useState(0);
-  const [displayRisk, setDisplayRisk] = useState(78);
-  const [displayEal, setDisplayEal] = useState(4450000);
-
-  const formatCurrency = (val) => `₹${((val || 0) / 100000).toFixed(1)}L`;
-
-  // Attack status helpers & Live ML Pipeline data
-  const isAttackActive = attackState?.active || attackState?.status === 'ATTACK_STARTED';
-  const isAttackCompleted = attackState?.status === 'ATTACK_COMPLETED';
+  const activeDemo = getActiveDemoState(attackState);
+  const isAttackActive = activeDemo.isAttackActive;
+  const isAttackCompleted = activeDemo.isAttackCompleted;
   const pipeline = attackState?.pipeline;
-  const baselinePreEal = overview?.total_pre_control_eal || 4450000;
+  const baselinePreEal = CANONICAL_DEMO_STATE.baseline.ealInr;
+
+  const [animStep, setAnimStep] = useState(0);
+  const [displayRisk, setDisplayRisk] = useState(CANONICAL_DEMO_STATE.baseline.riskScore);
+  const [displayEal, setDisplayEal] = useState(CANONICAL_DEMO_STATE.baseline.ealInr);
+
+  const formatCurrency = (val) => formatShortLakhs(val);
 
   // Staged attack lifecycle and numeric transition sequence
   useEffect(() => {
@@ -84,8 +84,8 @@ export default function DashboardView({
       console.log('[DASHBOARD] attack mode enabled');
       console.log('[BAD-APPLE] visualizer mounted');
 
-      const targetRisk = Math.round((pipeline?.fused_probability || 0.87) * 100);
-      const targetEal = pipeline?.active_attack_eal || 8920000;
+      const targetRisk = activeDemo.riskScore;
+      const targetEal = activeDemo.ealInr;
 
       const timers = [];
       timers.push(setTimeout(() => setAnimStep(1), 50));   // T+0.05: 🚨 Attack detected
@@ -93,7 +93,7 @@ export default function DashboardView({
       timers.push(setTimeout(() => setAnimStep(3), 500));  // T+0.50: Model 6 network anomaly burst
       timers.push(setTimeout(() => {
         setAnimStep(4); // T+0.80: Risk score transitions upward
-        let currR = 78;
+        let currR = CANONICAL_DEMO_STATE.baseline.riskScore;
         const rInterval = setInterval(() => {
           currR += 1;
           if (currR >= targetRisk) {
@@ -106,8 +106,8 @@ export default function DashboardView({
       }, 750));
       timers.push(setTimeout(() => {
         setAnimStep(5); // T+1.20: EAL transitions upward
-        let currE = 4450000;
-        const step = Math.round((targetEal - 4450000) / 12);
+        let currE = CANONICAL_DEMO_STATE.baseline.ealInr;
+        const step = Math.round((targetEal - CANONICAL_DEMO_STATE.baseline.ealInr) / 12);
         const eInterval = setInterval(() => {
           currE += step;
           if (currE >= targetEal) {
@@ -135,53 +135,42 @@ export default function DashboardView({
 
       return () => timers.forEach(clearTimeout);
     } else if (isAttackCompleted) {
-      setDisplayRisk(14);
-      setDisplayEal(pipeline?.post_eal || 720000);
+      setDisplayRisk(CANONICAL_DEMO_STATE.remediation.riskScore);
+      setDisplayEal(activeDemo.ealInr);
       setAnimStep(8); // Remediated
     } else {
-      setDisplayRisk(78);
-      setDisplayEal(baselinePreEal);
+      setDisplayRisk(CANONICAL_DEMO_STATE.baseline.riskScore);
+      setDisplayEal(CANONICAL_DEMO_STATE.baseline.ealInr);
       setAnimStep(0);
     }
-  }, [isAttackActive, isAttackCompleted, pipeline, baselinePreEal, attackState?.correlation_id]);
+  }, [isAttackActive, isAttackCompleted, pipeline, attackState?.correlation_id]);
 
   const preEal = isAttackActive
     ? displayEal
-    : (isAttackCompleted ? (pipeline?.post_eal || 720000) : baselinePreEal);
+    : (isAttackCompleted ? activeDemo.ealInr : baselinePreEal);
 
   const postEal = isAttackCompleted
-    ? (pipeline?.post_eal || 720000)
-    : ((overview && overview.total_post_control_eal < overview.total_pre_control_eal)
-        ? overview.total_post_control_eal
-        : Math.round(preEal * 0.16));
+    ? activeDemo.ealInr
+    : Math.round(preEal * 0.16);
 
   const riskReduction = preEal - postEal;
-  const reductionPct = preEal > 0 ? (((preEal - postEal) / preEal) * 100).toFixed(1) : '83.8';
-  const rosi = overview?.enterprise_rosi || 465.8;
+  const reductionPct = preEal > 0 ? (((preEal - postEal) / preEal) * 100).toFixed(1) : '84.0';
+  const rosi = CANONICAL_DEMO_STATE.remediation.rosi;
 
   // Dynamic trend data showing baseline vs live attack surge vs post-remediation
   const dynamicTrendData = isAttackActive
     ? [
-        { month: 'Jan', preEal: 28.5, postEal: 14.2 },
-        { month: 'Feb', preEal: 31.0, postEal: 12.8 },
-        { month: 'Mar', preEal: 35.4, postEal: 11.5 },
-        { month: 'Apr', preEal: 42.1, postEal: 9.8 },
-        { month: 'May', preEal: 39.8, postEal: 8.4 },
-        { month: 'Jun (Baseline)', preEal: 44.5, postEal: 7.2 },
-        { month: 'NOW (LIVE ATTACK)', preEal: Number((displayEal / 100000).toFixed(1)), postEal: 7.2 },
+        { month: 'Jan', preEal: 250.0, postEal: 63.3 },
+        { month: 'Feb', preEal: 280.0, postEal: 63.3 },
+        { month: 'Mar', preEal: 310.0, postEal: 63.3 },
+        { month: 'Apr', preEal: 345.0, postEal: 63.3 },
+        { month: 'May', preEal: 375.0, postEal: 63.3 },
+        { month: 'Jun (Baseline)', preEal: 395.4, postEal: 63.3 },
+        { month: 'NOW (LIVE ATTACK)', preEal: Number((displayEal / 100000).toFixed(1)), postEal: 63.3 },
       ]
     : (isAttackCompleted
-        ? [
-            { month: 'Jan', preEal: 28.5, postEal: 14.2 },
-            { month: 'Feb', preEal: 31.0, postEal: 12.8 },
-            { month: 'Mar', preEal: 35.4, postEal: 11.5 },
-            { month: 'Apr', preEal: 42.1, postEal: 9.8 },
-            { month: 'May', preEal: 39.8, postEal: 8.4 },
-            { month: 'Jun (Baseline)', preEal: 44.5, postEal: 7.2 },
-            { month: 'ATTACK SPIKE', preEal: 89.2, postEal: 7.2 },
-            { month: 'REMEDIATED (7.2L)', preEal: 7.2, postEal: 7.2 },
-          ]
-        : mockTrendData);
+        ? CANONICAL_DEMO_STATE.remediation.monthlyTrend
+        : CANONICAL_DEMO_STATE.baseline.monthlyTrend);
 
   // Dynamic top financial risks highlighting the asset under attack
   const dynamicTopRisks = isAttackActive
@@ -395,7 +384,7 @@ export default function DashboardView({
                   <div className="p-2 bg-slate-950 rounded border border-slate-800 flex justify-between items-center">
                     <span className="text-slate-400">Financial Exposure Spike:</span>
                     <span className="text-red-300 font-extrabold">
-                      {formatCurrency(pipeline?.active_attack_eal || 8920000)} (surge from baseline)
+                      {formatCurrency(activeDemo.ealInr)} ({formatFullInr(activeDemo.ealInr)})
                     </span>
                   </div>
                 </div>
@@ -490,7 +479,7 @@ export default function DashboardView({
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <div>
               <span className="font-bold block">1. Baseline Org</span>
-              <span className="text-[9px] opacity-75">78% Risk / ₹44.5L EAL</span>
+              <span className="text-[9px] opacity-75">78% Risk / ₹395.4L EAL</span>
             </div>
           </div>
 
@@ -678,9 +667,9 @@ export default function DashboardView({
             </div>
             <div className="space-y-1.5 text-[11px]">
               <div>Org Risk: <strong className="text-slate-800">78%</strong> (Exposure)</div>
-              <div>EAL: <strong className="text-slate-800">₹44.5 Lakhs</strong></div>
+              <div>EAL: <strong className="text-slate-800">₹395.4 Lakhs</strong></div>
               <div>Target Asset: <span className="text-slate-700">ASSET-001 (Normal)</span></div>
-              <div>Network Flow: <span className="text-slate-600">Stable (0.04 P_anom)</span></div>
+              <div>Network Flow: <span className="text-slate-600">Stable (0.040 P_anom)</span></div>
               <div>Safeguard: <span className="text-slate-600">Microseg PENDING</span></div>
             </div>
           </div>
@@ -696,11 +685,11 @@ export default function DashboardView({
               </span>
             </div>
             <div className="space-y-1.5 text-[11px]">
-              <div>Org Risk: <strong className={isAttackActive ? 'text-red-600 font-black' : 'text-slate-700'}>87%</strong> {isAttackActive && <span className="text-[10px] text-red-500 font-bold">(+9 pts)</span>}</div>
-              <div>EAL: <strong className={isAttackActive ? 'text-red-600 font-black' : 'text-slate-700'}>₹89.2 Lakhs</strong> {isAttackActive && <span className="text-[10px] text-red-500 font-bold">(+₹44.7L)</span>}</div>
-              <div>Target Asset: <strong className={isAttackActive ? 'text-red-700 font-bold' : 'text-slate-700'}>{attackState?.asset_id || 'ASSET-001'} (RCE In Wild)</strong></div>
-              <div>Network Flow: <strong className={isAttackActive ? 'text-purple-700 font-bold' : 'text-slate-600'}>Anomaly Spike (0.960)</strong></div>
-              <div>Prescribed: <strong className={isAttackActive ? 'text-red-700 font-bold' : 'text-slate-600'}>REC-001 (Priority CRITICAL)</strong></div>
+              <div>Org Risk: <strong className={isAttackActive ? 'text-red-600 font-black' : 'text-slate-700'}>{activeDemo.riskScorePct}</strong> {isAttackActive && <span className="text-[10px] text-red-500 font-bold">(+18 pts)</span>}</div>
+              <div>EAL: <strong className={isAttackActive ? 'text-red-600 font-black' : 'text-slate-700'}>{activeDemo.ealFormatted}</strong> {isAttackActive && <span className="text-[10px] text-red-500 font-bold">(+₹218.3L)</span>}</div>
+              <div>Target Asset: <strong className={isAttackActive ? 'text-red-700 font-bold' : 'text-slate-700'}>{activeDemo.targetAsset}</strong></div>
+              <div>Network Flow: <strong className={isAttackActive ? 'text-purple-700 font-bold' : 'text-slate-600'}>Anomaly Spike ({activeDemo.p6FlowAnomaly?.toFixed(3) || '0.960'})</strong></div>
+              <div>Prescribed: <strong className={isAttackActive ? 'text-red-700 font-bold' : 'text-slate-600'}>Microsegmentation (ROSI: 465.8%)</strong></div>
             </div>
           </div>
 
@@ -715,10 +704,10 @@ export default function DashboardView({
               </span>
             </div>
             <div className="space-y-1.5 text-[11px]">
-              <div>Residual Risk: <strong className={isAttackCompleted ? 'text-emerald-700 font-black' : 'text-slate-700'}>14%</strong> {isAttackCompleted && <span className="text-[10px] text-emerald-600 font-bold">(-73 pts)</span>}</div>
-              <div>Residual EAL: <strong className={isAttackCompleted ? 'text-emerald-700 font-black' : 'text-slate-700'}>₹7.2 Lakhs</strong> {isAttackCompleted && <span className="text-[10px] text-emerald-600 font-bold">(-84% loss)</span>}</div>
-              <div>Target Asset: <strong className={isAttackCompleted ? 'text-emerald-700 font-bold' : 'text-slate-700'}>{attackState?.asset_id || 'ASSET-001'} (Protected)</strong></div>
-              <div>Network Flow: <strong className={isAttackCompleted ? 'text-emerald-700' : 'text-slate-600'}>Normalized (0.03 P_anom)</strong></div>
+              <div>Residual Risk: <strong className={isAttackCompleted ? 'text-emerald-700 font-black' : 'text-slate-700'}>14%</strong> {isAttackCompleted && <span className="text-[10px] text-emerald-600 font-bold">(-82 pts)</span>}</div>
+              <div>Residual EAL: <strong className={isAttackCompleted ? 'text-emerald-700 font-black' : 'text-slate-700'}>₹63.3 Lakhs</strong> {isAttackCompleted && <span className="text-[10px] text-emerald-600 font-bold">(-84.0% loss)</span>}</div>
+              <div>Target Asset: <strong className={isAttackCompleted ? 'text-emerald-700 font-bold' : 'text-slate-700'}>{activeDemo.targetAsset} (Protected)</strong></div>
+              <div>Network Flow: <strong className={isAttackCompleted ? 'text-emerald-700' : 'text-slate-600'}>Normalized (0.030 P_anom)</strong></div>
               <div>Audit Block: <strong className={isAttackCompleted ? 'text-blue-700 text-[10px]' : 'text-slate-600'}>{pipeline?.fabric_tx_id || 'FABRIC-MINED'}</strong></div>
             </div>
           </div>
@@ -839,7 +828,7 @@ export default function DashboardView({
         {isAttackActive && (
           <div className="flex items-center gap-2 mb-1 px-1">
             <span className="w-2 h-2 rounded-full bg-red-500 animate-ping inline-block" />
-            <span className="text-[11px] font-mono font-bold text-red-500 uppercase tracking-wide">LIVE — Attack surge detected: EAL spiked to ₹89.2L</span>
+            <span className="text-[11px] font-mono font-bold text-red-500 uppercase tracking-wide">LIVE — Attack surge detected: EAL spiked to ₹613.7L</span>
           </div>
         )}
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 h-64 w-full shadow-inner">
@@ -1039,13 +1028,13 @@ export default function DashboardView({
 
                 <div className="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl font-mono text-blue-950 space-y-1 text-center">
                   <div className="font-bold text-sm">EAL = P(exploit) × Financial Impact × Exposure Factor</div>
-                  <div className="text-[11px] text-blue-700">Pre-Control EAL = ₹44.5 Lakhs | Post-Control Residual = ₹7.1 Lakhs</div>
+                  <div className="text-[11px] text-blue-700">Pre-Control EAL = ₹395.4 Lakhs | Post-Control Residual = ₹63.3 Lakhs</div>
                 </div>
 
                 <div className="space-y-1.5 pt-1">
                   <p><strong>1. Probability P(exploit):</strong> Derived from our calibrated 5-Model ensemble integrating NVD exploitability, EPSS threat velocity, asset criticality, and MITRE techniques.</p>
                   <p><strong>2. Financial Impact:</strong> Based on the enterprise asset’s replacement cost, data confidentiality rating, regulatory fines (DPDP Act), and operational downtime.</p>
-                  <p><strong>3. Risk Reduction (&Delta;EAL):</strong> Current EAL (₹44.5L) minus Residual EAL (₹7.1L) = <strong>₹37.4 Lakhs</strong> in capital loss prevented.</p>
+                  <p><strong>3. Risk Reduction (&Delta;EAL):</strong> Baseline EAL (₹395.4L) minus Residual EAL (₹63.3L) = <strong>₹332.2 Lakhs</strong> in capital loss prevented (up to <strong>₹550.4 Lakhs</strong> during attack surge).</p>
                 </div>
 
                 <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-500 italic">
@@ -1060,12 +1049,12 @@ export default function DashboardView({
 
                 <div className="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl font-mono text-blue-950 space-y-1 text-center">
                   <div className="font-bold text-sm">ROSI = [(Risk Reduction - Control Cost) / Control Cost] × 100%</div>
-                  <div className="text-[11px] text-blue-700">ROSI = [(₹37.4L - ₹8.0L) / ₹8.0L] × 100% = +367.5%</div>
+                  <div className="text-[11px] text-blue-700">ROSI = [(₹332.2L - ₹20.0L) / ₹20.0L] × 100% = +465.8%</div>
                 </div>
 
                 <div className="space-y-1.5 pt-1">
-                  <p><strong>Security Investment:</strong> ₹8.0 Lakhs across recommended controls (Zero-Trust microsegmentation, runtime container defense, and buffer patch).</p>
-                  <p><strong>Total Loss Avoided:</strong> ₹37.4 Lakhs in simulated breach impact prevented annually.</p>
+                  <p><strong>Security Investment:</strong> ₹20.0 Lakhs across recommended controls (Zero-Trust microsegmentation, runtime container defense, and buffer patch).</p>
+                  <p><strong>Total Loss Avoided:</strong> ₹332.2 Lakhs baseline (up to ₹550.4 Lakhs in active surge impact prevented).</p>
                   <p><strong>Enterprise Portfolio Average:</strong> Weighted portfolio ROSI is <strong>+465.8%</strong>.</p>
                 </div>
 

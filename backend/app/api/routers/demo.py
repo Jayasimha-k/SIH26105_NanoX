@@ -425,3 +425,72 @@ def get_attack_state():
         )
     }
 
+
+CANONICAL_DEMO_STATE = {
+    "scenario": "strix_container_escape_pentest",
+    "organization_id": "org_abc_tech",
+    "target_asset": {
+        "id": "ASSET-001",
+        "name": "Core Oracle Production DB",
+        "criticality": 9.5,
+        "financial_value_inr": 12000000.0,
+        "financial_value_lakhs": 120.0
+    },
+    "baseline": {
+        "risk_score": 78,
+        "risk_score_pct": "78%",
+        "eal_inr": 39543000.0,
+        "eal_lakhs": 395.4,
+        "p6_flow_anomaly": 0.040,
+        "fusion_probability": 0.35,
+        "status": "NORMAL",
+        "status_label": "BASELINE NORMAL (78%)",
+        "control_status": "MONITORING"
+    },
+    "attack": {
+        "risk_score": 96,
+        "risk_score_pct": "96%",
+        "fused_probability": 0.9574,
+        "org_adapted_probability": 0.9574,
+        "eal_inr": 61371720.0,
+        "eal_lakhs": 613.7,
+        "spike_inr": 21828720.0,
+        "spike_lakhs": 218.3,
+        "spike_pct": "+55.2%",
+        "p1_nvd": 0.98,
+        "p2_epss": 0.94,
+        "p3_cisa_kev": True,
+        "p4_mitre": "T1190 (Public RCE)",
+        "p5_meta": 0.934,
+        "p6_network": 0.960,
+        "fusion_version": "v2",
+        "fusion_weight": 0.90,
+        "recommended_control": "Zero-Trust Microsegmentation & Network Isolation",
+        "status": "ATTACK_ACTIVE",
+        "status_label": "ATTACK ACTIVE (96%)"
+    },
+    "remediation": {
+        "risk_score": 14,
+        "risk_score_pct": "14%",
+        "residual_probability": 0.142,
+        "eal_inr": 6326880.0,
+        "eal_lakhs": 63.3,
+        "risk_reduction_baseline_inr": 33216120.0,
+        "risk_reduction_baseline_lakhs": 332.2,
+        "loss_averted_peak_inr": 55044840.0,
+        "loss_averted_peak_lakhs": 550.4,
+        "reduction_pct": "-84.0%",
+        "rosi": 465.8,
+        "control_deployed": "Zero-Trust Microsegmentation & Network Isolation",
+        "status": "REMEDIATED",
+        "status_label": "POST-REMEDIATION (14%)"
+    }
+}
+
+
+@router.get("/canonical-state")
+def get_canonical_state():
+    """Returns the single source of truth canonical demo state values."""
+    return CANONICAL_DEMO_STATE
+
+

@@ -1,30 +1,33 @@
 import React from 'react';
 import { DollarSign } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
+import { CANONICAL_DEMO_STATE, getActiveDemoState, formatShortLakhs } from '../../services/demoState';
 
 export default function QuantifyView({ overview, attackState }) {
-  const formatCurrency = (val) => `₹${((val || 0) / 100000).toFixed(1)}L`;
+  const formatCurrency = (val) => formatShortLakhs(val);
+  const activeDemo = getActiveDemoState(attackState);
 
-  const isAttackActive = attackState?.active || overview?.is_attack_active;
+  const isAttackActive = activeDemo.isAttackActive;
+  const isAttackCompleted = activeDemo.isAttackCompleted;
   const pipeline = attackState?.pipeline;
 
   const preEal = isAttackActive
-    ? (pipeline?.active_attack_eal || overview?.total_pre_control_eal || 8920000)
-    : (overview?.total_pre_control_eal || 3500000);
+    ? activeDemo.ealInr
+    : (isAttackCompleted ? activeDemo.ealInr : CANONICAL_DEMO_STATE.baseline.ealInr);
 
-  const postEal = (overview && overview.total_post_control_eal < overview.total_pre_control_eal)
-    ? overview.total_post_control_eal
+  const postEal = isAttackCompleted
+    ? activeDemo.ealInr
     : Math.round(preEal * 0.16);
   const riskReduction = preEal - postEal;
   const reductionPct = preEal > 0 ? (((preEal - postEal) / preEal) * 100).toFixed(1) : '84.0';
-  const rosi = overview?.enterprise_rosi || 465.8;
+  const rosi = CANONICAL_DEMO_STATE.remediation.rosi;
 
   const chartData = overview?.asset_breakdown ? overview.asset_breakdown.map(a => ({
     name: a.is_under_attack ? `⚡ ${a.asset_name.split(' ')[0]}` : a.asset_name.split(' ')[0],
     preEal: a.pre_eal / 100000,
     postEal: (a.post_eal != null ? a.post_eal : a.pre_eal * 0.16) / 100000
   })) : [
-    { name: isAttackActive ? '⚡ ProdServer' : 'Payment', preEal: isAttackActive ? 89.2 : 14.5, postEal: 2.1 },
+    { name: isAttackActive ? '⚡ ProdServer' : 'Payment', preEal: isAttackActive ? 613.7 : 14.5, postEal: 2.1 },
     { name: 'Core', preEal: 11.2, postEal: 1.8 },
     { name: 'Customer', preEal: 6.8, postEal: 0.9 },
     { name: 'Internal', preEal: 3.5, postEal: 0.4 },

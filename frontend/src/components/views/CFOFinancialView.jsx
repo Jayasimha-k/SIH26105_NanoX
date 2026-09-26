@@ -26,22 +26,27 @@ import {
 } from 'recharts';
 import { api } from '../../services/api';
 
+import { CANONICAL_DEMO_STATE, getActiveDemoState, formatShortLakhs } from '../../services/demoState';
+
 export default function CFOFinancialView({ overview, attackState }) {
   const [financialEvents, setFinancialEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const formatCurrency = (val) => `₹${((val || 0) / 100000).toFixed(1)}L`;
+  const formatCurrency = (val) => formatShortLakhs(val);
+  const activeDemo = getActiveDemoState(attackState);
 
-  const isAttackActive = attackState?.active || attackState?.status === 'ATTACK_STARTED';
-  const pipeline = attackState?.pipeline;
+  const isAttackActive = activeDemo.isAttackActive;
+  const isAttackCompleted = activeDemo.isAttackCompleted;
 
   const preEal = isAttackActive
-    ? (pipeline?.active_attack_eal || 8920000)
-    : (overview?.total_pre_control_eal || 3500000);
+    ? activeDemo.ealInr
+    : (isAttackCompleted ? activeDemo.ealInr : CANONICAL_DEMO_STATE.baseline.ealInr);
 
-  const postEal = Math.round(preEal * 0.16);
+  const postEal = isAttackCompleted
+    ? activeDemo.ealInr
+    : Math.round(preEal * 0.16);
   const netSavings = preEal - postEal;
-  const rosi = 465.8;
+  const rosi = CANONICAL_DEMO_STATE.remediation.rosi;
 
   useEffect(() => {
     api.getIntelligenceEvents('FINANCIAL').then((data) => {

@@ -21,7 +21,7 @@ export const DEMO_STAGES = [
   { id: 'baseline', label: '1. Baseline Risk', min: '0-7m', icon: Activity, tab: 'dashboard' },
   { id: 'attack', label: '2. Launch Attack', min: '7-11m', icon: Flame, tab: 'security_testing' },
   { id: 'detection', label: '3. Model 6 Detection', min: '11-15m', icon: Radio, tab: 'dashboard' },
-  { id: 'risk_surge', label: '4. Risk Surge (87%)', min: '15-18m', icon: ShieldAlert, tab: 'dashboard' },
+  { id: 'risk_surge', label: '4. Risk Surge (96%)', min: '15-18m', icon: ShieldAlert, tab: 'dashboard' },
   { id: 'financial', label: '5. Financial Impact', min: '18-21m', icon: DollarSign, tab: 'dashboard' },
   { id: 'optimization', label: '6. Optimization', min: '21-25m', icon: SlidersHorizontal, tab: 'dashboard' },
   { id: 'remediation', label: '7. Remediation', min: '25-27m', icon: Lock, tab: 'execution' },

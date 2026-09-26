@@ -557,6 +557,7 @@ export default function IntelligenceCenterView({ currentRole = 'CISO', onRefresh
           return (
             <button
               key={tab.id}
+              id={`tab-btn-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold whitespace-nowrap transition-all border-b-2 ${
                 isActive

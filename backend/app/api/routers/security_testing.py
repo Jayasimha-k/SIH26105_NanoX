@@ -218,7 +218,7 @@ def get_security_test_history():
                 "findings": 1,
                 "severity": "CRITICAL",
                 "cve": "CVE-2024-21626",
-                "risk_impact": "EAL Surged to ₹89.2 Lakhs",
+                "risk_impact": "EAL Surged to ₹613.7 Lakhs (₹61,371,720)",
                 "remediation_status": "PROPOSED",
                 "executed_at": "2026-09-25T14:30:00Z"
             }
