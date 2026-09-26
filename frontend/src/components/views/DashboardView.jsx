@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Shield, AlertTriangle, TrendingUp, DollarSign, CheckCircle2,
-  XCircle, ArrowRight, HelpCircle, X, Zap, Radio, RefreshCw, Layers, Terminal, ExternalLink, Cpu, FileText
+  XCircle, ArrowRight, HelpCircle, X, Zap, Radio, RefreshCw, Layers, Terminal, ExternalLink, Cpu, FileText, Activity
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { api } from '../../services/api';
@@ -65,6 +65,7 @@ export default function DashboardView({
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
+  const [isRemediating, setIsRemediating] = useState(false);
   const activeDemo = getActiveDemoState(attackState);
   const isAttackActive = activeDemo.isAttackActive;
   const isAttackCompleted = activeDemo.isAttackCompleted;
@@ -605,7 +606,7 @@ export default function DashboardView({
             </div>
             {isAttackActive && (
               <span className="text-[10px] font-mono font-bold text-red-400 block">
-                ▲ +{formatCurrency(displayEal - 4450000)} (+{(((displayEal - 4450000) / 4450000) * 100).toFixed(1)}%)
+                ▲ +{formatCurrency(displayEal - CANONICAL_DEMO_STATE.baseline.ealInr)} (+{(((displayEal - CANONICAL_DEMO_STATE.baseline.ealInr) / CANONICAL_DEMO_STATE.baseline.ealInr) * 100).toFixed(1)}%)
               </span>
             )}
             <p className="text-[11px] text-slate-400 leading-relaxed">
@@ -635,7 +636,7 @@ export default function DashboardView({
               {isAttackActive
                 ? 'Security Lab attack event received: live P1-P6 and EAL surged in real time.'
                 : (isAttackCompleted
-                  ? 'Remediation confirmed on Fabric ledger: residual EAL dropped to ₹7.2L.'
+                  ? `Remediation confirmed on Fabric ledger: residual EAL dropped to ₹${CANONICAL_DEMO_STATE.remediation.ealLakhs}L.`
                   : 'SANS newsletter processed and confirmed by CISO; asset correlation updated.')}
             </div>
           </div>
@@ -736,7 +737,7 @@ export default function DashboardView({
                 <h3 className="text-2xl font-extrabold text-red-600 mt-1 font-mono">{formatCurrency(preEal)}</h3>
                 {isAttackActive && (
                   <span className="text-[10px] font-mono font-bold text-red-600 block mt-0.5 animate-pulse">
-                    ▲ +{formatCurrency(displayEal - 4450000)} (+{(((displayEal - 4450000) / 4450000) * 100).toFixed(1)}%)
+                    ▲ +{formatCurrency(displayEal - CANONICAL_DEMO_STATE.baseline.ealInr)} (+{(((displayEal - CANONICAL_DEMO_STATE.baseline.ealInr) / CANONICAL_DEMO_STATE.baseline.ealInr) * 100).toFixed(1)}%)
                   </span>
                 )}
               </div>

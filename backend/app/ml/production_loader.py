@@ -323,67 +323,88 @@ class ProductionMLInferenceEngine:
         P5 (Model 5 Meta Stacking XGBoost)
         """
         # 1. Model 1 (NVD/CVE)
-        try:
-            df1 = self._prepare_model_1_input(vuln_data)
-            p1_proba = self.model_1.predict_proba(df1)[0]
-            p1_raw = float(p1_proba[1])
-            p1_class = int(self.model_1.predict(df1)[0])
-        except Exception as e:
-            logger.error(f"Error executing Model 1: {e}")
+        if self.model_1 is not None:
+            try:
+                df1 = self._prepare_model_1_input(vuln_data)
+                p1_proba = self.model_1.predict_proba(df1)[0]
+                p1_raw = float(p1_proba[1])
+                p1_class = int(self.model_1.predict(df1)[0])
+            except Exception as e:
+                logger.warning(f"Error executing Model 1: {e}")
+                p1_raw = min(1.0, float(vuln_data.get("cvss_score", 7.0)) / 10.0)
+                p1_class = 1 if p1_raw >= 0.5 else 0
+        else:
             p1_raw = min(1.0, float(vuln_data.get("cvss_score", 7.0)) / 10.0)
             p1_class = 1 if p1_raw >= 0.5 else 0
 
         # 2. Model 2 (EPSS-Style)
-        try:
-            df2 = self._prepare_model_2_input(vuln_data)
-            p2_proba = self.model_2.predict_proba(df2)[0]
-            p2_raw = float(p2_proba[1])
-            p2_class = int(self.model_2.predict(df2)[0])
-        except Exception as e:
-            logger.error(f"Error executing Model 2: {e}")
+        if self.model_2 is not None:
+            try:
+                df2 = self._prepare_model_2_input(vuln_data)
+                p2_proba = self.model_2.predict_proba(df2)[0]
+                p2_raw = float(p2_proba[1])
+                p2_class = int(self.model_2.predict(df2)[0])
+            except Exception as e:
+                logger.warning(f"Error executing Model 2: {e}")
+                p2_raw = float(vuln_data.get("epss_score", 0.5))
+                p2_class = 1 if p2_raw >= 0.5 else 0
+        else:
             p2_raw = float(vuln_data.get("epss_score", 0.5))
             p2_class = 1 if p2_raw >= 0.5 else 0
 
         # 3. Model 3 (Org-Aware)
-        try:
-            df3 = self._prepare_model_3_input(p1_raw, vuln_data, asset_data, incident_count)
-            p3_proba = self.model_3.predict_proba(df3)[0]
-            p3_raw = float(p3_proba[1])
-            p3_class = int(self.model_3.predict(df3)[0])
-        except Exception as e:
-            logger.error(f"Error executing Model 3: {e}")
+        if self.model_3 is not None:
+            try:
+                df3 = self._prepare_model_3_input(p1_raw, vuln_data, asset_data, incident_count)
+                p3_proba = self.model_3.predict_proba(df3)[0]
+                p3_raw = float(p3_proba[1])
+                p3_class = int(self.model_3.predict(df3)[0])
+            except Exception as e:
+                logger.warning(f"Error executing Model 3: {e}")
+                p3_raw = p1_raw * (float(asset_data.get("criticality_score", 5.0)) / 10.0)
+                p3_class = 1 if p3_raw >= 0.5 else 0
+        else:
             p3_raw = p1_raw * (float(asset_data.get("criticality_score", 5.0)) / 10.0)
             p3_class = 1 if p3_raw >= 0.5 else 0
 
         # 4. Model 4 (ATT&CK)
-        try:
-            df4 = self._prepare_model_4_input(vuln_data)
-            p4_proba = self.model_4.predict_proba(df4)[0]
-            p4_raw = float(p4_proba[1])
-            p4_class = int(self.model_4.predict(df4)[0])
-        except Exception as e:
-            logger.error(f"Error executing Model 4: {e}")
+        if self.model_4 is not None:
+            try:
+                df4 = self._prepare_model_4_input(vuln_data)
+                p4_proba = self.model_4.predict_proba(df4)[0]
+                p4_raw = float(p4_proba[1])
+                p4_class = int(self.model_4.predict(df4)[0])
+            except Exception as e:
+                logger.warning(f"Error executing Model 4: {e}")
+                p4_raw = 0.85 if vuln_data.get("mitre_attack_technique") == "T1190" else 0.70
+                p4_class = 1 if p4_raw >= 0.5 else 0
+        else:
             p4_raw = 0.85 if vuln_data.get("mitre_attack_technique") == "T1190" else 0.70
             p4_class = 1 if p4_raw >= 0.5 else 0
 
         # 5. Meta Model 5 (Stacking Ensemble)
         # Note: Model 5's trees split on P3 at threshold 1.0 (binary indicator).
         # We compute both continuous and discrete stacking outputs:
-        try:
-            # Stacking with P3 binary classification indicator (as learned by Model 5's trees)
-            df5_binary = pd.DataFrame([{"P1": p1_raw, "P2": p2_raw, "P3": float(p3_class), "P4": p4_raw}])
-            p5_proba_bin = self.meta_model.predict_proba(df5_binary)[0]
-            p5_raw_bin = float(p5_proba_bin[1])
+        if self.meta_model is not None:
+            try:
+                # Stacking with P3 binary classification indicator (as learned by Model 5's trees)
+                df5_binary = pd.DataFrame([{"P1": p1_raw, "P2": p2_raw, "P3": float(p3_class), "P4": p4_raw}])
+                p5_proba_bin = self.meta_model.predict_proba(df5_binary)[0]
+                p5_raw_bin = float(p5_proba_bin[1])
 
-            # Stacking with P3 raw float
-            df5_cont = pd.DataFrame([{"P1": p1_raw, "P2": p2_raw, "P3": p3_raw, "P4": p4_raw}])
-            p5_proba_cont = self.meta_model.predict_proba(df5_cont)[0]
-            p5_raw_cont = float(p5_proba_cont[1])
+                # Stacking with P3 raw float
+                df5_cont = pd.DataFrame([{"P1": p1_raw, "P2": p2_raw, "P3": p3_raw, "P4": p4_raw}])
+                p5_proba_cont = self.meta_model.predict_proba(df5_cont)[0]
+                p5_raw_cont = float(p5_proba_cont[1])
 
-            p5_meta = p5_raw_bin if p3_class == 1 else p5_raw_cont
-            p5_pred = int(self.meta_model.predict(df5_binary)[0])
-        except Exception as e:
-            logger.error(f"Error executing Meta Model 5: {e}")
+                p5_meta = p5_raw_bin if p3_class == 1 else p5_raw_cont
+                p5_pred = int(self.meta_model.predict(df5_binary)[0])
+            except Exception as e:
+                logger.warning(f"Error executing Meta Model 5: {e}")
+                p5_meta = (0.25 * p1_raw) + (0.35 * p2_raw) + (0.25 * p3_raw) + (0.15 * p4_raw)
+                p5_raw_cont = p5_meta
+                p5_pred = 1 if p5_meta >= 0.5 else 0
+        else:
             p5_meta = (0.25 * p1_raw) + (0.35 * p2_raw) + (0.25 * p3_raw) + (0.15 * p4_raw)
             p5_raw_cont = p5_meta
             p5_pred = 1 if p5_meta >= 0.5 else 0
