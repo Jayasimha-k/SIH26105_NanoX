@@ -65,6 +65,9 @@ export default function DashboardView({
   const [processingId, setProcessingId] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
   const [isRemediating, setIsRemediating] = useState(false);
+  const [animStep, setAnimStep] = useState(0);
+  const [displayRisk, setDisplayRisk] = useState(78);
+  const [displayEal, setDisplayEal] = useState(4450000);
 
   const formatCurrency = (val) => `₹${((val || 0) / 100000).toFixed(1)}L`;
 
@@ -72,13 +75,52 @@ export default function DashboardView({
   const isAttackActive = attackState?.active || attackState?.status === 'ATTACK_STARTED';
   const isAttackCompleted = attackState?.status === 'ATTACK_COMPLETED';
   const pipeline = attackState?.pipeline;
+  const baselinePreEal = overview?.total_pre_control_eal || 4450000;
 
+  // Staged attack lifecycle and numeric transition sequence
   useEffect(() => {
     if (isAttackActive) {
       console.log(`[DASHBOARD] ATTACK_STARTED received: correlation_id=${attackState?.correlation_id || 'ATTACK-DEMO-2026-001'}`);
       console.log('[DASHBOARD] attack mode enabled');
       console.log('[BAD-APPLE] visualizer mounted');
-      const timer = setTimeout(() => {
+
+      const targetRisk = Math.round((pipeline?.fused_probability || 0.87) * 100);
+      const targetEal = pipeline?.active_attack_eal || 8920000;
+
+      const timers = [];
+      timers.push(setTimeout(() => setAnimStep(1), 50));   // T+0.05: 🚨 Attack detected
+      timers.push(setTimeout(() => setAnimStep(2), 250));  // T+0.25: Target asset highlighted
+      timers.push(setTimeout(() => setAnimStep(3), 500));  // T+0.50: Model 6 network anomaly burst
+      timers.push(setTimeout(() => {
+        setAnimStep(4); // T+0.80: Risk score transitions upward
+        let currR = 78;
+        const rInterval = setInterval(() => {
+          currR += 1;
+          if (currR >= targetRisk) {
+            setDisplayRisk(targetRisk);
+            clearInterval(rInterval);
+          } else {
+            setDisplayRisk(currR);
+          }
+        }, 35);
+      }, 750));
+      timers.push(setTimeout(() => {
+        setAnimStep(5); // T+1.20: EAL transitions upward
+        let currE = 4450000;
+        const step = Math.round((targetEal - 4450000) / 12);
+        const eInterval = setInterval(() => {
+          currE += step;
+          if (currE >= targetEal) {
+            setDisplayEal(targetEal);
+            clearInterval(eInterval);
+          } else {
+            setDisplayEal(currE);
+          }
+        }, 35);
+      }, 1100));
+      timers.push(setTimeout(() => setAnimStep(6), 1450)); // T+1.45: Optimizer recommendations update
+      timers.push(setTimeout(() => {
+        setAnimStep(7); // T+1.75: Bad Apple visualizer playback begins
         const videoEl = document.getElementById('bad-apple-video');
         if (videoEl) {
           videoEl.play().then(() => {
@@ -89,18 +131,23 @@ export default function DashboardView({
             videoEl.play().then(() => console.log('[BAD-APPLE] playback started')).catch(() => {});
           });
         }
-      }, 50);
-      return () => clearTimeout(timer);
-    } else {
-      console.log('[DASHBOARD] normal mode active');
-    }
-  }, [isAttackActive, attackState?.correlation_id]);
+      }, 1750));
 
-  // Real-time pre vs post calculations dynamically updated upon attack
-  const baselinePreEal = overview?.total_pre_control_eal || 4450000;
+      return () => timers.forEach(clearTimeout);
+    } else if (isAttackCompleted) {
+      setDisplayRisk(14);
+      setDisplayEal(pipeline?.post_eal || 720000);
+      setAnimStep(8); // Remediated
+    } else {
+      setDisplayRisk(78);
+      setDisplayEal(baselinePreEal);
+      setAnimStep(0);
+    }
+  }, [isAttackActive, isAttackCompleted, pipeline, baselinePreEal, attackState?.correlation_id]);
+
   const preEal = isAttackActive
-    ? (pipeline?.active_attack_eal || 8920000)
-    : baselinePreEal;
+    ? displayEal
+    : (isAttackCompleted ? (pipeline?.post_eal || 720000) : baselinePreEal);
 
   const postEal = isAttackCompleted
     ? (pipeline?.post_eal || 720000)
@@ -112,7 +159,7 @@ export default function DashboardView({
   const reductionPct = preEal > 0 ? (((preEal - postEal) / preEal) * 100).toFixed(1) : '83.8';
   const rosi = overview?.enterprise_rosi || 465.8;
 
-  // Dynamic trend data showing baseline vs live attack surge
+  // Dynamic trend data showing baseline vs live attack surge vs post-remediation
   const dynamicTrendData = isAttackActive
     ? [
         { month: 'Jan', preEal: 28.5, postEal: 14.2 },
@@ -121,7 +168,7 @@ export default function DashboardView({
         { month: 'Apr', preEal: 42.1, postEal: 9.8 },
         { month: 'May', preEal: 39.8, postEal: 8.4 },
         { month: 'Jun (Baseline)', preEal: 44.5, postEal: 7.2 },
-        { month: 'NOW (LIVE ATTACK)', preEal: 89.2, postEal: 7.2 },
+        { month: 'NOW (LIVE ATTACK)', preEal: Number((displayEal / 100000).toFixed(1)), postEal: 7.2 },
       ]
     : (isAttackCompleted
         ? [
@@ -130,8 +177,9 @@ export default function DashboardView({
             { month: 'Mar', preEal: 35.4, postEal: 11.5 },
             { month: 'Apr', preEal: 42.1, postEal: 9.8 },
             { month: 'May', preEal: 39.8, postEal: 8.4 },
-            { month: 'Jun', preEal: 44.5, postEal: 7.2 },
-            { month: 'POST-REMEDIATION', preEal: 44.5, postEal: 7.2 },
+            { month: 'Jun (Baseline)', preEal: 44.5, postEal: 7.2 },
+            { month: 'ATTACK SPIKE', preEal: 89.2, postEal: 7.2 },
+            { month: 'REMEDIATED (7.2L)', preEal: 7.2, postEal: 7.2 },
           ]
         : mockTrendData);
 
@@ -140,12 +188,12 @@ export default function DashboardView({
     ? [
         {
           id: attackState?.asset_id || 'ASSET-001',
-          name: pipeline?.asset_name || 'Production Web & Microservices Server',
-          cve: 'CVE-2024-21626 / CVE-2024-3094',
+          name: pipeline?.asset_name || 'Core Oracle Production Database',
+          cve: 'CVE-2024-21626 (runc Container Escape RCE)',
           cveTitle: 'Active RCE Exploitation & Network Flow Anomaly Spike',
           exposure: 'INTERNET-FACING (SURGING)',
           criticality: `${pipeline?.asset_criticality || 9.5} / 10`,
-          eal: `₹${(((pipeline?.active_attack_eal || 8920000)) / 100000).toFixed(1)} Lakhs`,
+          eal: `₹${((displayEal || 8920000) / 100000).toFixed(1)} Lakhs`,
           impact: '₹90.0 Lakhs',
           recommendedControl: 'Zero-Trust Microsegmentation & Network Isolation (Emergency)',
           isUnderAttack: true,
@@ -417,6 +465,81 @@ export default function DashboardView({
         </div>
       )}
 
+      {/* SECTION 22: EVENT LIFECYCLE PROGRESS TRACKER */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl text-white space-y-3 font-mono text-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping inline-block" />
+            <span className="font-bold text-slate-100 uppercase tracking-wider text-[11px]">
+              SIH 2026 Audit & Telemetry Lifecycle Stepper
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] text-slate-400">
+            <span>Event Correlation:</span>
+            <span className="px-2 py-0.5 rounded bg-blue-950 border border-blue-800 text-blue-300 font-bold">
+              {attackState?.correlation_id || 'ATTACK-DEMO-2026'}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[10px]">
+          {/* Step 1: Baseline */}
+          <div className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${
+            isAttackActive || isAttackCompleted ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' : 'bg-blue-950/60 border-blue-700 text-blue-200'
+          }`}>
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <div>
+              <span className="font-bold block">1. Baseline Org</span>
+              <span className="text-[9px] opacity-75">78% Risk / ₹44.5L EAL</span>
+            </div>
+          </div>
+
+          {/* Step 2: Exploit Ingestion */}
+          <div className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${
+            isAttackActive ? 'bg-red-950/70 border-red-500 text-red-200 animate-pulse ring-1 ring-red-400' : (isAttackCompleted ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-500')
+          }`}>
+            {isAttackActive ? <Radio className="w-3.5 h-3.5 text-red-400 animate-spin shrink-0" /> : (isAttackCompleted ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <div className="w-3 h-3 rounded-full border border-slate-700 shrink-0" />)}
+            <div>
+              <span className="font-bold block">2. Ingest Exploit</span>
+              <span className="text-[9px] opacity-75">{isAttackActive ? 'Active Telemetry' : (isAttackCompleted ? 'Neutralized' : 'Ready')}</span>
+            </div>
+          </div>
+
+          {/* Step 3: Model 6 Anomaly */}
+          <div className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${
+            isAttackActive && animStep >= 3 ? 'bg-purple-950/70 border-purple-500 text-purple-200 animate-pulse' : (isAttackCompleted ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-500')
+          }`}>
+            {isAttackActive && animStep >= 3 ? <Activity className="w-3.5 h-3.5 text-purple-400 shrink-0" /> : (isAttackCompleted ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <div className="w-3 h-3 rounded-full border border-slate-700 shrink-0" />)}
+            <div>
+              <span className="font-bold block">3. Model 6 Anomaly</span>
+              <span className="text-[9px] opacity-75">{isAttackActive && animStep >= 3 ? 'P(flow)=0.960' : (isAttackCompleted ? 'Flow Normal' : 'Standby')}</span>
+            </div>
+          </div>
+
+          {/* Step 4: Risk & EAL Surge */}
+          <div className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${
+            isAttackActive && animStep >= 5 ? 'bg-red-950/70 border-red-500 text-red-200' : (isAttackCompleted ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-500')
+          }`}>
+            {isAttackActive && animStep >= 5 ? <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" /> : (isAttackCompleted ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <div className="w-3 h-3 rounded-full border border-slate-700 shrink-0" />)}
+            <div>
+              <span className="font-bold block">4. EAL Surge</span>
+              <span className="text-[9px] opacity-75">{formatCurrency(displayEal)}</span>
+            </div>
+          </div>
+
+          {/* Step 5: Fabric Audit Block */}
+          <div className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${
+            isAttackCompleted ? 'bg-emerald-950/60 border-emerald-500 text-emerald-200 font-bold' : (isAttackActive ? 'bg-blue-950/40 border-blue-900 text-blue-300' : 'bg-slate-950 border-slate-800 text-slate-500')
+          }`}>
+            {isAttackCompleted ? <Layers className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <div className="w-3 h-3 rounded-full border border-slate-700 shrink-0" />}
+            <div>
+              <span className="font-bold block">5. Fabric Audit</span>
+              <span className="text-[9px] opacity-75">{isAttackCompleted ? 'Tx Confirmed' : 'Queue Buffered'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* SECTION 9: EXECUTIVE RISK CONCLUSIONS (CUSTOMER SEES THIS FIRST) */}
       <div id="spotlight-org-risk" className="bg-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-xl text-white space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
@@ -428,18 +551,30 @@ export default function DashboardView({
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                 isAttackActive
                   ? 'bg-red-950 text-red-300 border border-red-800 animate-pulse'
-                  : (isAttackCompleted ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-amber-950 text-amber-300 border border-amber-800')
+                  : (isAttackCompleted ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-blue-950 text-blue-300 border border-blue-800')
               }`}>
                 {isAttackActive ? 'ACTIVE ATTACK DETECTED' : (isAttackCompleted ? 'POST-REMEDIATION BASELINE' : 'MONITORING NORMAL')}
               </span>
             </div>
             <div className="flex items-baseline gap-3">
-              <h2 className="text-3xl font-black tracking-tight text-white">
-                {isAttackActive ? '87%' : (isAttackCompleted ? '14%' : '78%')}
+              <h2 className="text-4xl font-black tracking-tight text-white font-mono">
+                {displayRisk}%
               </h2>
-              <span className="text-slate-400 text-sm font-semibold">
-                {isAttackActive ? 'Critical Cyber Exposure' : (isAttackCompleted ? 'Residual Enterprise Exposure' : 'Current Enterprise Exposure')}
-              </span>
+              <div>
+                <span className="text-slate-300 text-xs font-semibold block">
+                  {isAttackActive ? 'Critical Cyber Exposure' : (isAttackCompleted ? 'Residual Enterprise Exposure' : 'Baseline Enterprise Exposure')}
+                </span>
+                {isAttackActive && (
+                  <span className="text-[10px] font-mono font-bold text-red-400 bg-red-950/80 border border-red-800 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                    ↑ +{displayRisk - 78} pts surge
+                  </span>
+                )}
+                {isAttackCompleted && (
+                  <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                    ↓ -64 pts loss averted
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -464,10 +599,10 @@ export default function DashboardView({
               1. Why is this risk level set?
             </span>
             <ul className="text-slate-300 space-y-1 text-[11px] list-disc list-inside">
-              <li>{isAttackActive ? 'Network anomaly: empirical attack flow detected' : 'Network behavioral telemetry: normal baseline'}</li>
-              <li>Asset ASSET-001 (Production Database) criticality 9.5/10</li>
+              <li>{isAttackActive ? 'Network anomaly: active empirical flow spike' : (isAttackCompleted ? 'Network flow returned to normal baseline' : 'Network telemetry: normal baseline')}</li>
+              <li>Asset {attackState?.asset_id || 'ASSET-001'} (Core Oracle DB) criticality 9.5/10</li>
               <li>Threat intelligence: CVE-2024-21626 active in wild</li>
-              <li>Zero-Trust microsegmentation policy {isAttackCompleted ? 'deployed' : 'pending'}</li>
+              <li>Zero-Trust microsegmentation policy {isAttackCompleted ? 'deployed & active' : 'pending'}</li>
             </ul>
           </div>
 
@@ -479,6 +614,11 @@ export default function DashboardView({
             <div className="text-xl font-bold text-white font-mono">
               {formatCurrency(preEal)} <span className="text-xs font-normal text-slate-400 font-sans">EAL</span>
             </div>
+            {isAttackActive && (
+              <span className="text-[10px] font-mono font-bold text-red-400 block">
+                ▲ +{formatCurrency(displayEal - 4450000)} (+{(((displayEal - 4450000) / 4450000) * 100).toFixed(1)}%)
+              </span>
+            )}
             <p className="text-[11px] text-slate-400 leading-relaxed">
               Potential annualized loss to revenue, DPDP regulatory penalties, and operational downtime without controls.
             </p>
@@ -513,6 +653,78 @@ export default function DashboardView({
         </div>
       </div>
 
+      {/* SECTION 14 & 29: CAUSE & EFFECT COMPARISON MATRIX */}
+      <div id="spotlight-what-changed" className="cyber-card p-5 space-y-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 bg-blue-50 text-blue-600 rounded-lg border border-blue-100">
+              <Layers className="w-4 h-4" />
+            </span>
+            <h3 className="font-bold text-slate-900 text-sm">
+              CyberOptRQ Cause & Effect Matrix &bull; What Changed?
+            </h3>
+          </div>
+          <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">
+            {isAttackActive ? '🔴 LIVE ATTACK IN PROGRESS' : (isAttackCompleted ? '🟢 POST-REMEDIATION VERIFIED' : '⚪ BASELINE MONITORING')}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono text-xs">
+          {/* Column 1: Before Attack (Baseline) */}
+          <div className="p-3.5 rounded-xl border bg-slate-50/80 border-slate-200 space-y-2">
+            <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase pb-1 border-b border-slate-200">
+              <span>1. Baseline State</span>
+              <span className="text-blue-600 font-bold">NORMAL</span>
+            </div>
+            <div className="space-y-1.5 text-[11px]">
+              <div>Org Risk: <strong className="text-slate-800">78%</strong> (Exposure)</div>
+              <div>EAL: <strong className="text-slate-800">₹44.5 Lakhs</strong></div>
+              <div>Target Asset: <span className="text-slate-700">ASSET-001 (Normal)</span></div>
+              <div>Network Flow: <span className="text-slate-600">Stable (0.04 P_anom)</span></div>
+              <div>Safeguard: <span className="text-slate-600">Microseg PENDING</span></div>
+            </div>
+          </div>
+
+          {/* Column 2: During Attack (Surge) */}
+          <div className={`p-3.5 rounded-xl border space-y-2 transition-all ${
+            isAttackActive ? 'bg-red-50 border-red-300 text-red-950 ring-2 ring-red-400/40 shadow-sm' : 'bg-slate-50/50 border-slate-200 text-slate-600'
+          }`}>
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase pb-1 border-b border-red-200">
+              <span className={isAttackActive ? 'text-red-700 font-black' : 'text-slate-500'}>2. During Attack</span>
+              <span className={isAttackActive ? 'text-red-600 font-black animate-pulse' : 'text-slate-400'}>
+                {isAttackActive ? 'ACTIVE SURGE' : 'TRIGGER PENDING'}
+              </span>
+            </div>
+            <div className="space-y-1.5 text-[11px]">
+              <div>Org Risk: <strong className={isAttackActive ? 'text-red-600 font-black' : 'text-slate-700'}>87%</strong> {isAttackActive && <span className="text-[10px] text-red-500 font-bold">(+9 pts)</span>}</div>
+              <div>EAL: <strong className={isAttackActive ? 'text-red-600 font-black' : 'text-slate-700'}>₹89.2 Lakhs</strong> {isAttackActive && <span className="text-[10px] text-red-500 font-bold">(+₹44.7L)</span>}</div>
+              <div>Target Asset: <strong className={isAttackActive ? 'text-red-700 font-bold' : 'text-slate-700'}>{attackState?.asset_id || 'ASSET-001'} (RCE In Wild)</strong></div>
+              <div>Network Flow: <strong className={isAttackActive ? 'text-purple-700 font-bold' : 'text-slate-600'}>Anomaly Spike (0.960)</strong></div>
+              <div>Prescribed: <strong className={isAttackActive ? 'text-red-700 font-bold' : 'text-slate-600'}>REC-001 (Priority CRITICAL)</strong></div>
+            </div>
+          </div>
+
+          {/* Column 3: After Remediation (Residual) */}
+          <div className={`p-3.5 rounded-xl border space-y-2 transition-all ${
+            isAttackCompleted ? 'bg-emerald-50 border-emerald-300 text-emerald-950 ring-2 ring-emerald-400/40 shadow-sm' : 'bg-slate-50/50 border-slate-200 text-slate-600'
+          }`}>
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase pb-1 border-b border-emerald-200">
+              <span className={isAttackCompleted ? 'text-emerald-700 font-black' : 'text-slate-500'}>3. Post-Remediation</span>
+              <span className={isAttackCompleted ? 'text-emerald-600 font-black' : 'text-slate-400'}>
+                {isAttackCompleted ? 'VERIFIED' : 'AWAITING ACTION'}
+              </span>
+            </div>
+            <div className="space-y-1.5 text-[11px]">
+              <div>Residual Risk: <strong className={isAttackCompleted ? 'text-emerald-700 font-black' : 'text-slate-700'}>14%</strong> {isAttackCompleted && <span className="text-[10px] text-emerald-600 font-bold">(-73 pts)</span>}</div>
+              <div>Residual EAL: <strong className={isAttackCompleted ? 'text-emerald-700 font-black' : 'text-slate-700'}>₹7.2 Lakhs</strong> {isAttackCompleted && <span className="text-[10px] text-emerald-600 font-bold">(-84% loss)</span>}</div>
+              <div>Target Asset: <strong className={isAttackCompleted ? 'text-emerald-700 font-bold' : 'text-slate-700'}>{attackState?.asset_id || 'ASSET-001'} (Protected)</strong></div>
+              <div>Network Flow: <strong className={isAttackCompleted ? 'text-emerald-700' : 'text-slate-600'}>Normalized (0.03 P_anom)</strong></div>
+              <div>Audit Block: <strong className={isAttackCompleted ? 'text-blue-700 text-[10px]' : 'text-slate-600'}>{pipeline?.fabric_tx_id || 'FABRIC-MINED'}</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* TOP SECTION: 4 KEY CISO FINANCIAL METRICS */}
       <div>
         <div className="flex justify-between items-center mb-3">
@@ -532,7 +744,12 @@ export default function DashboardView({
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-slate-600 text-xs font-semibold">Current EAL</p>
-                <h3 className="text-2xl font-extrabold text-red-600 mt-1">{formatCurrency(preEal)}</h3>
+                <h3 className="text-2xl font-extrabold text-red-600 mt-1 font-mono">{formatCurrency(preEal)}</h3>
+                {isAttackActive && (
+                  <span className="text-[10px] font-mono font-bold text-red-600 block mt-0.5 animate-pulse">
+                    ▲ +{formatCurrency(displayEal - 4450000)} (+{(((displayEal - 4450000) / 4450000) * 100).toFixed(1)}%)
+                  </span>
+                )}
               </div>
               <div className="p-2 bg-red-50 rounded-lg text-red-600 border border-red-200">
                 <AlertTriangle className="w-5 h-5" />

@@ -139,8 +139,8 @@ export const api = {
   getModel6Info: () => fetchJSON('/predict/model6-info'),
 
   // Attack Demo Event System (for Attacker Console <-> Dashboard <-> Bad Apple)
-  startAttackDemo: (scenario = 'controlled_local_attack') =>
-    fetchJSON('/demo/attack/start', { method: 'POST', body: JSON.stringify({ scenario }) }),
+  startAttackDemo: (scenario = 'controlled_local_attack', organization_id = 'org_abc_tech', asset_id = 'ASSET-001') =>
+    fetchJSON('/demo/attack/start', { method: 'POST', body: JSON.stringify({ scenario, organization_id, asset_id }) }),
   completeAttackDemo: (correlationId) =>
     fetchJSON('/demo/attack/complete', { method: 'POST', body: JSON.stringify({ correlation_id: correlationId }) }),
   resetAttackDemo: () =>

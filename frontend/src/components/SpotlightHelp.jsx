@@ -17,6 +17,7 @@ import {
   Activity, Layers, Sparkles, Info, CheckCircle2, Terminal,
   Database, Lock, Cpu, Flame, Film, Target, BookOpen
 } from 'lucide-react';
+import { api } from '../services/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TOPIC CATALOGUE — 15 verified topics, each with a real tab + real DOM id
@@ -339,6 +340,10 @@ export default function SpotlightHelp({
   currentRole = 'CISO',
   activeTab,
   onNavigateTab,
+  attackState = {},
+  overview = {},
+  pipeline = null,
+  onRefresh,
 }) {
   const [roleFilter, setRoleFilter] = useState(currentRole);
   const [idx, setIdx] = useState(0);
@@ -351,11 +356,60 @@ export default function SpotlightHelp({
   // Keep role filter in sync
   useEffect(() => { setRoleFilter(currentRole); }, [currentRole]);
 
+  const isAttackActive = attackState?.active || attackState?.status === 'ATTACK_STARTED';
+  const isAttackCompleted = attackState?.status === 'ATTACK_COMPLETED';
+  const activeRisk = isAttackActive ? '87%' : (isAttackCompleted ? '14%' : '78%');
+  const activeEal = isAttackActive ? '₹89.2 Lakhs' : (isAttackCompleted ? '₹7.2 Lakhs' : '₹44.5 Lakhs');
+  const activeAsset = attackState?.asset_id || pipeline?.asset_id || 'ASSET-001 (Core Oracle DB)';
+  const activeCorrelation = attackState?.correlation_id || 'ATTACK-DEMO-2026';
+
   const topics = SPOTLIGHT_TOPICS.filter(t =>
     roleFilter === 'ALL' ? true : t.roles.includes(roleFilter)
   );
   const clampedIdx = Math.min(idx, topics.length - 1);
-  const topic = topics[clampedIdx];
+  const rawTopic = topics[clampedIdx];
+
+  const getDynamicTopic = (raw) => {
+    if (!raw) return raw;
+    const t = { ...raw };
+    if (raw.id === 'cyber_risk') {
+      if (isAttackActive) {
+        t.title = 'Current Cyber Risk (Attack Surge: 87%)';
+        t.what = `ATTACK SURGE DETECTED: Enterprise risk jumped to 87% (+9 pts) due to validated exploitation on ${activeAsset}. Fusion v2 combined Model 6 flow anomaly (0.960) with CVSS 9.8 and EPSS 0.94.`;
+        t.why = 'Real-time threat validation elevates exposure from theoretical likelihood to active business crisis.';
+        t.how = 'Bayesian Fusion layer v2 fused Model 6 network flow evidence with P1-P5 meta-ensemble risk score.';
+      } else if (isAttackCompleted) {
+        t.title = 'Current Cyber Risk (Post-Remediation: 14%)';
+        t.what = 'NEUTRALIZED: Residual risk dropped to 14% (-73 pts) after Zero-Trust microsegmentation deployment. Capital preserved: ₹37.4 Lakhs.';
+        t.why = 'Proves to the CISO, CFO, and Board that deployed controls prevented catastrophic breach exposure.';
+        t.how = `Fabric audit block ${pipeline?.fabric_tx_id || 'FABRIC-MINED'} anchors the verifiable reassessment.`;
+      }
+    } else if (raw.id === 'eal') {
+      if (isAttackActive) {
+        t.title = 'Expected Annual Loss (Surge: ₹89.2L)';
+        t.what = 'EAL SURGED TO ₹89.2 LAKHS: Baseline was ₹44.5L (surge delta +₹44.7L / +100.4%). FAIR model recalculated Single Loss Expectancy across impacted assets.';
+      } else if (isAttackCompleted) {
+        t.title = 'Expected Annual Loss (Residual: ₹7.2L)';
+        t.what = 'RESIDUAL EAL: ₹7.2 Lakhs post-control. 84% reduction in annualized financial risk verified.';
+      }
+    } else if (raw.id === 'model_6') {
+      if (isAttackActive) {
+        t.title = 'Model 6 Network Flow (Anomaly: 0.960)';
+        t.what = `ANOMALY BURST: Model 6 empirical flow score spiked to 0.960 malicious probability on ${activeAsset}. 100% offline local XGBoost classification on CIC-IDS2017.`;
+      }
+    } else if (raw.id === 'attack_mode') {
+      if (isAttackActive) {
+        t.what = `SYNCHRONIZED ATTACK MODE: Active security demonstration ${activeCorrelation} in progress. Live telemetry streaming across the dashboard.`;
+      }
+    } else if (raw.id === 'bad_apple') {
+      if (isAttackActive) {
+        t.what = 'BAD APPLE VISUALIZER: Embedded high-contrast visualizer playing in sync with live attack telemetry to give an immediate, unmistakable presentation cue.';
+      }
+    }
+    return t;
+  };
+
+  const topic = getDynamicTopic(rawTopic);
 
   // ── Resolve target whenever topic or open state changes ──────────────────
   const resolveCurrentTarget = useCallback(() => {
@@ -397,12 +451,9 @@ export default function SpotlightHelp({
     };
 
     if (needsIntelSubTab) {
-      // Wait for view mount, then simulate clicking the sub-tab button
       setTimeout(() => {
-        // Find all tab buttons in the intelligence center and click the right one
         const allBtns = document.querySelectorAll('button');
         for (const btn of allBtns) {
-          // Look for a button whose text matches the sub-tab we need
           const txt = btn.textContent || '';
           const wantCiso = topic.intelSubTab === 'ciso_queue' && (txt.includes('CISO Review') || txt.includes('ciso_queue'));
           const wantCfo  = topic.intelSubTab === 'cfo_queue'  && (txt.includes('CFO Review') || txt.includes('cfo_queue'));
@@ -411,11 +462,9 @@ export default function SpotlightHelp({
             break;
           }
         }
-        // Now resolve with extra time for React re-render
         setTimeout(doResolve, 250);
       }, 500);
     } else {
-      // Small delay to let React commit the new tab's DOM
       setTimeout(doResolve, topic.tab !== activeTab ? 450 : 80);
     }
   }, [isOpen, topic, activeTab, onNavigateTab]);
@@ -425,7 +474,7 @@ export default function SpotlightHelp({
     return () => { if (cleanupRef.current) cleanupRef.current(); };
   }, [resolveCurrentTarget]);
 
-  // Re-measure on scroll or resize
+  // Re-measure on scroll or resize with ResizeObserver for dynamic layout shifts
   useEffect(() => {
     if (!isOpen) return;
     const handle = () => {
@@ -440,9 +489,17 @@ export default function SpotlightHelp({
     };
     window.addEventListener('scroll', handle, true);
     window.addEventListener('resize', handle);
+
+    let observer = null;
+    try {
+      observer = new ResizeObserver(handle);
+      observer.observe(document.body);
+    } catch (e) {}
+
     return () => {
       window.removeEventListener('scroll', handle, true);
       window.removeEventListener('resize', handle);
+      if (observer) observer.disconnect();
     };
   }, [isOpen, topic]);
 
@@ -537,7 +594,25 @@ export default function SpotlightHelp({
                 <div style={{ fontSize:10, fontWeight:700, color:'#94A3B8', letterSpacing:'0.12em', textTransform:'uppercase', fontFamily:'monospace' }}>
                   Guided Explainer
                 </div>
-                <div style={{ fontSize:9, color:'#475569', fontFamily:'monospace' }}>SIH 2026 · Presentation Mode</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                  <span style={{
+                    fontSize: 8.5,
+                    fontWeight: 800,
+                    fontFamily: 'monospace',
+                    padding: '1px 5px',
+                    borderRadius: 4,
+                    textTransform: 'uppercase',
+                    background: isAttackActive ? 'rgba(239, 68, 68, 0.25)' : (isAttackCompleted ? 'rgba(16, 185, 129, 0.25)' : 'rgba(59, 130, 246, 0.2)'),
+                    color: isAttackActive ? '#F87171' : (isAttackCompleted ? '#34D399' : '#93C5FD'),
+                    border: isAttackActive ? '1px solid #EF4444' : (isAttackCompleted ? '1px solid #10B981' : '1px solid #3B82F6'),
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4
+                  }}>
+                    <span style={{ width: 4, height: 4, borderRadius: '50%', background: isAttackActive ? '#EF4444' : (isAttackCompleted ? '#10B981' : '#3B82F6'), display: 'inline-block' }} />
+                    {isAttackActive ? 'ATTACK ACTIVE (87%)' : (isAttackCompleted ? 'POST-REMEDIATION (14%)' : 'BASELINE NORMAL (78%)')}
+                  </span>
+                </div>
               </div>
             </div>
             <button
@@ -650,6 +725,77 @@ export default function SpotlightHelp({
               </p>
             </div>
           ))}
+
+          {/* Safe demo attack assist button */}
+          {(topic.id === 'attack_mode' || topic.id === 'cyber_risk') && !isAttackActive && (
+            <div style={{ marginTop: 10 }}>
+              <button
+                onClick={async () => {
+                  try {
+                    await api.startAttackDemo();
+                    if (onRefresh) onRefresh();
+                  } catch (e) { console.error(e); }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '9px 14px',
+                  background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid #F87171',
+                  borderRadius: 10,
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  boxShadow: '0 4px 14px rgba(239, 68, 68, 0.35)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <Flame size={14} />
+                <span>[ DEMO: Trigger Authorized Attack ]</span>
+              </button>
+            </div>
+          )}
+
+          {/* Safe demo remediation assist button */}
+          {(topic.id === 'attack_mode' || topic.id === 'cyber_risk' || topic.id === 'remediation') && isAttackActive && (
+            <div style={{ marginTop: 10 }}>
+              <button
+                onClick={async () => {
+                  try {
+                    await api.approveRecommendation('REC-001', 'APPROVED', 'Emergency Attack Mitigation');
+                    await api.completeAttackDemo(activeCorrelation);
+                    if (onRefresh) onRefresh();
+                  } catch (e) { console.error(e); }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '9px 14px',
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid #34D399',
+                  borderRadius: 10,
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <Lock size={14} />
+                <span>[ DEMO: Deploy Emergency Remediation ]</span>
+              </button>
+            </div>
+          )}
 
           {/* Progress dots */}
           <div style={{ display:'flex', justifyContent:'center', gap:5, marginTop:16, flexWrap:'wrap', marginBottom:10 }}>

@@ -560,6 +560,10 @@ export default function App({ isClerkConfigured = true }) {
         currentRole={currentRole}
         activeTab={activeTab}
         onNavigateTab={(tab) => setActiveTab(tab)}
+        attackState={attackState}
+        overview={overview}
+        pipeline={attackState?.pipeline}
+        onRefresh={reloadData}
       />
     </div>
   );

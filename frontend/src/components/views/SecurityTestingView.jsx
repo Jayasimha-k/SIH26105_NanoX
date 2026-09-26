@@ -45,8 +45,21 @@ export default function SecurityTestingView({ assets }) {
         test_mode: testMode
       });
       setTestResult(res);
-      // Reload history
+
+      // Trigger the real backend Attack Demo pipeline & WebSocket broadcast
+      try {
+        await api.startAttackDemo(
+          'strix_container_escape_pentest',
+          'org_abc_tech',
+          targetAssetId
+        );
+      } catch (attackErr) {
+        console.warn('Attack demo trigger note:', attackErr);
+      }
+
+      // Reload history & data
       api.getSecurityTestHistory().then((d) => setHistory(d.runs || [])).catch(() => {});
+      if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Security testing error:", err);
       setErrorMessage(err.message || "Scope authorization rejected or test execution failed.");
@@ -253,6 +266,16 @@ export default function SecurityTestingView({ assets }) {
                 <span className="text-[11px] text-emerald-700 block">
                   Reduces residual loss to ₹{(testResult.recommended_remediation?.expected_residual_eal / 100000).toFixed(1)}L.
                 </span>
+              </div>
+
+              <div className="pt-1">
+                <button
+                  onClick={() => onNavigate && onNavigate('dashboard')}
+                  className="w-full py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white rounded-xl font-bold font-mono text-xs flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all cursor-pointer"
+                >
+                  <Flame className="w-4 h-4 text-amber-300" />
+                  <span>View Live Attack Response & EAL Surge on Dashboard &rarr;</span>
+                </button>
               </div>
             </div>
           ) : (
