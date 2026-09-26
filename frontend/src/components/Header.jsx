@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
-import { Shield, UserCheck, LogOut, MessageSquare, Building2, Globe, Cloud, Laptop } from 'lucide-react';
+import { Shield, UserCheck, LogOut, MessageSquare, Building2, Globe, Cloud, Laptop, HelpCircle, Presentation } from 'lucide-react';
 import { UserButton, useUser, useClerk, useAuth } from './AuthContext';
 import { OrganizationDataPanel } from './OrgAndModelPanels';
 
-export default function Header({ currentRole, wsStatus, onSignOut, isClerkConfigured, onToggleMessenger, unreadMessageCount = 0, onNavigateMarketing }) {
+export default function Header({
+  currentRole,
+  wsStatus,
+  onSignOut,
+  isClerkConfigured,
+  onToggleMessenger,
+  unreadMessageCount = 0,
+  onNavigateMarketing,
+  onOpenHelp,
+  onToggleDemoBar,
+  showDemoBar = true
+}) {
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const { authMode } = useAuth();
@@ -46,6 +57,17 @@ export default function Header({ currentRole, wsStatus, onSignOut, isClerkConfig
             </button>
           )}
 
+          {/* [ ? HELP ] button — Explicit click only */}
+          <button
+            id="global-help-btn"
+            onClick={onOpenHelp}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-400/80 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95"
+            title="Open Interactive Guided Spotlight Explanation (SIH Demo Explainer)"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-amber-700" />
+            <span>[ ? HELP ]</span>
+          </button>
+
           {/* [ ORGANIZATION DATA ] button */}
           <button
             id="org-data-btn"
@@ -60,6 +82,22 @@ export default function Header({ currentRole, wsStatus, onSignOut, isClerkConfig
             <Building2 className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">ORGANIZATION DATA</span>
           </button>
+
+          {/* SIH Demo Narrative Toggle */}
+          {onToggleDemoBar && (
+            <button
+              onClick={onToggleDemoBar}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                showDemoBar
+                  ? 'bg-slate-900 text-white border-slate-700 shadow-sm'
+                  : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
+              }`}
+              title="Toggle SIH 2026 9-Stage Demo Narrative Bar"
+            >
+              <Presentation className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden md:inline">DEMO BAR</span>
+            </button>
+          )}
 
           {/* Live Risk Data Indicator */}
           <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs shadow-inner">

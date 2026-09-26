@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Shield, AlertTriangle, TrendingUp, DollarSign, CheckCircle2,
-  XCircle, ArrowRight, HelpCircle, X, Zap, Radio, RefreshCw, Layers, Terminal, ExternalLink
+  XCircle, ArrowRight, HelpCircle, X, Zap, Radio, RefreshCw, Layers, Terminal, ExternalLink, Cpu, FileText
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { api } from '../../services/api';
@@ -61,6 +61,7 @@ export default function DashboardView({
 }) {
   const [showExplainModal, setShowExplainModal] = useState(false);
   const [explainType, setExplainType] = useState('EAL'); // 'EAL' or 'ROSI'
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
   const [isRemediating, setIsRemediating] = useState(false);
@@ -239,7 +240,7 @@ export default function DashboardView({
     <div className="space-y-6">
       {/* ATTACK MODE ACTIVE HUD & SYNCHRONIZED BAD APPLE EMBEDDED VISUALIZER */}
       {isAttackActive && (
-        <div className="p-6 bg-slate-950 border-2 border-red-500 rounded-2xl shadow-2xl space-y-5 text-white relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+        <div id="spotlight-attack-mode" className="p-6 bg-slate-950 border-2 border-red-500 rounded-2xl shadow-2xl space-y-5 text-white relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Banner Header */}
@@ -416,6 +417,102 @@ export default function DashboardView({
         </div>
       )}
 
+      {/* SECTION 9: EXECUTIVE RISK CONCLUSIONS (CUSTOMER SEES THIS FIRST) */}
+      <div id="spotlight-org-risk" className="bg-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-xl text-white space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-blue-400">
+                Organization Cyber Risk Synthesis
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                isAttackActive
+                  ? 'bg-red-950 text-red-300 border border-red-800 animate-pulse'
+                  : (isAttackCompleted ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-amber-950 text-amber-300 border border-amber-800')
+              }`}>
+                {isAttackActive ? 'ACTIVE ATTACK DETECTED' : (isAttackCompleted ? 'POST-REMEDIATION BASELINE' : 'MONITORING NORMAL')}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-3xl font-black tracking-tight text-white">
+                {isAttackActive ? '87%' : (isAttackCompleted ? '14%' : '78%')}
+              </h2>
+              <span className="text-slate-400 text-sm font-semibold">
+                {isAttackActive ? 'Critical Cyber Exposure' : (isAttackCompleted ? 'Residual Enterprise Exposure' : 'Current Enterprise Exposure')}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              id="spotlight-model-6-details"
+              onClick={() => setShowTechnicalDetails(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/50 text-blue-300 hover:text-white text-xs font-mono font-bold transition-all shadow-sm cursor-pointer"
+              title="Inspect Model 6 (CIC-IDS2017 XGBoost) and P1–P6 Evidence"
+            >
+              <Cpu className="w-3.5 h-3.5" />
+              <span>[ VIEW TECHNICAL EVIDENCE & MODEL 6 METRICS ]</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4 Pillars: WHY? | FINANCIAL IMPACT | WHAT TO DO | WHAT CHANGED */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          {/* WHY? */}
+          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider block">
+              1. Why is this risk level set?
+            </span>
+            <ul className="text-slate-300 space-y-1 text-[11px] list-disc list-inside">
+              <li>{isAttackActive ? 'Network anomaly: empirical attack flow detected' : 'Network behavioral telemetry: normal baseline'}</li>
+              <li>Asset ASSET-001 (Production Database) criticality 9.5/10</li>
+              <li>Threat intelligence: CVE-2024-21626 active in wild</li>
+              <li>Zero-Trust microsegmentation policy {isAttackCompleted ? 'deployed' : 'pending'}</li>
+            </ul>
+          </div>
+
+          {/* FINANCIAL IMPACT */}
+          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-wider block">
+              2. Financial Impact
+            </span>
+            <div className="text-xl font-bold text-white font-mono">
+              {formatCurrency(preEal)} <span className="text-xs font-normal text-slate-400 font-sans">EAL</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Potential annualized loss to revenue, DPDP regulatory penalties, and operational downtime without controls.
+            </p>
+          </div>
+
+          {/* WHAT TO DO */}
+          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider block">
+              3. Recommended Action
+            </span>
+            <div className="text-xs font-bold text-emerald-300">
+              REC-001: Zero-Trust Microsegmentation
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Optimal prescriptive recommendation: investment of ₹2.5L delivers ₹14.2L loss reduction (+465.8% ROSI).
+            </p>
+          </div>
+
+          {/* WHAT CHANGED */}
+          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider block">
+              4. What Changed Recently?
+            </span>
+            <div className="text-xs text-slate-300 font-medium">
+              {isAttackActive
+                ? 'Security Lab attack event received: live P1-P6 and EAL surged in real time.'
+                : (isAttackCompleted
+                  ? 'Remediation confirmed on Fabric ledger: residual EAL dropped to ₹7.2L.'
+                  : 'SANS newsletter processed and confirmed by CISO; asset correlation updated.')}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* TOP SECTION: 4 KEY CISO FINANCIAL METRICS */}
       <div>
         <div className="flex justify-between items-center mb-3">
@@ -431,7 +528,7 @@ export default function DashboardView({
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Pre-Control EAL */}
-          <div className="cyber-card border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
+          <div id="spotlight-financial-impact" className="cyber-card border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-slate-600 text-xs font-semibold">Current EAL</p>
@@ -555,7 +652,7 @@ export default function DashboardView({
       {/* MIDDLE SECTION: TOP FINANCIAL CYBER RISKS & PENDING APPROVAL CENTER */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* LEFT (7 cols): TOP FINANCIAL CYBER RISKS */}
-        <div className="lg:col-span-7 cyber-card space-y-4">
+        <div id="spotlight-risk-drivers" className="lg:col-span-7 cyber-card space-y-4">
           <div className="flex justify-between items-center border-b border-slate-200 pb-3">
             <div>
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
@@ -630,7 +727,7 @@ export default function DashboardView({
         </div>
 
         {/* RIGHT (5 cols): PENDING DECISIONS (APPROVAL CENTER) */}
-        <div className="lg:col-span-5 cyber-card space-y-4">
+        <div id="spotlight-optimizer" className="lg:col-span-5 cyber-card space-y-4">
           <div className="flex justify-between items-center border-b border-slate-200 pb-3">
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
@@ -767,6 +864,149 @@ export default function DashboardView({
                 className="cyber-button text-xs py-2 px-4"
               >
                 Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TECHNICAL EVIDENCE MODAL: MODEL 6 & MULTI-MODEL METRICS (STRICT VERIFIED AUDIT) */}
+      {showTechnicalDetails && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-3xl w-full p-6 space-y-5 text-white my-auto max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-400">
+                  <Cpu className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-purple-950 border border-purple-800 text-purple-300 font-bold uppercase">
+                      Technical Audit Evidence
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-400">
+                      Version: CyberOptRQ_P6_CIC2017_XGBoost_v1
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white tracking-tight mt-0.5">
+                    Network Behavioral Intelligence (Model 6) & Multi-Model Fusion
+                  </h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTechnicalDetails(false)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Purpose & Scientific Role */}
+            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+              <div className="flex items-center gap-2 text-blue-400 font-mono font-bold uppercase text-[11px]">
+                <FileText className="w-3.5 h-3.5" />
+                <span>Model Purpose & Operational Scope</span>
+              </div>
+              <p className="text-slate-300 leading-relaxed">
+                Model 6 evaluates statistical flow dynamics in real time to provide empirical network-level evidence. It de-biases pre-breach structural scores (P1–P5) without decrypting confidential payloads, operating 100% locally and offline.
+              </p>
+            </div>
+
+            {/* Audited Metrics Grid (Exact values from reports/p6_metrics.json) */}
+            <div>
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 font-mono">
+                Audited Holdout Test Performance (CIC-IDS2017 Test Split: 60,454 Flows)
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">ROC-AUC Score</span>
+                  <span className="text-base font-bold text-emerald-400">0.98954</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Discriminative Power</span>
+                </div>
+                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">Test Accuracy</span>
+                  <span className="text-base font-bold text-white">97.30%</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">58,824 / 60,454</span>
+                </div>
+                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">F1-Score</span>
+                  <span className="text-base font-bold text-blue-400">0.87417</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Precision: 89.99%</span>
+                </div>
+                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">Brier Calibration</span>
+                  <span className="text-base font-bold text-amber-400">0.02105</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Well Calibrated</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Scientific Rigor & Leakage Elimination */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-sans">
+              <div className="p-3.5 bg-slate-950/70 rounded-xl border border-slate-800 space-y-1.5">
+                <span className="text-[10px] font-mono font-bold text-amber-400 uppercase">Forensic Hygiene & Leakage Prevention</span>
+                <ul className="text-slate-300 text-[11px] space-y-1 list-disc list-inside">
+                  <li><strong>Destination Port removed:</strong> Prevented artificial testbed overfitting (IV was 9.73).</li>
+                  <li><strong>8 Invariant columns dropped:</strong> Zero-variance columns eliminated from raw capture.</li>
+                  <li><strong>56 Active flow features:</strong> Inter-arrival times, packet sizes, duration, TCP flags.</li>
+                </ul>
+              </div>
+
+              <div className="p-3.5 bg-slate-950/70 rounded-xl border border-slate-800 space-y-1.5">
+                <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase">External Validation & Throughput</span>
+                <ul className="text-slate-300 text-[11px] space-y-1 list-disc list-inside">
+                  <li><strong>UNSW-NB15 Cross-Validation:</strong> Audited across 14 aligned behavioral features.</li>
+                  <li><strong>Inference Latency:</strong> 37.3 ms single-flow average latency on CPU.</li>
+                  <li><strong>Batch Throughput:</strong> &gt;267,000 flows/sec for real-time packet ingest.</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 6-Model Pipeline Fusion */}
+            <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs font-mono">
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="font-bold text-white">Non-Destructive Fusion Architecture (Fusion v2)</span>
+                <span className="text-[10px] text-emerald-400">Bayesian Logistic Calibration</span>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-[10px] text-center pt-1">
+                <div className="p-1.5 bg-slate-900 rounded border border-slate-800">
+                  <span className="text-slate-400 block">P1</span>
+                  <span className="font-bold text-white">NVD CVSS</span>
+                </div>
+                <div className="p-1.5 bg-slate-900 rounded border border-slate-800">
+                  <span className="text-slate-400 block">P2</span>
+                  <span className="font-bold text-white">EPSS Threat</span>
+                </div>
+                <div className="p-1.5 bg-slate-900 rounded border border-slate-800">
+                  <span className="text-slate-400 block">P3</span>
+                  <span className="font-bold text-white">Org Context</span>
+                </div>
+                <div className="p-1.5 bg-slate-900 rounded border border-slate-800">
+                  <span className="text-slate-400 block">P4</span>
+                  <span className="font-bold text-white">MITRE TTPs</span>
+                </div>
+                <div className="p-1.5 bg-slate-900 rounded border border-slate-800">
+                  <span className="text-slate-400 block">P5</span>
+                  <span className="font-bold text-white">Meta-Learner</span>
+                </div>
+                <div className="p-1.5 bg-slate-900 rounded border border-purple-500/50 bg-purple-950/20">
+                  <span className="text-purple-400 block font-bold">P6</span>
+                  <span className="font-bold text-white">Network Model</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
+              <span className="text-slate-500 text-[11px] font-mono">
+                Audited against official evaluation artifacts in reports/p6_metrics.json
+              </span>
+              <button
+                onClick={() => setShowTechnicalDetails(false)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold font-mono text-xs transition-colors"
+              >
+                Close Audit View
               </button>
             </div>
           </div>

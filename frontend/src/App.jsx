@@ -23,6 +23,8 @@ import SecurityTestingView from './components/views/SecurityTestingView';
 import CFOFinancialView from './components/views/CFOFinancialView';
 import PublicMarketingSite from './components/public/PublicMarketingSite';
 import OnboardingStepper from './components/onboarding/OnboardingStepper';
+import SpotlightHelp from './components/SpotlightHelp';
+import DemoPresentationBar, { DEMO_STAGES } from './components/DemoPresentationBar';
 
 import { api } from './services/api';
 import { WebSocketClient } from './services/websocket';
@@ -37,6 +39,14 @@ export default function App({ isClerkConfigured = true }) {
   const [demoAuthenticated, setDemoAuthenticated] = useState(false);
   const [wsClientRef, setWsClientRef] = useState(null);
   const [isMessengerOpen, setIsMessengerOpen] = useState(false);
+
+  // Global Help Explainer Spotlight State — Strictly FALSE by default (no auto-popup)
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  // SIH 2026 Presentation Demo Mode State
+  const [showDemoBar, setShowDemoBar] = useState(true);
+  const [demoStage, setDemoStage] = useState('baseline');
+  const [isResettingDemo, setIsResettingDemo] = useState(false);
 
   // Attack Mode & Demo Synchronization State
   const [attackState, setAttackState] = useState({ active: false, status: 'IDLE' });
@@ -126,6 +136,33 @@ export default function App({ isClerkConfigured = true }) {
       setAuditBlocks(blk);
     } catch (e) {
       console.error("Error loading application data:", e);
+    }
+  };
+
+  // SIH Demo Narrative Stage Navigation & Deterministic Demo Reset
+  const handleResetDemo = async () => {
+    setIsResettingDemo(true);
+    try {
+      await api.resetAttackDemo();
+      setAttackState({ active: false, status: 'IDLE', pipeline: null });
+      setDemoStage('baseline');
+      await reloadData();
+    } catch (e) {
+      console.error("Failed to reset demo state:", e);
+      setAttackState({ active: false, status: 'IDLE', pipeline: null });
+      setDemoStage('baseline');
+    } finally {
+      setIsResettingDemo(false);
+    }
+  };
+
+  const handleSelectDemoStage = (stage) => {
+    setDemoStage(stage.id);
+    if (stage.tab) {
+      setActiveTab(stage.tab);
+    }
+    if (stage.id === 'attack' && (!attackState?.active)) {
+      api.startAttackDemo().catch(() => {});
     }
   };
 
@@ -469,7 +506,22 @@ export default function App({ isClerkConfigured = true }) {
         onToggleMessenger={() => setIsMessengerOpen(!isMessengerOpen)}
         unreadMessageCount={interTeamMessages.length}
         onNavigateMarketing={() => setViewMode('marketing')}
+        onOpenHelp={() => setIsHelpOpen(true)}
+        onToggleDemoBar={() => setShowDemoBar((prev) => !prev)}
+        showDemoBar={showDemoBar}
       />
+
+      {/* SIH 2026 9-Stage Demo Presentation Bar & Deterministic Reset */}
+      {showDemoBar && (
+        <DemoPresentationBar
+          currentStage={demoStage}
+          onSelectStage={handleSelectDemoStage}
+          onResetDemo={handleResetDemo}
+          isAttackActive={attackState?.active || attackState?.status === 'ATTACK_STARTED'}
+          isResetting={isResettingDemo}
+        />
+      )}
+
       <div className="flex flex-1">
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} currentRole={currentRole} />
         <main className="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto w-full space-y-6">
@@ -499,6 +551,15 @@ export default function App({ isClerkConfigured = true }) {
         onNavigate={setActiveTab}
         isOpen={isMessengerOpen}
         onClose={() => setIsMessengerOpen(false)}
+      />
+
+      {/* Global Interactive Spotlight Explainer — STRICTLY visible ONLY when user explicitly clicks [ ? HELP ] */}
+      <SpotlightHelp
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        currentRole={currentRole}
+        activeTab={activeTab}
+        onNavigateTab={(tab) => setActiveTab(tab)}
       />
     </div>
   );
