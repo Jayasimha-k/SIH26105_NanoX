@@ -62,7 +62,7 @@ export default function NetworkIntelligenceView({ attackState }) {
   ];
 
   return (
-    <div id="spotlight-network-intel" className="space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -98,8 +98,8 @@ export default function NetworkIntelligenceView({ attackState }) {
         </div>
       </div>
 
-      {/* Primary Customer Cards (Executive & SecOps Overview) */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Primary Customer Cards (Executive & SecOps Overview) — spotlight-network-intel target */}
+      <div id="spotlight-network-intel" className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Malicious Flow Probability */}
         <div className={`cyber-card border-l-4 ${isAttackActive ? 'border-l-rose-500 bg-rose-50/20' : 'border-l-emerald-500'}`}>
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">

@@ -162,7 +162,7 @@ export default function ExecuteView({ recommendations = [], currentRole, onRefre
   const awaitingVerify = tasks.filter(t => t.status === 'AWAITING_VERIFICATION').length;
 
   return (
-    <div id="spotlight-remediation" className="space-y-6">
+    <div className="space-y-6">
       {actionNotice && (
         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800 animate-in fade-in">
           <div className="flex items-center gap-2">
@@ -210,8 +210,8 @@ export default function ExecuteView({ recommendations = [], currentRole, onRefre
         </div>
       </div>
 
-      {/* MY REMEDIATION QUEUE TABLE */}
-      <div className="cyber-card space-y-4">
+      {/* MY REMEDIATION QUEUE TABLE — spotlight-remediation target */}
+      <div id="spotlight-remediation" className="cyber-card space-y-4">
         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
           <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
             <Wrench className="w-4 h-4 text-blue-600" />

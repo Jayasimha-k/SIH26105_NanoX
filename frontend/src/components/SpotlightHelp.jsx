@@ -1,35 +1,33 @@
 /**
  * SpotlightHelp.jsx  —  SIH 2026 Guided Explainer
  *
- * Architecture:
- *  • Side panel (360 px, right edge) — dashboard stays fully visible
- *  • Cross-view navigation: navigates to the correct tab via onNavigateTab,
- *    then retries the DOM query until the element mounts (max ~1.5 s)
- *  • Scrolls the target into view, then measures its bounding rect
- *  • Animated glow ring on the actual target element
- *  • Panel side dynamically chosen (left / right) to avoid covering target
- *  • Zero auto-popup guarantee — isOpen=false until user clicks [ ? HELP ]
+ * Visual Architecture (Bulletproof Chromium / Edge Portal Implementation):
+ *  • createPortal(..., document.body) prevents clipping by parent overflow/transforms.
+ *  • 9999px box-shadow cutout leaves target 100% visible & un-dimmed while smoothly
+ *    dimming the surrounding dashboard:
+ *      box-shadow: 0 0 0 9999px rgba(15,23,42,0.72), 0 0 28px ${accent}66, inset 0 0 12px ${accent}22
+ *  • Continuous requestAnimationFrame loop tracks element bounding rect across scrolls,
+ *    window resizes, attack HUD expansions, Bad Apple video mounting, and view transitions.
+ *  • Dynamic adaptive panel placement (Right -> Left -> Bottom -> Top -> Floating) ensures
+ *    the explanation panel NEVER covers or collides with the target element.
+ *  • Animated target callout badge and dashed SVG connector line.
+ *  • Clear z-index hierarchy:
+ *      Backdrop (z: 1000) -> Cutout ring (z: 1100) -> SVG connector (z: 1150) -> Help Panel (z: 1200)
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   HelpCircle, X, ChevronRight, ChevronLeft, Shield, DollarSign,
-  Activity, Layers, Sparkles, Info, CheckCircle2, Terminal,
-  Database, Lock, Cpu, Flame, Film, Target, BookOpen
+  Activity, Layers, Sparkles, Info, CheckCircle2,
+  Database, Lock, Cpu, Flame, Target, BookOpen
 } from 'lucide-react';
 import {
-  CANONICAL_DEMO_STATE,
   getActiveDemoState,
-  formatLakhs,
-  formatShortLakhs,
-  formatFullInr
 } from '../services/demoState';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOPIC CATALOGUE — 15 verified topics, each with a real tab + real DOM id
-// ─────────────────────────────────────────────────────────────────────────────
-// Tab IDs must match exactly the case labels in App.jsx renderActiveView()
-// IntelligenceCenter topics that require a sub-tab are handled by intelSubTab
+// TOPIC CATALOGUE — 15 verified topics, each with a real tab + real DOM target
 // ─────────────────────────────────────────────────────────────────────────────
 export const SPOTLIGHT_TOPICS = [
   {
@@ -61,7 +59,8 @@ export const SPOTLIGHT_TOPICS = [
   {
     id: 'organization_data',
     tab: 'my_org',
-    target: '#org-data-btn',
+    target: '#spotlight-org-data',
+    fallbackTarget: '#org-data-btn',
     title: 'Organization Data & Context',
     category: 'Contextualization',
     icon: Database,
@@ -225,8 +224,6 @@ export const SPOTLIGHT_TOPICS = [
     icon: Flame,
     accent: '#F87171',
     roles: ['CISO', 'SOC', 'Security', 'ALL'],
-    // NOTE: this element is CONDITIONALLY rendered only when attackState.active=true
-    // When attack is NOT active, we fall back gracefully to spotlight the org-risk card
     fallbackTarget: '#spotlight-org-risk',
     what: "Real-time demonstration mode triggered when the controlled Security Lab launches an active exploit. CyberOptRQ reacts with active telemetry, risk & EAL surges, and embedded Bad Apple visualizer playback.",
     why: "Shows how CyberOptRQ dynamically responds in seconds: risk surges, EAL spikes, and the affected asset is pinpointed.",
@@ -235,95 +232,294 @@ export const SPOTLIGHT_TOPICS = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DOM target resolver with retry + scroll
+// Adaptive panel positioning (Never covers target)
 // ─────────────────────────────────────────────────────────────────────────────
-function resolveTarget(selector, fallback, onFound, onFailed, maxMs = 1600) {
-  const deadline = Date.now() + maxMs;
-  let rafId;
+function computeLayout(rect) {
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const PANEL_W = 380;
+  const MARGIN = 14;
 
-  const attempt = () => {
-    let el = document.querySelector(selector);
-    if (!el && fallback) {
-      el = document.querySelector(fallback);
-    }
-    if (el) {
-      // scroll into center of viewport
-      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      // wait for scroll animation, then measure
-      setTimeout(() => {
-        const rect = el.getBoundingClientRect();
-        onFound({ el, rect, usedFallback: !document.querySelector(selector) });
-      }, 320);
-      return;
-    }
-    if (Date.now() < deadline) {
-      rafId = requestAnimationFrame(attempt);
-    } else {
-      onFailed(`Target not found: ${selector}`);
-    }
-  };
+  if (!rect) {
+    return {
+      placement: 'floating',
+      panelStyle: {
+        position: 'fixed',
+        top: MARGIN,
+        bottom: MARGIN,
+        right: MARGIN,
+        width: Math.min(PANEL_W, vw - MARGIN * 2),
+        maxHeight: `calc(100vh - ${MARGIN * 2}px)`,
+      },
+      connector: null,
+    };
+  }
 
-  rafId = requestAnimationFrame(attempt);
-  return () => cancelAnimationFrame(rafId);
+  const tTop = Math.max(0, rect.top - 6);
+  const tBottom = Math.min(vh, rect.bottom + 6);
+  const tLeft = Math.max(0, rect.left - 6);
+  const tRight = Math.min(vw, rect.right + 6);
+
+  const spaceRight = vw - tRight;
+  const spaceLeft = tLeft;
+  const spaceBottom = vh - tBottom;
+  const spaceTop = tTop;
+
+  // 1. Try placing on RIGHT if ample room
+  if (spaceRight >= PANEL_W + MARGIN) {
+    const panelTop = Math.max(MARGIN, Math.min(tTop, vh - 480));
+    const panelHeight = Math.min(680, vh - panelTop - MARGIN);
+    const connY = Math.min(Math.max(tTop + 24, panelTop + 36), tBottom - 16);
+    return {
+      placement: 'right',
+      panelStyle: {
+        position: 'fixed',
+        left: Math.round(tRight + 14),
+        top: Math.round(panelTop),
+        width: PANEL_W,
+        maxHeight: Math.round(panelHeight),
+      },
+      connector: {
+        x1: tRight,
+        y1: connY,
+        x2: tRight + 14,
+        y2: connY,
+      }
+    };
+  }
+
+  // 2. Try placing on LEFT if ample room
+  if (spaceLeft >= PANEL_W + MARGIN) {
+    const panelTop = Math.max(MARGIN, Math.min(tTop, vh - 480));
+    const panelHeight = Math.min(680, vh - panelTop - MARGIN);
+    const connY = Math.min(Math.max(tTop + 24, panelTop + 36), tBottom - 16);
+    return {
+      placement: 'left',
+      panelStyle: {
+        position: 'fixed',
+        left: Math.round(tLeft - PANEL_W - 14),
+        top: Math.round(panelTop),
+        width: PANEL_W,
+        maxHeight: Math.round(panelHeight),
+      },
+      connector: {
+        x1: tLeft,
+        y1: connY,
+        x2: tLeft - 14,
+        y2: connY,
+      }
+    };
+  }
+
+  // 3. For wide cards spanning most of width: Try placing BELOW
+  if (spaceBottom >= 180) {
+    const cardMidX = tLeft + rect.width / 2;
+    const panelLeft = Math.max(MARGIN, Math.min(cardMidX - PANEL_W / 2, vw - PANEL_W - MARGIN));
+    const panelHeight = Math.min(spaceBottom - MARGIN * 2, 480);
+    const connX = Math.round(Math.max(tLeft + 30, Math.min(cardMidX, tRight - 30)));
+    return {
+      placement: 'bottom',
+      panelStyle: {
+        position: 'fixed',
+        left: Math.round(panelLeft),
+        top: Math.round(tBottom + 12),
+        width: Math.min(PANEL_W, vw - MARGIN * 2),
+        maxHeight: Math.round(panelHeight),
+      },
+      connector: {
+        x1: connX,
+        y1: tBottom,
+        x2: connX,
+        y2: tBottom + 12,
+      }
+    };
+  }
+
+  // 4. Try placing ABOVE
+  if (spaceTop >= 180) {
+    const cardMidX = tLeft + rect.width / 2;
+    const panelLeft = Math.max(MARGIN, Math.min(cardMidX - PANEL_W / 2, vw - PANEL_W - MARGIN));
+    const panelHeight = Math.min(spaceTop - MARGIN * 2, 480);
+    const connX = Math.round(Math.max(tLeft + 30, Math.min(cardMidX, tRight - 30)));
+    return {
+      placement: 'top',
+      panelStyle: {
+        position: 'fixed',
+        left: Math.round(panelLeft),
+        bottom: Math.round(vh - tTop + 12),
+        width: Math.min(PANEL_W, vw - MARGIN * 2),
+        maxHeight: Math.round(panelHeight),
+      },
+      connector: {
+        x1: connX,
+        y1: tTop,
+        x2: connX,
+        y2: tTop - 12,
+      }
+    };
+  }
+
+  // 5. If space is tight vertically, place below or above without covering
+  if (spaceBottom >= spaceTop) {
+    const cardMidX = tLeft + rect.width / 2;
+    const panelLeft = Math.max(MARGIN, Math.min(cardMidX - PANEL_W / 2, vw - PANEL_W - MARGIN));
+    return {
+      placement: 'bottom-compact',
+      panelStyle: {
+        position: 'fixed',
+        left: Math.round(panelLeft),
+        top: Math.round(tBottom + 10),
+        width: Math.min(PANEL_W, vw - MARGIN * 2),
+        maxHeight: Math.max(160, Math.round(spaceBottom - 16)),
+      },
+      connector: null,
+    };
+  } else {
+    const cardMidX = tLeft + rect.width / 2;
+    const panelLeft = Math.max(MARGIN, Math.min(cardMidX - PANEL_W / 2, vw - PANEL_W - MARGIN));
+    return {
+      placement: 'top-compact',
+      panelStyle: {
+        position: 'fixed',
+        left: Math.round(panelLeft),
+        bottom: Math.round(vh - tTop + 10),
+        width: Math.min(PANEL_W, vw - MARGIN * 2),
+        maxHeight: Math.max(160, Math.round(spaceTop - 16)),
+      },
+      connector: null,
+    };
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Spotlight glow overlay
+// Spotlight Cutout & Dimming (Undimmed Target + Dimmed Surrounding)
 // ─────────────────────────────────────────────────────────────────────────────
-function SpotlightRing({ rect, accent, panelOnRight }) {
-  if (!rect) return null;
-
-  // Sidebar width ~256px, header ~64px
-  const SIDEBAR_W = 256;
-  const HEADER_H = 64;
-  const MARGIN = 10;
-
-  const safeTop = Math.max(rect.top, HEADER_H + MARGIN);
-  const safeLeft = Math.max(rect.left, SIDEBAR_W + MARGIN);
-  const safeWidth = rect.width;
-  const safeHeight = rect.bottom - safeTop;
-
-  return (
-    <>
-      {/* Dim overlay with punch-out */}
+function SpotlightCutout({ rect, accent, topicTitle, topicCategory }) {
+  if (!rect) {
+    return (
       <div
         style={{
-          position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'none',
-          background: 'rgba(2,6,23,0.52)',
-          maskImage: `radial-gradient(ellipse ${safeWidth + 80}px ${safeHeight + 80}px at ${safeLeft + safeWidth / 2}px ${safeTop + safeHeight / 2}px, transparent 50%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0.52) 100%)`,
-          WebkitMaskImage: `radial-gradient(ellipse ${safeWidth + 80}px ${safeHeight + 80}px at ${safeLeft + safeWidth / 2}px ${safeTop + safeHeight / 2}px, transparent 50%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0.52) 100%)`,
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.70)',
+          zIndex: 1000,
+          pointerEvents: 'none',
+          transition: 'opacity 0.25s ease',
         }}
       />
-      {/* Glow ring */}
+    );
+  }
+
+  const PADDING = 6;
+  const top = Math.round(rect.top - PADDING);
+  const left = Math.round(rect.left - PADDING);
+  const width = Math.round(rect.width + PADDING * 2);
+  const height = Math.round(rect.height + PADDING * 2);
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top,
+        left,
+        width,
+        height,
+        borderRadius: 14,
+        border: `2.5px solid ${accent}`,
+        /* 9999px box-shadow dims the entire dashboard outside this transparent cutout */
+        boxShadow: `0 0 0 9999px rgba(15, 23, 42, 0.72), 0 0 28px ${accent}66, inset 0 0 14px ${accent}22`,
+        zIndex: 1100,
+        pointerEvents: 'none',
+        animation: 'sihGlow 2.5s ease-in-out infinite',
+        transition: 'top 0.12s ease-out, left 0.12s ease-out, width 0.12s ease-out, height 0.12s ease-out',
+      }}
+    >
+      {/* Callout Focus Badge */}
       <div
         style={{
-          position: 'fixed', zIndex: 1001, pointerEvents: 'none',
-          top: safeTop - 6,
-          left: safeLeft - 6,
-          width: safeWidth + 12,
-          height: safeHeight + 12,
-          borderRadius: 12,
-          border: `2px solid ${accent}`,
-          boxShadow: `0 0 0 4px ${accent}18, 0 0 28px ${accent}44`,
-          animation: 'sihGlow 2.5s ease-in-out infinite',
+          position: 'absolute',
+          top: -24,
+          left: 8,
+          background: accent,
+          color: '#0F172A',
+          fontSize: 9.5,
+          fontWeight: 900,
+          fontFamily: 'monospace',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          padding: '3px 9px',
+          borderRadius: 6,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+          whiteSpace: 'nowrap',
         }}
       >
-        <div style={{
-          position: 'absolute', top: -20, left: 8,
-          background: accent, color: '#0F172A',
-          fontSize: 9, fontWeight: 900, fontFamily: 'monospace',
-          letterSpacing: '0.12em', textTransform: 'uppercase',
-          padding: '2px 8px', borderRadius: 4, whiteSpace: 'nowrap',
-        }}>
-          ▶ Inspecting
-        </div>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#0F172A', display: 'inline-block' }} />
+        <span>{topicCategory}: {topicTitle}</span>
       </div>
-    </>
+    </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main component
+// Connector Line (Target -> Panel)
+// ─────────────────────────────────────────────────────────────────────────────
+function SpotlightConnector({ connector, accent }) {
+  if (!connector) return null;
+  const { x1, y1, x2, y2 } = connector;
+  return (
+    <svg
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 1150,
+        pointerEvents: 'none',
+      }}
+    >
+      <line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={accent}
+        strokeWidth="2.5"
+        strokeDasharray="4 3"
+        strokeLinecap="round"
+        opacity="0.85"
+      />
+      <circle cx={x1} cy={y1} r="4" fill={accent} />
+      <circle cx={x2} cy={y2} r="4" fill={accent} />
+    </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Development Debug Overlay
+// ─────────────────────────────────────────────────────────────────────────────
+function SpotlightDebug({ rect, panelStyle }) {
+  const isDebug = typeof window !== 'undefined' && (window.__DEBUG_SPOTLIGHT__ || window.location.search.includes('debug=1'));
+  if (!isDebug) return null;
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 12, left: 12, zIndex: 9999,
+      background: 'rgba(2,6,23,0.92)', border: '1px solid #38BDF8',
+      padding: '8px 12px', borderRadius: 8, fontSize: 10, fontFamily: 'monospace',
+      color: '#38BDF8', pointerEvents: 'none', lineHeight: 1.5,
+    }}>
+      <div><strong>DEBUG_SPOTLIGHT=true</strong></div>
+      <div>TARGET: x={Math.round(rect?.left || 0)} y={Math.round(rect?.top || 0)} w={Math.round(rect?.width || 0)} h={Math.round(rect?.height || 0)}</div>
+      <div>PANEL: left={panelStyle?.left ?? 'auto'} top={panelStyle?.top ?? 'auto'} w={panelStyle?.width}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main SpotlightHelp Component
 // ─────────────────────────────────────────────────────────────────────────────
 export default function SpotlightHelp({
   isOpen,
@@ -341,24 +537,24 @@ export default function SpotlightHelp({
   const [targetRect, setTargetRect] = useState(null);
   const [usedFallback, setUsedFallback] = useState(false);
   const [resolving, setResolving] = useState(false);
-  const [panelOnRight, setPanelOnRight] = useState(true);
-  const cleanupRef = useRef(null);
 
-  // Keep role filter in sync
+  // Decouple navigation callback from render churn
+  const onNavigateTabRef = useRef(onNavigateTab);
+  onNavigateTabRef.current = onNavigateTab;
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+
   useEffect(() => { setRoleFilter(currentRole); }, [currentRole]);
 
   const activeDemo = getActiveDemoState(attackState);
   const isAttackActive = activeDemo.isAttackActive;
   const isAttackCompleted = activeDemo.isAttackCompleted;
-  const activeRisk = activeDemo.riskScorePct;
-  const activeEal = activeDemo.ealFormatted;
-  const activeAsset = activeDemo.targetAsset;
   const activeCorrelation = attackState?.correlation_id || 'ATTACK-DEMO-2026';
 
   const topics = SPOTLIGHT_TOPICS.filter(t =>
     roleFilter === 'ALL' || t.roles.includes(roleFilter) || t.roles.includes('ALL')
   );
-  const clampedIdx = Math.min(idx, topics.length - 1);
+  const clampedIdx = Math.min(idx, Math.max(0, topics.length - 1));
   const rawTopic = topics[clampedIdx];
 
   const getDynamicTopic = (raw) => {
@@ -412,56 +608,29 @@ export default function SpotlightHelp({
       if (isAttackActive) {
         t.what = `SYNCHRONIZED ATTACK MODE: Active security demonstration ${activeCorrelation} in progress. Live telemetry streaming across the dashboard.`;
       }
-    } else if (raw.id === 'bad_apple') {
-      if (isAttackActive) {
-        t.what = 'BAD APPLE VISUALIZER: Embedded high-contrast visualizer playing in sync with live attack telemetry to give an immediate, unmistakable presentation cue.';
-      }
     }
     return t;
   };
 
   const topic = getDynamicTopic(rawTopic);
 
-  // ── Resolve target whenever topic or open state changes ──────────────────
-  const resolveCurrentTarget = useCallback(() => {
-    if (!isOpen || !topic) return;
-
-    // Clean up previous resolve attempt
-    if (cleanupRef.current) { cleanupRef.current(); cleanupRef.current = null; }
-    setTargetRect(null);
-    setUsedFallback(false);
-    setResolving(true);
-
-    // 1. Navigate to the required tab
-    if (topic.tab && topic.tab !== activeTab) {
-      onNavigateTab(topic.tab);
+  // ── Continuous RAF Target Tracking ───────────────────────────────────────
+  useEffect(() => {
+    if (!isOpen || !topic) {
+      setTargetRect(null);
+      return;
     }
 
-    // 2. If the topic needs an Intelligence Center sub-tab, we need to wait
-    //    for mount then click the sub-tab button
-    const needsIntelSubTab = topic.intelSubTab && topic.tab === 'intelligence';
+    let hasScrolled = false;
+    let rafId;
 
-    const doResolve = () => {
-      cleanupRef.current = resolveTarget(
-        topic.target,
-        topic.fallbackTarget || null,
-        ({ el, rect, usedFallback: uf }) => {
-          setUsedFallback(uf);
-          setResolving(false);
-          setTargetRect(rect);
-          // Decide panel side: if target is on right half of viewport, put panel on left
-          const midScreen = window.innerWidth / 2;
-          setPanelOnRight(rect.left + rect.width / 2 < midScreen);
-        },
-        () => {
-          setResolving(false);
-          setTargetRect(null);
-        },
-        1600
-      );
-    };
+    // Trigger tab navigation if needed
+    if (topic.tab && topic.tab !== activeTabRef.current) {
+      onNavigateTabRef.current(topic.tab);
+    }
 
-    if (needsIntelSubTab) {
+    // Trigger Intelligence Center sub-tab if needed
+    if (topic.intelSubTab && topic.tab === 'intelligence') {
       setTimeout(() => {
         const subTabId = topic.intelSubTab;
         const targetBtn = document.getElementById(`tab-btn-${subTabId}`);
@@ -471,54 +640,61 @@ export default function SpotlightHelp({
           const allBtns = document.querySelectorAll('button');
           for (const btn of allBtns) {
             const txt = btn.textContent || '';
-            const wantCiso = topic.intelSubTab === 'ciso_queue' && (txt.includes('CISO Review') || txt.includes('ciso_queue'));
-            const wantCfo  = topic.intelSubTab === 'cfo_queue'  && (txt.includes('CFO Review') || txt.includes('cfo_queue'));
+            const wantCiso = subTabId === 'ciso_queue' && (txt.includes('CISO Review') || txt.includes('ciso_queue'));
+            const wantCfo  = subTabId === 'cfo_queue'  && (txt.includes('CFO Review') || txt.includes('cfo_queue'));
             if (wantCiso || wantCfo) {
               btn.click();
               break;
             }
           }
         }
-        setTimeout(doResolve, 250);
-      }, 500);
-    } else {
-      setTimeout(doResolve, topic.tab !== activeTab ? 450 : 80);
+      }, 150);
     }
-  }, [isOpen, topic, activeTab, onNavigateTab]);
 
-  useEffect(() => {
-    resolveCurrentTarget();
-    return () => { if (cleanupRef.current) cleanupRef.current(); };
-  }, [resolveCurrentTarget]);
-
-  // Re-measure on scroll or resize with ResizeObserver for dynamic layout shifts
-  useEffect(() => {
-    if (!isOpen) return;
-    const handle = () => {
-      if (!topic) return;
+    const track = () => {
       const el = document.querySelector(topic.target) ||
                  (topic.fallbackTarget ? document.querySelector(topic.fallbackTarget) : null);
+
       if (el) {
+        if (!hasScrolled) {
+          const initRect = el.getBoundingClientRect();
+          const isWide = initRect.width > (window.innerWidth - 450);
+          el.scrollIntoView({ behavior: 'smooth', block: isWide ? 'start' : 'center', inline: 'nearest' });
+          hasScrolled = true;
+        }
+
         const r = el.getBoundingClientRect();
-        setTargetRect(r);
-        setPanelOnRight(r.left + r.width / 2 < window.innerWidth / 2);
+        if (r.width > 0 && r.height > 0) {
+          setTargetRect(prev => {
+            if (!prev ||
+                Math.abs(prev.left - r.left) > 1 ||
+                Math.abs(prev.top - r.top) > 1 ||
+                Math.abs(prev.width - r.width) > 1 ||
+                Math.abs(prev.height - r.height) > 1) {
+              return {
+                left: r.left,
+                top: r.top,
+                right: r.right,
+                bottom: r.bottom,
+                width: r.width,
+                height: r.height,
+              };
+            }
+            return prev;
+          });
+          setResolving(false);
+          setUsedFallback(!document.querySelector(topic.target) && !!topic.fallbackTarget);
+        }
+      } else {
+        setResolving(true);
       }
-    };
-    window.addEventListener('scroll', handle, true);
-    window.addEventListener('resize', handle);
 
-    let observer = null;
-    try {
-      observer = new ResizeObserver(handle);
-      observer.observe(document.body);
-    } catch (e) {}
-
-    return () => {
-      window.removeEventListener('scroll', handle, true);
-      window.removeEventListener('resize', handle);
-      if (observer) observer.disconnect();
+      rafId = requestAnimationFrame(track);
     };
-  }, [isOpen, topic]);
+
+    rafId = requestAnimationFrame(track);
+    return () => cancelAnimationFrame(rafId);
+  }, [isOpen, topic?.id, topic?.tab, topic?.target, topic?.intelSubTab, topic?.fallbackTarget]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -539,76 +715,85 @@ export default function SpotlightHelp({
 
   const accent = topic.accent || '#60A5FA';
   const TopicIcon = topic.icon || HelpCircle;
-  const PANEL_W = 350;
 
-  const panelStyle = {
-    position: 'fixed',
-    top: 0, bottom: 0,
-    width: PANEL_W,
-    zIndex: 1100,
-    display: 'flex', flexDirection: 'column',
-    background: 'linear-gradient(160deg,#0F172A 0%,#0D1526 100%)',
-    boxShadow: panelOnRight
-      ? `-24px 0 80px rgba(0,0,0,0.55), -1px 0 0 ${accent}22`
-      : `24px 0 80px rgba(0,0,0,0.55), 1px 0 0 ${accent}22`,
-    borderLeft:  panelOnRight ? `1px solid ${accent}33` : 'none',
-    borderRight: panelOnRight ? 'none' : `1px solid ${accent}33`,
-    ...(panelOnRight ? { right: 0 } : { left: 0 }),
-    animation: panelOnRight
-      ? 'sihSlideRight 0.36s cubic-bezier(0.34,1.2,0.64,1) both'
-      : 'sihSlideLeft 0.36s cubic-bezier(0.34,1.2,0.64,1) both',
+  // Compute adaptive layout (never covers target)
+  const layout = computeLayout(targetRect);
+
+  const panelFullStyle = {
+    ...layout.panelStyle,
+    zIndex: 1200,
+    display: 'flex',
+    flexDirection: 'column',
+    background: 'linear-gradient(165deg, rgba(15,23,42,0.97) 0%, rgba(13,21,38,0.98) 100%)',
+    boxShadow: `0 24px 70px rgba(0,0,0,0.65), 0 0 0 1px ${accent}33`,
+    borderRadius: 18,
+    border: `1px solid ${accent}44`,
+    backdropFilter: 'blur(20px)',
+    overflow: 'hidden',
+    animation: 'sihPanelFade 0.28s cubic-bezier(0.16, 1, 0.3, 1) both',
   };
 
-  return (
+  const portalContent = (
     <>
-      {/* Global keyframes */}
+      {/* Keyframe animations */}
       <style>{`
+        [id^="spotlight-"], #org-data-btn {
+          scroll-margin-top: 85px !important;
+        }
         @keyframes sihGlow {
-          0%,100% { opacity:1; box-shadow:0 0 0 4px ${accent}18,0 0 28px ${accent}44; }
-          50%      { opacity:.88; box-shadow:0 0 0 7px ${accent}0D,0 0 42px ${accent}55; }
+          0%, 100% { opacity: 1; box-shadow: 0 0 0 9999px rgba(15,23,42,0.72), 0 0 28px ${accent}66, inset 0 0 12px ${accent}22; }
+          50%      { opacity: 0.88; box-shadow: 0 0 0 9999px rgba(15,23,42,0.76), 0 0 42px ${accent}88, inset 0 0 20px ${accent}44; }
         }
-        @keyframes sihSlideRight {
-          from { transform:translateX(100%); opacity:0; }
-          to   { transform:translateX(0); opacity:1; }
-        }
-        @keyframes sihSlideLeft {
-          from { transform:translateX(-100%); opacity:0; }
-          to   { transform:translateX(0); opacity:1; }
+        @keyframes sihPanelFade {
+          from { opacity: 0; transform: scale(0.96); }
+          to   { opacity: 1; transform: scale(1); }
         }
         @keyframes sihFadeUp {
-          from { opacity:0; transform:translateY(6px); }
-          to   { opacity:1; transform:translateY(0); }
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
 
-      {/* Spotlight ring + dim layer */}
-      <SpotlightRing rect={targetRect} accent={accent} panelOnRight={panelOnRight} />
+      {/* Dimmed backdrop + transparent target cutout */}
+      <SpotlightCutout
+        rect={targetRect}
+        accent={accent}
+        topicTitle={topic.title}
+        topicCategory={topic.category}
+      />
 
-      {/* Click backdrop to close */}
+      {/* Subtle dashed SVG connector from target to explanation panel */}
+      <SpotlightConnector connector={layout.connector} accent={accent} />
+
+      {/* Backdrop click catcher to dismiss */}
       <div
-        style={{ position:'fixed', inset:0, zIndex:1002, cursor:'default' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 1000, cursor: 'default' }}
         onClick={onClose}
       />
 
-      {/* ── Side panel ─────────────────────────────────────────────────── */}
-      <div id="spotlight-help-panel" data-testid="spotlight-help-panel" style={panelStyle} onClick={e => e.stopPropagation()}>
-
+      {/* ── Explanation Panel ────────────────────────────────────────────── */}
+      <div
+        id="spotlight-help-panel"
+        data-testid="spotlight-help-panel"
+        style={panelFullStyle}
+        onClick={e => e.stopPropagation()}
+      >
         {/* Header */}
         <div style={{
-          padding:'14px 18px 12px',
-          borderBottom:`1px solid ${accent}22`,
-          background:`linear-gradient(135deg,${accent}08,transparent)`,
+          padding: '14px 18px 12px',
+          borderBottom: `1px solid ${accent}22`,
+          background: `linear-gradient(135deg, ${accent}12, transparent)`,
         }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
-                padding:6, background:`${accent}18`, border:`1px solid ${accent}44`,
-                borderRadius:8, color:accent, display:'flex', alignItems:'center',
+                padding: 6, background: `${accent}18`, border: `1px solid ${accent}44`,
+                borderRadius: 8, color: accent, display: 'flex', alignItems: 'center',
               }}>
                 <BookOpen size={13} />
               </div>
               <div>
-                <div style={{ fontSize:10, fontWeight:700, color:'#94A3B8', letterSpacing:'0.12em', textTransform:'uppercase', fontFamily:'monospace' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'monospace' }}>
                   Guided Explainer
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
@@ -636,29 +821,29 @@ export default function SpotlightHelp({
               onClick={onClose}
               title="Close Help (Esc)"
               style={{
-                padding:6, borderRadius:8,
-                background:'rgba(100,116,139,0.15)', border:'1px solid rgba(100,116,139,0.25)',
-                color:'#94A3B8', cursor:'pointer', display:'flex',
-                transition:'all 0.2s',
+                padding: 6, borderRadius: 8,
+                background: 'rgba(100,116,139,0.15)', border: '1px solid rgba(100,116,139,0.25)',
+                color: '#94A3B8', cursor: 'pointer', display: 'flex',
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background='rgba(239,68,68,0.15)'; e.currentTarget.style.color='#F87171'; }}
-              onMouseLeave={e => { e.currentTarget.style.background='rgba(100,116,139,0.15)'; e.currentTarget.style.color='#94A3B8'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.color = '#F87171'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(100,116,139,0.15)'; e.currentTarget.style.color = '#94A3B8'; }}
             >
               <X size={14} />
             </button>
           </div>
 
           {/* Role filter pills */}
-          <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
-            {['CISO','CFO','Security','SOC','ALL'].map(r => (
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {['CISO', 'CFO', 'Security', 'SOC', 'ALL'].map(r => (
               <button key={r}
                 onClick={() => { setRoleFilter(r); setIdx(0); }}
                 style={{
-                  padding:'3px 9px', borderRadius:20, fontSize:10, fontWeight:700,
-                  fontFamily:'monospace', cursor:'pointer', transition:'all 0.2s',
-                  background: roleFilter===r ? accent : 'rgba(30,41,59,0.8)',
-                  color: roleFilter===r ? '#0F172A' : '#64748B',
-                  border: roleFilter===r ? `1px solid ${accent}` : '1px solid rgba(100,116,139,0.2)',
+                  padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                  fontFamily: 'monospace', cursor: 'pointer', transition: 'all 0.2s',
+                  background: roleFilter === r ? accent : 'rgba(30,41,59,0.8)',
+                  color: roleFilter === r ? '#0F172A' : '#64748B',
+                  border: roleFilter === r ? `1px solid ${accent}` : '1px solid rgba(100,116,139,0.2)',
                 }}
               >{r}</button>
             ))}
@@ -666,143 +851,147 @@ export default function SpotlightHelp({
         </div>
 
         {/* Content area */}
-        <div style={{ flex:1, overflowY:'auto', padding:'18px 18px 0' }}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 0' }}
           key={`${topic.id}-${clampedIdx}`}>
 
           {/* Topic identity row */}
-          <div style={{ display:'flex', alignItems:'flex-start', gap:10, marginBottom:10,
-            animation:'sihFadeUp 0.28s ease both' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10,
+            animation: 'sihFadeUp 0.28s ease both' }}>
             <div style={{
-              padding:9, background:`${accent}18`, border:`1px solid ${accent}44`,
-              borderRadius:10, color:accent, flexShrink:0, display:'flex',
+              padding: 9, background: `${accent}18`, border: `1px solid ${accent}44`,
+              borderRadius: 10, color: accent, flexShrink: 0, display: 'flex',
             }}>
               <TopicIcon size={17} />
             </div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:8, color:accent, fontWeight:700, fontFamily:'monospace',
-                letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:2 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 8, color: accent, fontWeight: 700, fontFamily: 'monospace',
+                letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>
                 {topic.category}
               </div>
-              <h3 style={{ fontSize:14, fontWeight:800, color:'#F1F5F9', lineHeight:1.3, margin:0 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 800, color: '#F1F5F9', lineHeight: 1.3, margin: 0 }}>
                 {topic.title}
               </h3>
             </div>
-            <div style={{ fontSize:11, fontFamily:'monospace', color:'#475569', flexShrink:0, textAlign:'right' }}>
-              <span style={{ color:accent, fontWeight:700, fontSize:15 }}>{clampedIdx+1}</span>
-              <span style={{ color:'#475569' }}> / {topics.length}</span>
+            <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#475569', flexShrink: 0, textAlign: 'right' }}>
+              <span style={{ color: accent, fontWeight: 700, fontSize: 15 }}>{clampedIdx + 1}</span>
+              <span style={{ color: '#475569' }}> / {topics.length}</span>
             </div>
           </div>
 
-          {/* Target status */}
+          {/* Target Status Bar */}
           <div style={{
-            display:'flex', alignItems:'center', gap:6,
-            padding:'5px 10px', borderRadius:8, marginBottom:12,
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '5px 10px', borderRadius: 8, marginBottom: 12,
             background: resolving ? 'rgba(30,41,59,0.6)' :
                         targetRect ? `${accent}0D` : 'rgba(30,41,59,0.6)',
             border: `1px solid ${resolving ? 'rgba(100,116,139,0.2)' :
-                        targetRect ? accent+'33' : 'rgba(100,116,139,0.2)'}`,
-            fontSize:9, fontFamily:'monospace',
+                        targetRect ? accent + '33' : 'rgba(100,116,139,0.2)'}`,
+            fontSize: 9, fontFamily: 'monospace',
             color: resolving ? '#64748B' : targetRect ? accent : '#64748B',
-            animation:'sihFadeUp 0.3s ease 0.05s both',
+            animation: 'sihFadeUp 0.3s ease 0.05s both',
           }}>
             <Target size={9} />
-            <span style={{ fontWeight:700 }}>
+            <span style={{ fontWeight: 700 }}>
               {resolving
                 ? 'Navigating to target...'
                 : targetRect
                   ? (usedFallback ? 'Showing fallback element (attack mode not active)' : 'Target highlighted on screen')
                   : 'Target not visible — navigate to it manually'}
             </span>
-            <code style={{ marginLeft:'auto', opacity:0.55, fontSize:8 }}>
+            <code style={{ marginLeft: 'auto', opacity: 0.55, fontSize: 8 }}>
               {topic.tab}
             </code>
           </div>
 
           {/* WHAT / WHY / HOW cards */}
           {[
-            { label:'What is this?', color:'#60A5FA', text: topic.what },
-            { label:'Why does it matter?', color:'#FBBF24', text: topic.why },
-            { label:'How does CyberOptRQ use it?', color:'#34D399', text: topic.how },
+            { label: 'What is this?', color: '#60A5FA', text: topic.what },
+            { label: 'Why does it matter?', color: '#FBBF24', text: topic.why },
+            { label: 'How does CyberOptRQ use it?', color: '#34D399', text: topic.how },
           ].map(({ label, color, text }, ci) => (
             <div key={label} style={{
-              padding:'12px 14px', background:'rgba(15,23,42,0.7)',
-              border:'1px solid rgba(51,65,85,0.6)', borderRadius:10, marginBottom:8,
-              animation:`sihFadeUp 0.32s ease ${0.07 + ci*0.06}s both`,
+              padding: '12px 14px', background: 'rgba(15,23,42,0.7)',
+              border: '1px solid rgba(51,65,85,0.6)', borderRadius: 10, marginBottom: 8,
+              animation: `sihFadeUp 0.32s ease ${0.07 + ci * 0.06}s both`,
             }}>
               <div style={{
-                fontSize:9, fontWeight:800, color, fontFamily:'monospace',
-                letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:6,
-                display:'flex', alignItems:'center', gap:5,
+                fontSize: 9, fontWeight: 800, color, fontFamily: 'monospace',
+                letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6,
+                display: 'flex', alignItems: 'center', gap: 5,
               }}>
-                <span style={{ display:'inline-block', width:3, height:10, background:color, borderRadius:2 }} />
+                <span style={{ display: 'inline-block', width: 3, height: 10, background: color, borderRadius: 2 }} />
                 {label}
               </div>
-              <p style={{ fontSize:11.5, color:'#CBD5E1', lineHeight:1.65, margin:0 }}>
+              <p style={{ fontSize: 11.5, color: '#CBD5E1', lineHeight: 1.65, margin: 0 }}>
                 {text}
               </p>
             </div>
           ))}
 
-
           {/* Progress dots */}
-          <div style={{ display:'flex', justifyContent:'center', gap:5, marginTop:16, flexWrap:'wrap', marginBottom:10 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 5, marginTop: 14, flexWrap: 'wrap', marginBottom: 8 }}>
             {topics.map((t, i) => (
               <button key={t.id} title={t.title}
                 onClick={() => setIdx(i)}
                 style={{
-                  width: i===clampedIdx ? 18 : 6, height:6, borderRadius:3,
-                  background: i===clampedIdx ? accent : 'rgba(100,116,139,0.3)',
-                  border:'none', cursor:'pointer', padding:0,
-                  transition:'all 0.28s cubic-bezier(0.34,1.56,0.64,1)',
+                  width: i === clampedIdx ? 18 : 6, height: 6, borderRadius: 3,
+                  background: i === clampedIdx ? accent : 'rgba(100,116,139,0.3)',
+                  border: 'none', cursor: 'pointer', padding: 0,
+                  transition: 'all 0.28s cubic-bezier(0.34,1.56,0.64,1)',
                 }}
               />
             ))}
           </div>
-          <div style={{ textAlign:'center', marginBottom:14, fontSize:9, color:'#374151', fontFamily:'monospace' }}>
+          <div style={{ textAlign: 'center', marginBottom: 12, fontSize: 9, color: '#475569', fontFamily: 'monospace' }}>
             ← → arrow keys · Esc to close
           </div>
         </div>
 
         {/* Footer nav */}
         <div style={{
-          padding:'12px 18px',
-          borderTop:`1px solid ${accent}22`,
-          background:'rgba(2,6,23,0.6)',
-          display:'flex', alignItems:'center', gap:8,
+          padding: '12px 18px',
+          borderTop: `1px solid ${accent}22`,
+          background: 'rgba(2,6,23,0.7)',
+          display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <button onClick={onClose} style={{
-            padding:'7px 13px', borderRadius:8,
-            background:'rgba(30,41,59,0.8)', border:'1px solid rgba(100,116,139,0.3)',
-            color:'#64748B', fontSize:11, fontWeight:700, fontFamily:'monospace',
-            cursor:'pointer', transition:'all 0.2s',
+            padding: '7px 13px', borderRadius: 8,
+            background: 'rgba(30,41,59,0.8)', border: '1px solid rgba(100,116,139,0.3)',
+            color: '#64748B', fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
+            cursor: 'pointer', transition: 'all 0.2s',
           }}
-            onMouseEnter={e => e.currentTarget.style.color='#F1F5F9'}
-            onMouseLeave={e => e.currentTarget.style.color='#64748B'}
+            onMouseEnter={e => e.currentTarget.style.color = '#F1F5F9'}
+            onMouseLeave={e => e.currentTarget.style.color = '#64748B'}
           >CLOSE</button>
 
-          <div style={{ display:'flex', gap:6, marginLeft:'auto' }}>
+          <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
             <button onClick={goPrev} style={{
-              display:'flex', alignItems:'center', gap:4,
-              padding:'7px 13px', borderRadius:8,
-              background:'rgba(30,41,59,0.8)', border:'1px solid rgba(100,116,139,0.3)',
-              color:'#CBD5E1', fontSize:11, fontWeight:700, fontFamily:'monospace',
-              cursor:'pointer', transition:'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '7px 13px', borderRadius: 8,
+              background: 'rgba(30,41,59,0.8)', border: '1px solid rgba(100,116,139,0.3)',
+              color: '#CBD5E1', fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
+              cursor: 'pointer', transition: 'all 0.2s',
             }}>
               <ChevronLeft size={13} /> PREV
             </button>
             <button onClick={goNext} style={{
-              display:'flex', alignItems:'center', gap:4,
-              padding:'7px 16px', borderRadius:8,
-              background: accent, border:`1px solid ${accent}`,
-              color:'#0F172A', fontSize:11, fontWeight:800, fontFamily:'monospace',
-              cursor:'pointer', boxShadow:`0 4px 14px ${accent}44`,
-              transition:'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '7px 16px', borderRadius: 8,
+              background: accent, border: `1px solid ${accent}`,
+              color: '#0F172A', fontSize: 11, fontWeight: 800, fontFamily: 'monospace',
+              cursor: 'pointer', boxShadow: `0 4px 14px ${accent}44`,
+              transition: 'all 0.2s',
             }}>
               NEXT <ChevronRight size={13} />
             </button>
           </div>
         </div>
       </div>
+
+      {/* Debug Overlay */}
+      <SpotlightDebug rect={targetRect} panelStyle={panelFullStyle} />
     </>
   );
+
+  return createPortal(portalContent, document.body);
 }

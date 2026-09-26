@@ -88,7 +88,7 @@ export default function MyOrganizationView() {
   }
 
   return (
-    <div id="spotlight-org-data" className="space-y-6">
+    <div className="space-y-6">
       {/* View Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -115,8 +115,8 @@ export default function MyOrganizationView() {
         </button>
       </div>
 
-      {/* WHY DOES CYBEROPTRQ NEED THIS DATA? BANNER — org-data-btn spotlight target */}
-      <div id="org-data-btn" className="p-5 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-slate-50 border border-blue-200 rounded-2xl flex items-start gap-4">
+      {/* WHY DOES CYBEROPTRQ NEED THIS DATA? BANNER — spotlight-org-data target */}
+      <div id="spotlight-org-data" data-testid="org-data-banner" className="p-5 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-slate-50 border border-blue-200 rounded-2xl flex items-start gap-4">
         <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-sm shrink-0">
           <HelpCircle className="w-5 h-5" />
         </div>
